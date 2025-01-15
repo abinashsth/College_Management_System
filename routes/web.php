@@ -8,7 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\StudentController; // Importing the StudentController
+use App\Http\Controllers\StudentController; 
 
 // Default Route
 Route::get('/', function () {
