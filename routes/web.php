@@ -9,10 +9,11 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\StudentController; 
+use App\Http\Controllers\ClassController; 
 
 // Default Route
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 // Authentication Routes
@@ -37,6 +38,10 @@ Route::resource('permissions', PermissionController::class);
 
 // User routes
 Route::resource('users', UserController::class);
+// Student Routes
+Route::resource('students', StudentController::class);
+Route::resource('classes', ClassController::class);
 
-// Student routes
-// Route::resource('students', StudentController::class); // Adding student routes
+Route::get('/admin/dashboard', [DashboardController::class, 'adminIndex'])->name('admin.dashboard')->middleware('role:Super Admin');
+Route::get('/teacher/dashboard', [DashboardController::class, 'teacherIndex'])->name('teacher.dashboard')->middleware('role:Teacher');
+Route::get('/student/dashboard', [DashboardController::class, 'studentIndex'])->name('student.dashboard')->middleware('role:Student');

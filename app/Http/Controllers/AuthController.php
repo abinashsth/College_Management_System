@@ -47,15 +47,27 @@ class AuthController extends Controller
             'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
-
+    
         if (Auth::attempt($request->only('email', 'password'))) {
-            return redirect()->route('dashboard');
+            $user = Auth::user();
+            
+            // Redirect based on user role
+            if ($user->roles->contains('name', 'Super Admin')) {
+                return redirect()->route('admin.dashboard'); // Change to your admin route
+            } elseif ($user->roles->contains('name', 'Teacher')) {
+                return redirect()->route('teacher.dashboard'); // Change to your teacher route
+            } elseif ($user->roles->contains('name', 'Student')) {
+                return redirect()->route('student.dashboard'); // Change to your student route
+            }
+    
+            return redirect()->route('dashboard'); // Default route
         }
-
+    
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ]);
     }
+    
 
     public function logout()
     {
