@@ -7,11 +7,16 @@ use Illuminate\Http\Request;
 
 class PermissionController extends Controller
 {
+    public static function middleware(): array 
+    {
+        return ['role:User'];
+    }
     public function index()
     {
-        $permissions = Permission::all(); // Fetch all permissions
+        $permissions = Permission::paginate(10); // Fetch paginated permissions
         return view('permissions.index', compact('permissions')); // Return the view with permissions
     }
+
 
     public function create()
     {

@@ -9,12 +9,19 @@ use Illuminate\Support\Facades\Hash;
 
 class StudentController extends Controller
 {
+    public static function middleware(): array 
+    {
+        return ['role:User'];
+    }
+
    
     public function index()
     {
-        $students = Student::with('class')->paginate(10);
+        $students = Student::with('classModel')->paginate(10);
         return view('students.index', compact('students'));
     }
+
+
     public function create()
     {
         $classes = ClassModel::all();

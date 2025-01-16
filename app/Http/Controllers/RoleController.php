@@ -8,11 +8,16 @@ use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
+    public static function middleware(): array 
+    {
+        return ['role:User'];
+    }
     public function index()
     {
         $roles = Role::with('permissions')->paginate(10);
         return view('roles.index', compact('roles'));
     }
+
 
     public function create()
     {

@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class ClassController extends Controller
 {
+    public static function middleware(): array 
+    {
+        return ['role:User'];
+    }
+
     public function index()
     {
         $classes = ClassModel::with('students')->paginate(10);

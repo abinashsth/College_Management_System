@@ -35,12 +35,12 @@
                 <tr class="hover:bg-gray-50">
                     <td class="border-b py-3 px-4">{{ $user->name }}</td>
                     <td class="border-b py-3 px-4">{{ $user->email }}</td>
-                    <td class="border-b py-3 px-4">
-                        @forelse($user->roles as $role)
+                    <td class="border-b py-3 px-4"> {{ $user->roles->pluck('name')->implode(', ') }}
+                        <!-- @forelse($user->roles as $role)
                             {{ $role->name }}<br>
                         @empty
                             N/A
-                        @endforelse
+                        @endforelse -->
                     </td>
                     <td class="border-b py-3 px-4">{{ $user->created_at->format('d m, Y') }}</td>
                     <td class="border-b py-3 px-4 text-center">

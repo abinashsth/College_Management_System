@@ -51,22 +51,24 @@ class AuthController extends Controller
         if (Auth::attempt($request->only('email', 'password'))) {
             $user = Auth::user();
             
-            // Redirect based on user role
+            // Redirect based on user roles
             if ($user->roles->contains('name', 'Super Admin')) {
-                return redirect()->route('admin.dashboard'); // Change to your admin route
+                return redirect()->route('admin.dashboard');
             } elseif ($user->roles->contains('name', 'Teacher')) {
-                return redirect()->route('teacher.dashboard'); // Change to your teacher route
+                return redirect()->route('teacher.dashboard');
             } elseif ($user->roles->contains('name', 'Student')) {
-                return redirect()->route('student.dashboard'); // Change to your student route
+                return redirect()->route('student.dashboard');
             }
     
-            return redirect()->route('dashboard'); // Default route
+            // Default route if no specific role matches
+            return redirect()->route('dashboard');
         }
     
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ]);
     }
+    
     
 
     public function logout()
