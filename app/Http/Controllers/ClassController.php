@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ClassModel;
+use App\Models\Classes;
 use Illuminate\Http\Request;
 
 class ClassController extends Controller
 {
-    public static function middleware(): array 
+    public function __construct()
     {
-        return ['role:User'];
+        $this->middleware(['auth', 'permission:view classes']);
     }
 
     public function index()
     {
-        $classes = ClassModel::with('students')->paginate(10);
+        $classes = Classes::withCount('students')->paginate(10);
         return view('classes.index', compact('classes'));
     }
 
@@ -25,38 +25,50 @@ class ClassController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'class_name' => 'required|string|max:255',
-            'section' => 'nullable|string|max:50'
+            'section' => 'nullable|string|max:255',
         ]);
 
-        ClassModel::create($validated);
+        Classes::create([
+            'class_name' => $request->class_name,
+            'section' => $request->section,
+        ]);
 
         return redirect()->route('classes.index')
             ->with('success', 'Class created successfully');
     }
 
-    public function edit(ClassModel $class)
+    public function edit(Classes $class)
     {
         return view('classes.edit', compact('class'));
     }
 
-    public function update(Request $request, ClassModel $class)
+    public function update(Request $request, Classes $class)
     {
-        $validated = $request->validate([
+        $request->validate([
             'class_name' => 'required|string|max:255',
-            'section' => 'nullable|string|max:50'
+            'section' => 'nullable|string|max:255',
         ]);
 
-        $class->update($validated);
+        $class->update([
+            'class_name' => $request->class_name,
+            'section' => $request->section,
+        ]);
 
         return redirect()->route('classes.index')
             ->with('success', 'Class updated successfully');
     }
 
-    public function destroy(ClassModel $class)
+    public function destroy(Classes $class)
     {
+        if ($class->students()->count() > 0) {
+            return redirect()->route('classes.index')
+                ->with('error', 'Cannot delete class with students. Please remove students first.');
+        }
+
         $class->delete();
+
         return redirect()->route('classes.index')
             ->with('success', 'Class deleted successfully');
     }

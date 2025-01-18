@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use App\Models\Role; // Importing the Role model
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
     public function showSignupForm()
     {
-        return view('auth.signup');
+        return view('auth.register');
     }
 
     public function signup(Request $request)
@@ -25,15 +25,15 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => bcrypt($request->password),
+            'password' => Hash::make($request->password),
         ]);
 
-        // Assign default role (e.g., Student)
-        $user->roles()->attach(Role::where('name', 'Student')->first());
+        // Assign default role (e.g., student)
+        $user->assignRole('student');
 
         Auth::login($user);
 
-        return redirect()->route('login');
+        return redirect()->route('home');
     }
 
     public function showLoginForm()
@@ -43,37 +43,26 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
         ]);
-    
-        if (Auth::attempt($request->only('email', 'password'))) {
-            $user = Auth::user();
-            
-            // Redirect based on user roles
-            if ($user->roles->contains('name', 'Super Admin')) {
-                return redirect()->route('admin.dashboard');
-            } elseif ($user->roles->contains('name', 'Teacher')) {
-                return redirect()->route('teacher.dashboard');
-            } elseif ($user->roles->contains('name', 'Student')) {
-                return redirect()->route('student.dashboard');
-            }
-    
-            // Default route if no specific role matches
-            return redirect()->route('dashboard');
+
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended('dashboard');
         }
-    
+
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ]);
     }
-    
-    
 
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::logout();
-        return redirect('/login');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/');
     }
 }

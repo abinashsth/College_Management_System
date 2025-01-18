@@ -1,64 +1,63 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AccountController;
-use App\Http\Controllers\ExamController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\StudentController; 
-use App\Http\Controllers\ClassController; 
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\ClassController;
+use App\Http\Controllers\ExamController;
+use App\Http\Controllers\AccountController;
+use Illuminate\Support\Facades\Route;
 
-// Default Route
 Route::get('/', function () {
-    return view('auth.login');
+    return view('welcome');
 });
 
-// Authentication Routes
-Route::get('/signup', [AuthController::class, 'showSignupForm'])->name('signup');
-Route::post('/signup', [AuthController::class, 'signup']);
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Dashboard
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
 
+    // Student Management
+    Route::middleware(['permission:view students'])->group(function () {
+        Route::resource('students', StudentController::class);
+    });
 
-// Dashboard Route
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
-    Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+    // Class Management
+    Route::middleware(['permission:view classes'])->group(function () {
+        Route::resource('classes', ClassController::class);
+    });
+
+    // Exam Management
+    Route::middleware(['permission:manage exams'])->group(function () {
+        Route::resource('exams', ExamController::class);
+        Route::get('/student-grades', [ExamController::class, 'studentGrades'])->name('student.grades');
+    });
+
+    // Account Management
+    Route::middleware(['permission:manage accounts'])->group(function () {
+        Route::resource('accounts', AccountController::class);
+    });
+
+    // User Management
+    Route::middleware(['permission:view users'])->group(function () {
+        Route::resource('users', UserController::class);
+        Route::get('/change-password', [UserController::class, 'showChangePasswordForm'])->name('change.password.form');
+        Route::post('/change-password', [UserController::class, 'changePassword'])->name('change.password');
+    });
+
+    // Role & Permission Management
+    Route::middleware(['permission:view roles'])->group(function () {
+        Route::resource('roles', RoleController::class);
+        Route::resource('permissions', PermissionController::class);
+    });
+
+    // Profile Routes
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Role routes
-Route::resource('roles', RoleController::class);
-
-// Permission routes
-Route::resource('permissions', PermissionController::class);
-
-// User routes
-Route::resource('users', UserController::class);
-// Student Routes
-Route::resource('students', StudentController::class);
-Route::resource('classes', ClassController::class);
-
-Route::get('/admin/dashboard', [DashboardController::class, 'adminIndex'])->name('admin.dashboard')->middleware('role:Super Admin');
-Route::get('/teacher/dashboard', [DashboardController::class, 'teacherIndex'])->name('teacher.dashboard')->middleware('role:Teacher');
-Route::get('/student/dashboard', [DashboardController::class, 'studentIndex'])->name('student.dashboard')->middleware('role:Student');
-
-
-Route::get('/exam', [ExamController::class, 'index'])->name('exam.index');
-Route::get('/exam/create', [ExamController::class, 'create'])->name('exam.create');
-Route::post('/exam/store', [ExamController::class, 'store'])->name('exam.store');
-Route::get('/exam/{exam}/edit', [ExamController::class, 'edit'])->name('exam.edit');
-Route::put('/exam/{exam}/update', [ExamController::class, 'update'])->name('exam.update');
-Route::delete('/exam/{exam}/delete', [ExamController::class, 'destroy'])->name('exam.delete');
-
-Route::get('/account', [AccountController::class, 'index'])->name('account.index');
-Route::get('/account/create', [AccountController::class, 'create'])->name('account.create');
-Route::post('/account/store', [AccountController::class, 'store'])->name('account.store');
-Route::get('/account/{account}/edit', [AccountController::class, 'edit'])->name('account.edit');
-Route::get('/account/{account}/edit', [AccountController::class, 'edit'])->name('account.edit');
-Route::put('/account/{account}/update', [AccountController::class, 'update'])->name('account.update');
-Route::delete('/account/{account}/delete', [AccountController::class, 'destroy'])->name('account.delete');
+require __DIR__.'/auth.php';

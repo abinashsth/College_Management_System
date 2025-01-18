@@ -3,47 +3,60 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
-use App\Models\ClassModel;
+use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Classes;
 use Illuminate\Support\Facades\Hash;
 
 class StudentController extends Controller
 {
-    public static function middleware(): array 
+    public function __construct()
     {
-        return ['role:User'];
+        $this->middleware(['auth', 'permission:view students']);
     }
 
-   
     public function index()
     {
-        $students = Student::with('classModel')->paginate(10);
+        $students = Student::with('class')->paginate(10);
         return view('students.index', compact('students'));
     }
 
-
     public function create()
     {
-        $classes = ClassModel::all();
+        $classes = Classes::all();
         return view('students.create', compact('classes'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
-            'address' => 'required|string',
-            'contact_number' => 'required|string|max:20',
-            'dob' => 'required|date',
-            'email' => 'nullable|email|unique:students',
-            'password' => 'required|min:6',
+            'email' => 'required|string|email|max:255|unique:students',
+            'password' => 'required|string|min:8|confirmed',
+            'address' => 'nullable|string|max:255',
+            'contact_number' => 'nullable|string|max:20',
+            'dob' => 'nullable|date',
             'class_id' => 'required|exists:classes,id',
-            'status' => 'required|boolean'
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
-        
-        Student::create($validated);
+        $student = Student::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'address' => $request->address,
+            'contact_number' => $request->contact_number,
+            'dob' => $request->dob,
+            'class_id' => $request->class_id,
+            'status' => true,
+        ]);
+
+        // Create a user account for the student
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+        $user->assignRole('student');
 
         return redirect()->route('students.index')
             ->with('success', 'Student created successfully');
@@ -51,27 +64,39 @@ class StudentController extends Controller
 
     public function edit(Student $student)
     {
-        $classes = ClassModel::all();
+        $classes = Classes::all();
         return view('students.edit', compact('student', 'classes'));
     }
 
     public function update(Request $request, Student $student)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
-            'address' => 'required|string',
-            'contact_number' => 'required|string|max:20',
-            'dob' => 'required|date',
-            'email' => 'nullable|email|unique:students,email,' . $student->id,
+            'email' => 'required|string|email|max:255|unique:students,email,' . $student->id,
+            'address' => 'nullable|string|max:255',
+            'contact_number' => 'nullable|string|max:20',
+            'dob' => 'nullable|date',
             'class_id' => 'required|exists:classes,id',
-            'status' => 'required|boolean'
+            'status' => 'boolean'
         ]);
 
-        if ($request->filled('password')) {
-            $validated['password'] = Hash::make($request->password);
-        }
+        $student->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'address' => $request->address,
+            'contact_number' => $request->contact_number,
+            'dob' => $request->dob,
+            'class_id' => $request->class_id,
+            'status' => $request->status ?? false,
+        ]);
 
-        $student->update($validated);
+        // Update the corresponding user account
+        if ($user = User::where('email', $student->getOriginal('email'))->first()) {
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
+        }
 
         return redirect()->route('students.index')
             ->with('success', 'Student updated successfully');
@@ -79,7 +104,13 @@ class StudentController extends Controller
 
     public function destroy(Student $student)
     {
+        // Delete the corresponding user account
+        if ($user = User::where('email', $student->email)->first()) {
+            $user->delete();
+        }
+
         $student->delete();
+
         return redirect()->route('students.index')
             ->with('success', 'Student deleted successfully');
     }

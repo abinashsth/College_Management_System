@@ -41,7 +41,7 @@
                     <td class="border-b py-3 px-4">{{ $role->created_at->format('d m, Y') }}</td>
                     <td class="border-b py-3 px-4 flex space-x-2">
                         <a href="{{ route('roles.edit', $role->id) }}" 
-                        class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
+                           class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
                             Edit
                         </a>
                         <form action="{{ route('roles.destroy', $role->id) }}" method="POST" 

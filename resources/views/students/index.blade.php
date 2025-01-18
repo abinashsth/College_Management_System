@@ -6,7 +6,7 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Students</h1>
         <a href="{{ route('students.create') }}" class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">
-            Add New Student
+            Create Student
         </a>
     </div>
 
@@ -23,39 +23,35 @@
         <table class="w-full text-left border-collapse">
             <thead class="bg-gray-100">
                 <tr>
+                    <th class="border-b py-3 px-4">ID</th>
                     <th class="border-b py-3 px-4">Name</th>
+                    <th class="border-b py-3 px-4">Email</th>
                     <th class="border-b py-3 px-4">Class</th>
                     <th class="border-b py-3 px-4">Contact</th>
-                    <th class="border-b py-3 px-4">Email</th>
                     <th class="border-b py-3 px-4">Status</th>
                     <th class="border-b py-3 px-4">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($students as $student)
+                @forelse ($students as $student)
                 <tr class="hover:bg-gray-50">
+                    <td class="border-b py-3 px-4">{{ $student->id }}</td>
                     <td class="border-b py-3 px-4">{{ $student->name }}</td>
-                    <td class="border-b py-3 px-4">
-                        @if($student->class)
-                        {{ $student->class->class_name }} {{ $student->class->section }}
-                        @else
-                        <span class="text-gray-500 italic">No Class Assigned</span>
-                        @endif
-                    </td>
-                    <td class="border-b py-3 px-4">{{ $student->contact_number }}</td>
                     <td class="border-b py-3 px-4">{{ $student->email }}</td>
+                    <td class="border-b py-3 px-4">{{ $student->class->class_name }}</td>
+                    <td class="border-b py-3 px-4">{{ $student->contact_number }}</td>
                     <td class="border-b py-3 px-4">
-                        <span class="{{ $student->status ? 'text-green-600' : 'text-red-600' }}">
-                            {{ $student->status ? 'Enabled' : 'Disabled' }}
+                        <span class="px-2 py-1 rounded text-sm {{ $student->status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                            {{ $student->status ? 'Active' : 'Inactive' }}
                         </span>
                     </td>
                     <td class="border-b py-3 px-4 flex space-x-2">
-                        <a href="{{ route('students.edit', $student) }}" 
-                        class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                        <a href="{{ route('students.edit', $student->id) }}" 
+                           class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
                             Edit
                         </a>
-                        <form action="{{ route('students.destroy', $student) }}" method="POST" 
-                              onsubmit="return confirm('Are you sure?');" class="inline">
+                        <form action="{{ route('students.destroy', $student->id) }}" method="POST" 
+                              onsubmit="return confirm('Are you sure you want to delete this student?');" class="inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" 
@@ -65,7 +61,11 @@
                         </form>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-gray-500">No students found.</td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

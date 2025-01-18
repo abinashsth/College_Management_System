@@ -11,14 +11,14 @@ return new class extends Migration
         Schema::create('students', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->text('address');
-            $table->string('contact_number');
-            $table->date('dob');
-            $table->string('email')->nullable()->unique();
+            $table->string('address')->nullable();
+            $table->string('contact_number')->nullable();
+            $table->date('dob')->nullable();
+            $table->string('email')->unique();
             $table->string('password');
             $table->boolean('status')->default(true);
+            $table->foreignId('class_id')->nullable()->constrained('classes')->onDelete('set null');
             $table->timestamp('verified_at')->nullable();
-            $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -27,4 +27,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('students');
     }
-};
+}; 

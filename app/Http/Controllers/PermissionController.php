@@ -2,58 +2,66 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Permission; // Import the Permission model
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
 {
-    public static function middleware(): array 
+    public function __construct()
     {
-        return ['role:User'];
-    }
-    public function index()
-    {
-        $permissions = Permission::paginate(10); // Fetch paginated permissions
-        return view('permissions.index', compact('permissions')); // Return the view with permissions
+        $this->middleware(['auth', 'permission:view permissions']);
     }
 
+    public function index()
+    {
+        $permissions = Permission::paginate(10);
+        return view('permissions.index', compact('permissions'));
+    }
 
     public function create()
     {
-        return view('permissions.create'); // Return the view for creating a new permission
+        return view('permissions.create');
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:permissions|max:255',
+            'name' => 'required|string|max:255|unique:permissions',
         ]);
 
-        Permission::create($request->all()); // Save the new permission
-        return redirect()->route('permissions.index')->with('success', 'Permission created successfully.'); // Redirect with success message
+        Permission::create($request->all());
+
+        return redirect()->route('permissions.index')
+            ->with('success', 'Permission created successfully');
     }
 
-    public function edit($id)
+    public function edit(Permission $permission)
     {
-        $permission = Permission::findOrFail($id); // Find the permission by ID
-        return view('permissions.edit', compact('permission')); // Return the view for editing the permission
+        return view('permissions.edit', compact('permission'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Permission $permission)
     {
         $request->validate([
-            'name' => 'required|unique:permissions,name,' . $id . '|max:255',
+            'name' => 'required|string|max:255|unique:permissions,name,' . $permission->id,
         ]);
 
-        $permission = Permission::findOrFail($id); // Find the permission by ID
-        $permission->update($request->all()); // Update the permission
-        return redirect()->route('permissions.index')->with('success', 'Permission updated successfully.'); // Redirect with success message
+        $permission->update($request->all());
+
+        return redirect()->route('permissions.index')
+            ->with('success', 'Permission updated successfully');
     }
 
-    public function destroy($id)
+    public function destroy(Permission $permission)
     {
-        $permission = Permission::findOrFail($id); // Find the permission by ID
-        $permission->delete(); // Delete the permission
-        return redirect()->route('permissions.index')->with('success', 'Permission deleted successfully.'); // Redirect with success message
+        if ($permission->roles()->count() > 0) {
+            return redirect()->route('permissions.index')
+                ->with('error', 'Cannot delete permission that is assigned to roles');
+        }
+
+        $permission->delete();
+
+        return redirect()->route('permissions.index')
+            ->with('success', 'Permission deleted successfully');
     }
 }

@@ -3,51 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Role;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'permission:view users']);
+    }
+
     public function index()
     {
-        // Fetch users with roles, paginated (10 users per page)
         $users = User::with('roles')->paginate(10);
-        
         return view('users.index', compact('users'));
-    }
-    
-    public function edit($id)
-    {
-        $user = User::findOrFail($id); // Fetch the user by ID
-        $roles = Role::orderBy('name', 'ASC')->get();
-
-        return view('users.edit', [
-            'user' => $user,
-            'roles' => $roles
-        ]);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id',
-        ]);
-
-        $user = User::findOrFail($id);
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-        ]);
-
-        // Update roles
-        if ($request->has('roles')) {
-            $user->roles()->sync($request->roles); // Sync roles
-        }
-
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
 
     public function create()
@@ -59,68 +29,88 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|max:255',
-            'email' => 'required|email|unique:users|max:255',
-            'password' => 'required|min:6|confirmed',
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'roles' => 'required|array'
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => bcrypt($request->password),
+            'password' => Hash::make($request->password),
         ]);
 
-        if ($request->has('roles')) {
-            $user->roles()->attach($request->roles);
-        }
+        $user->assignRole($request->roles);
 
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
+        return redirect()->route('users.index')
+            ->with('success', 'User created successfully');
     }
 
-    public function destroy($id)
+    public function edit(User $user)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
-        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+        $roles = Role::all();
+        $userRoles = $user->roles->pluck('name')->toArray();
+        return view('users.edit', compact('user', 'roles', 'userRoles'));
     }
 
-    // New method to show the profile
-    public function profile()
-    {
-        $user = auth()->user(); // Get the authenticated user
-        $roles = $user->roles; // Get the roles associated with the user
-        $permissions = $user->permissions; // Get the permissions associated with the user
-        return view('users.profile', compact('user', 'roles', 'permissions'));
-    }
-
-    // New method to update the profile
-    public function updateProfile(Request $request)
+    public function update(Request $request, User $user)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . auth()->id(),
-            'password' => 'nullable|string|min:6|confirmed',
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
+            'roles' => 'required|array'
         ]);
 
-        $user = auth()->user();
-        $user->name = $request->name;
-        $user->email = $request->email;
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
 
         if ($request->filled('password')) {
-            $user->password = bcrypt($request->password);
+            $user->update(['password' => Hash::make($request->password)]);
         }
 
-        $user->save();
+        $user->syncRoles($request->roles);
 
-        // Update roles only if roles are provided
-        if ($request->has('roles')) {
-            $user->roles()->sync($request->roles); // Sync roles
+        return redirect()->route('users.index')
+            ->with('success', 'User updated successfully');
+    }
+
+    public function destroy(User $user)
+    {
+        if ($user->hasRole('super-admin')) {
+            return redirect()->route('users.index')
+                ->with('error', 'Cannot delete super-admin user');
         }
 
-        return redirect()->route('profile')->with('success', 'Profile updated successfully.');
+        $user->delete();
+
+        return redirect()->route('users.index')
+            ->with('success', 'User deleted successfully');
+    }
+
+    public function showChangePasswordForm()
+    {
+        return view('users.change-password');
+    }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', function ($attribute, $value, $fail) {
+                if (!Hash::check($value, auth()->user()->password)) {
+                    $fail('The current password is incorrect.');
+                }
+            }],
+            'password' => 'required|string|min:8|confirmed|different:current_password',
+        ]);
+
+        auth()->user()->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        return redirect()->back()->with('success', 'Password changed successfully.');
     }
 }

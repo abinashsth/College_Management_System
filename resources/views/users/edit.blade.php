@@ -2,111 +2,86 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Edit User</h1>
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Edit User</h1>
+        <a href="{{ route('users.index') }}" class="text-gray-600 hover:text-gray-800">
+            Back to Users
+        </a>
+    </div>
 
-    <!-- //crating a form to update the user details and id also\ -->
-    <form action="{{ route('users.update', $user->id) }}" method="POST">
-        @csrf
-        @method('PUT')
-        <!-- // created all the form required for update user -- name, email, password, password_confirmation, roles -->
-        <div class="mb-4">
-            <label for="name" class="block text-gray-700">Name</label>
-            <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" class="w-full border border-gray-300 px-4 py-2 rounded">
-            @error('name')
-            <span class="text-red-500">{{ $message }}</span>
-            @enderror
-        </div>
-        <!-- //continue the form for email, password, password_confirmation, roles -->
-        <div class="mb-4">
-            <label for="email" class="block text-gray-700">Email</label>
-            <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" class="w-full border border-gray-300 px-4 py-2 rounded">
-            @error('email')
-            <span class="text-red-500">{{ $message }}</span>
-            @enderror
+    <div class="bg-white rounded shadow-md max-w-3xl mx-auto p-6">
+        <form action="{{ route('users.update', $user->id) }}" method="POST">
+            @csrf
+            @method('PUT')
 
-        </div>
-        <!-- // continue the form for password, password_confirmation, roles -->
-        <div class="mb-4">
-            <label for="password" class="block text-gray-700">Password</label>
-            <input type="password" name="password" id="password" class="w-full border
-            border-gray-300 px-4 py-2 rounded">
-            @error('password')
-            <span class="text-red-500">{{ $message }}</span>
-            @enderror
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="mb-4">
+                    <label for="name" class="block text-gray-700 font-medium mb-2">Name</label>
+                    <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" required
+                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                           placeholder="Enter name">
+                    @error('name')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
+                    <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required
+                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                           placeholder="Enter email">
+                    @error('email')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
+                    <input type="password" id="password" name="password"
+                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                           placeholder="Enter new password (leave blank to keep current)">
+                    @error('password')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="password_confirmation" class="block text-gray-700 font-medium mb-2">Confirm Password</label>
+                    <input type="password" id="password_confirmation" name="password_confirmation"
+                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                           placeholder="Confirm new password">
+                </div>
             </div>
-            <!-- // continue the form for password_confirmation, roles -->
-            <div class="mb-4">
-            <label for="password_confirmation" class="block text-gray-700">Confirm Password</label>
-            <input type="password" name="password_confirmation" id="password_confirmation" class="w
-            -full border border-gray-300 px-4 py-2 rounded">
+
+            <div class="mb-6">
+                <label class="block text-gray-700 font-medium mb-2">Roles</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-md">
+                    @foreach($roles as $role)
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="roles[]" value="{{ $role->id }}"
+                               class="text-teal-600 focus:ring-teal-500 rounded"
+                               {{ in_array($role->id, old('roles', $user->roles->pluck('id')->toArray())) ? 'checked' : '' }}
+                               {{ $role->name === 'super-admin' && !$user->hasRole('super-admin') ? 'disabled' : '' }}>
+                        <span class="ml-2">{{ $role->name }}</span>
+                    </label>
+                    @endforeach
+                </div>
+                @error('roles')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
             </div>
-            <!-- // continue the form for roles -->
-            <div class="mb-4">
-            <label>Roles:</label>
-            @foreach($roles as $role)
-            <div>
-                <input type="checkbox" name="roles[]" value="{{ $role->id }}" {{ $user->roles->contains($role->id) ? 'checked' : '' }}>
-                <label>{{ $role->name }}</label>
-            </div>
-            @endforeach
-            </div>
-            <!-- // continue the form for submit button -->
-            <div class="mb-4">
-                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-whit
-                e font-bold py-2 px-4 rounded">Update User</button>
+
+            <div class="flex justify-end space-x-2">
+                <a href="{{ route('users.index') }}" 
+                   class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700">
+                    Update User
+                </button>
             </div>
         </form>
-    
-
-
-
-    <!-- <form action="{{ route('users.update', $user->id) }}" method="POST">
-        @csrf
-        @method('PUT')
-
-        <div class="mb-4">
-            <label for="name" class="block text-gray-700">Name</label>
-            <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" class="w-full border border-gray-300 px-4 py-2 rounded">
-            @error('name')
-            <span class="text-red-500">{{ $message }}</span>
-            @enderror
-        </div>
-
-        <div class="mb-4">
-            <label for="email" class="block text-gray-700">Email</label>
-            <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" class="w-full border border-gray-300 px-4 py-2 rounded">
-            @error('email')
-            <span class="text-red-500">{{ $message }}</span>
-            @enderror
-        </div>
-
-        <div class="mb-4">
-            <label for="password" class="block text-gray-700">Password</label>
-            <input type="password" name="password" id="password" class="w-full border border-gray-300 px-4 py-2 rounded">
-            @error('password')
-            <span class="text-red-500">{{ $message }}</span>
-            @enderror
-        </div>
-
-        <div class="mb-4">
-            <label for="password_confirmation" class="block text-gray-700">Confirm Password</label>
-            <input type="password" name="password_confirmation" id="password_confirmation" class="w-full border border-gray-300 px-4 py-2 rounded">
-        </div>
-
-        <div class="mb-4">
-            <label>Roles:</label>
-            @foreach($roles as $role)
-                <div>
-                    <input type="checkbox" id="role-{{ $role->id }}" name="roles[]" value="{{ $role->id }}" 
-                        {{ $user->roles->contains($role->id) ? 'checked' : '' }}>
-                    <label for="role-{{ $role->id }}">{{ $role->name }}</label>
-                </div>
-            @endforeach
-        </div>
-
-        <div class="mb-4">
-            <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">Update User</button>
-        </div>
-    </form> -->
+    </div>
 </div>
 @endsection

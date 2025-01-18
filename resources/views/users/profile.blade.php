@@ -1,7 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-@if(session('success'))
+@if(auth()->user()->permissions->contains('name', 'view profile'))
+    <h1 class="text-3xl font-semibold">User Profile</h1>
+    <p class="mt-4">Manage your profile information.</p>
+    <!-- Profile content goes here -->
+    @if(session('success'))
     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6" role="alert">
         {{ session('success') }}
     </div>
@@ -55,4 +59,7 @@
         </div>
     </form>
 </div>
+@else
+    <p>You do not have permission to view this content.</p>
+@endif
 @endsection

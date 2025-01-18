@@ -5,121 +5,114 @@
     <!-- Header Section -->
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Edit Student</h1>
-        <a href="{{ route('students.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
-            Cancel
+        <a href="{{ route('students.index') }}" class="text-gray-600 hover:text-gray-800">
+            Back to Students
         </a>
     </div>
 
-    <!-- Form Section -->
-    <div class="bg-white rounded shadow-md p-6">
-        <form method="POST" action="{{ route('students.update', $student) }}">
+    <div class="bg-white rounded shadow-md max-w-3xl mx-auto p-6">
+        <form action="{{ route('students.update', $student->id) }}" method="POST">
             @csrf
             @method('PUT')
 
-            <!-- Name -->
-            <div class="mb-4">
-                <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                <input type="text" id="name" name="name" value="{{ old('name', $student->name) }}" 
-                       class="block w-full mt-1 rounded-md shadow-sm border-blue-300 bg-blue-50 focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 bg-red-50 @enderror" 
-                       required>
-                @error('name')
-                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="mb-4">
+                    <label for="name" class="block text-gray-700 font-medium mb-2">Student Name</label>
+                    <input type="text" id="name" name="name" value="{{ old('name', $student->name) }}" required
+                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                           placeholder="Enter student name">
+                    @error('name')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
+                    <input type="email" id="email" name="email" value="{{ old('email', $student->email) }}" required
+                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                           placeholder="Enter email address">
+                    @error('email')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="class_id" class="block text-gray-700 font-medium mb-2">Class</label>
+                    <select id="class_id" name="class_id" required
+                            class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        <option value="">Select Class</option>
+                        @foreach($classes as $class)
+                            <option value="{{ $class->id }}" 
+                                {{ old('class_id', $student->class_id) == $class->id ? 'selected' : '' }}>
+                                {{ $class->class_name }} - {{ $class->section }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('class_id')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="contact_number" class="block text-gray-700 font-medium mb-2">Contact Number</label>
+                    <input type="text" id="contact_number" name="contact_number" 
+                           value="{{ old('contact_number', $student->contact_number) }}"
+                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                           placeholder="Enter contact number">
+                    @error('contact_number')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="dob" class="block text-gray-700 font-medium mb-2">Date of Birth</label>
+                    <input type="date" id="dob" name="dob" value="{{ old('dob', $student->dob) }}"
+                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    @error('dob')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="address" class="block text-gray-700 font-medium mb-2">Address</label>
+                    <textarea id="address" name="address" rows="3"
+                              class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                              placeholder="Enter address">{{ old('address', $student->address) }}</textarea>
+                    @error('address')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">Status</label>
+                    <div class="flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="status" value="1" 
+                                   {{ old('status', $student->status) ? 'checked' : '' }}
+                                   class="text-teal-600 focus:ring-teal-500">
+                            <span class="ml-2">Active</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="status" value="0" 
+                                   {{ old('status', $student->status) ? '' : 'checked' }}
+                                   class="text-teal-600 focus:ring-teal-500">
+                            <span class="ml-2">Inactive</span>
+                        </label>
+                    </div>
+                    @error('status')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
-            <!-- Class -->
-            <div class="mb-4">
-                <label for="class_id" class="block text-sm font-medium text-gray-700">Class</label>
-                <select id="class_id" name="class_id" 
-                        class="block w-full mt-1 rounded-md shadow-sm border-blue-300 bg-blue-50 focus:ring-blue-500 focus:border-blue-500 @error('class_id') border-red-500 bg-red-50 @enderror" 
-                        required>
-                    <option value="">Select Class</option>
-                    @foreach($classes as $class)
-                    <option value="{{ $class->id }}" {{ old('class_id', $student->class_id) == $class->id ? 'selected' : '' }}>
-                        {{ $class->class_name }} {{ $class->section }}
-                    </option>
-                    @endforeach
-                </select>
-                @error('class_id')
-                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Address -->
-            <div class="mb-4">
-                <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
-                <textarea id="address" name="address" 
-                          class="block w-full mt-1 rounded-md shadow-sm border-blue-300 bg-blue-50 focus:ring-blue-500 focus:border-blue-500 @error('address') border-red-500 bg-red-50 @enderror" 
-                          required>{{ old('address', $student->address) }}</textarea>
-                @error('address')
-                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Contact Number -->
-            <div class="mb-4">
-                <label for="contact_number" class="block text-sm font-medium text-gray-700">Contact Number</label>
-                <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number', $student->contact_number) }}" 
-                       class="block w-full mt-1 rounded-md shadow-sm border-blue-300 bg-blue-50 focus:ring-blue-500 focus:border-blue-500 @error('contact_number') border-red-500 bg-red-50 @enderror" 
-                       required>
-                @error('contact_number')
-                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Date of Birth -->
-            <div class="mb-4">
-                <label for="dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
-                <input type="date" id="dob" name="dob" value="{{ old('dob', $student->dob->format('Y-m-d')) }}" 
-                       class="block w-full mt-1 rounded-md shadow-sm border-blue-300 bg-blue-50 focus:ring-blue-500 focus:border-blue-500 @error('dob') border-red-500 bg-red-50 @enderror" 
-                       required>
-                @error('dob')
-                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Email -->
-            <div class="mb-4">
-                <label for="email" class="block text-sm font-medium text-gray-700">Email (Optional)</label>
-                <input type="email" id="email" name="email" value="{{ old('email', $student->email) }}" 
-                       class="block w-full mt-1 rounded-md shadow-sm border-blue-300 bg-blue-50 focus:ring-blue-500 focus:border-blue-500 @error('email') border-red-500 bg-red-50 @enderror">
-                @error('email')
-                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Password -->
-            <div class="mb-4">
-                <label for="password" class="block text-sm font-medium text-gray-700">Password (Leave blank to keep current)</label>
-                <input type="password" id="password" name="password" 
-                       class="block w-full mt-1 rounded-md shadow-sm border-blue-300 bg-blue-50 focus:ring-blue-500 focus:border-blue-500 @error('password') border-red-500 bg-red-50 @enderror">
-                @error('password')
-                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Status -->
-            <div class="mb-4">
-                <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                <select id="status" name="status" 
-                        class="block w-full mt-1 rounded-md shadow-sm border-blue-300 bg-blue-50 focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 bg-red-50 @enderror" 
-                        required>
-                    <option value="1" {{ old('status', $student->status) ? 'selected' : '' }}>Enabled</option>
-                    <option value="0" {{ old('status', $student->status) ? '' : 'selected' }}>Disabled</option>
-                </select>
-                @error('status')
-                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Buttons -->
-            <div class="flex justify-end space-x-4">
-                <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">
-                    Update Student
-                </button>
-                <a href="{{ route('students.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+            <div class="flex justify-end space-x-2 mt-6">
+                <a href="{{ route('students.index') }}" 
+                   class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
                     Cancel
                 </a>
+                <button type="submit" class="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700">
+                    Update Student
+                </button>
             </div>
         </form>
     </div>

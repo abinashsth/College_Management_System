@@ -20,6 +20,12 @@ class RoleMiddleware
             return redirect('/'); // Redirect to home or login page
         }
 
+        // Check for specific permissions
+        $permissions = auth()->user()->permissions;
+        if (!$permissions->contains('name', $role)) {
+            return redirect('/'); // Redirect if permission is not granted
+        }
+
         return $next($request);
     }
 }

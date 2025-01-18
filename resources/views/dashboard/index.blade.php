@@ -1,48 +1,148 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-white rounded-lg shadow p-6">
-                    <h1 class="text-2xl text-gray-400 mb-8">Welcome to your dashboard, Name</h1>
-
-                    <div class="space-y-8">
-                        <div class="flex items-start space-x-4">
-                            <div class="w-8 h-8 bg-[#20B2AA] rounded-sm flex items-center justify-center text-white">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 class="text-lg font-semibold">Add other account</h2>
-                                <p class="text-gray-500">Create a account of the selective roles based on the certain permission.</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-start space-x-4">
-                            <div class="w-8 h-8 bg-[#20B2AA] rounded-sm flex items-center justify-center text-white">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 class="text-lg font-semibold">Add Employees</h2>
-                                <p class="text-gray-500">Create n/m course content and coaching products for your students. When you give them a pricing plan, they'll appear on your roll</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-start space-x-4">
-                            <div class="w-8 h-8 bg-[#20B2AA] rounded-sm flex items-center justify-center text-white">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 class="text-lg font-semibold">Add students</h2>
-                                <p class="text-gray-500">Create n/m course content and coaching products for your students. When you give them a pricing plan, they'll appear on your roll</p>
-                            </div>
-                        </div>
-                    </div>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2 sidebar">
+            <div class="position-sticky">
+                <div class="user-profile mb-4 text-center">
+                    <img src="{{ Auth::user()->avatar ?? asset('images/default-avatar.png') }}" 
+                         class="rounded-circle mb-2" alt="Profile" style="width: 60px; height: 60px;">
+                    <h6 class="mb-0 text-white">{{ Auth::user()->name }}</h6>
+                    <small class="text-white-50">{{ Auth::user()->roles->pluck('name')->first() }}</small>
                 </div>
+
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}" 
+                           href="{{ route('admin.dashboard') }}">
+                            <i class="fas fa-home me-2"></i> Dashboard
+                        </a>
+                    </li>
+
+                    @can('view users')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('exam*') ? 'active' : '' }}" 
+                           href="#examSubmenu" data-bs-toggle="collapse">
+                            <i class="fas fa-file-alt me-2"></i> Exam Management
+                        </a>
+                        <div class="collapse {{ request()->is('exam*') ? 'show' : '' }}" id="examSubmenu">
+                            <ul class="nav flex-column ms-3">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('exams.index') }}">
+                                        <i class="fas fa-clipboard-list me-2"></i> Subject
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('exams.index') }}">
+                                        <i class="fas fa-pen me-2"></i> Exams
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('exams.index') }}">
+                                        <i class="fas fa-chart-bar me-2"></i> Grades
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    @endcan
+
+                    @role('super-admin')
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('change.password.form') }}">
+                            <i class="fas fa-lock me-2"></i> Change Password
+                        </a>
+                    </li>
+                    @endrole
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" 
+                           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                            <i class="fas fa-sign-out-alt me-2"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-10 ms-sm-auto px-4">
+            <div class="content-header d-flex justify-content-between align-items-center py-3">
+                <h4 class="m-0">EXAM MANAGEMENT</h4>
+                <div>
+                    <button class="btn btn-link text-dark">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <button class="btn btn-link text-dark">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area bg-white rounded shadow-sm p-4 mt-3">
+                @if(count($stats) === 0)
+                    <div class="text-center py-5">
+                        <h4 class="text-muted mb-3">No Account at this time</h4>
+                        <p class="text-muted">Account will appear here after they enroll in your account.</p>
+                    </div>
+                @else
+                    <!-- Your existing content here -->
+                @endif
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+.sidebar {
+    min-height: 100vh;
+    background-color: #37a2bc !important;
+    padding: 1.5rem 1rem;
+}
+
+.sidebar .nav-link {
+    color: white;
+    padding: 0.5rem 1rem;
+    margin: 0.2rem 0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.sidebar .nav-link.active {
+    background-color: rgba(255,255,255,0.2);
+}
+
+.content-area {
+    min-height: calc(100vh - 100px);
+}
+
+.content-header {
+    border-bottom: 1px solid #eee;
+}
+
+/* Submenu styles */
+.sidebar .collapse .nav-link {
+    padding-left: 2.5rem;
+    font-size: 0.85rem;
+}
+
+/* Remove default collapse animation */
+.collapse {
+    transition: none;
+}
+
+.collapse.show {
+    display: block;
+}
+</style>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 @endsection
