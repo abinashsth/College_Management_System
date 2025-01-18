@@ -38,7 +38,13 @@
                     <td class="border-b py-3 px-4">{{ $user->name }}</td>
                     <td class="border-b py-3 px-4">{{ $user->email }}</td>
                     <td class="border-b py-3 px-4">
-                        {{ $user->roles->pluck('name')->implode(', ') }}
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($user->roles as $role)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    {{ $role->name }}
+                                </span>
+                            @endforeach
+                        </div>
                     </td>
                     <td class="border-b py-3 px-4">{{ $user->created_at->format('d m, Y') }}</td>
                     <td class="border-b py-3 px-4 flex space-x-2">

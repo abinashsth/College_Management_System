@@ -7,7 +7,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class RoleAndPermissionSeeder extends Seeder
 {
@@ -16,6 +16,9 @@ class RoleAndPermissionSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
+        // Disable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
         // Truncate tables to avoid duplicate entries
         DB::table('role_has_permissions')->truncate();
         DB::table('model_has_roles')->truncate();
@@ -23,88 +26,112 @@ class RoleAndPermissionSeeder extends Seeder
         DB::table('roles')->truncate();
         DB::table('permissions')->truncate();
 
-        // Create permissions
+        // Enable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        // Define permissions
         $permissions = [
+            // Dashboard
             'view dashboard',
-            'view students',
-            'create students',
-            'edit students',
-            'delete students',
-            'view classes',
-            'create classes',
-            'edit classes',
-            'delete classes',
-            'manage exams',
-            'manage accounts',
-            'view users',
-            'create users',
-            'edit users',
-            'delete users',
-            'view roles',
-            'create roles',
-            'edit roles',
-            'delete roles',
-            'view permissions',
-            'create permissions',
-            'edit permissions',
-            'delete permissions'
+
+            // User Management
+            'view users', 'create users', 'edit users', 'delete users',
+
+            // Role Management
+            'view roles', 'create roles', 'edit roles', 'delete roles',
+
+            // Permission Management
+            'view permissions', 'create permissions', 'edit permissions', 'delete permissions',
+
+            // Student Management
+            'view students', 'create students', 'edit students', 'delete students',
+
+            // Class Management
+            'view classes', 'create classes', 'edit classes', 'delete classes',
+
+            // Exam Management
+            'view exams', 'create exams', 'edit exams', 'delete exams', 'grade exams',
+
+            // Account Management
+            'view accounts', 'create accounts', 'edit accounts', 'delete accounts',
+
+            // Profile
+            'view profile', 'edit profile'
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission, 'guard_name' => 'web']);
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
-        // Create roles and assign permissions
-        $superAdmin = Role::create(['name' => 'super-admin', 'guard_name' => 'web']);
-        $superAdmin->givePermissionTo(Permission::all());
+        // Define roles and their permissions
+        $roles = [
+            'super-admin' => Permission::all(),
+            'admin' => [
+                'view dashboard',
+                'view users', 'create users', 'edit users',
+                'view roles', 'create roles', 'edit roles',
+                'view students', 'create students', 'edit students',
+                'view classes', 'create classes', 'edit classes',
+                'view exams', 'create exams', 'edit exams',
+                'view accounts',
+                'view profile', 'edit profile'
+            ],
+            'teacher' => [
+                'view dashboard',
+                'view students',
+                'view classes',
+                'view exams', 'grade exams',
+                'view profile', 'edit profile'
+            ],
+            'student' => [
+                'view dashboard',
+                'view exams',
+                'view profile', 'edit profile'
+            ],
+        ];
 
-        $admin = Role::create(['name' => 'admin', 'guard_name' => 'web']);
-        $admin->givePermissionTo([
-            'view dashboard',
-            'view students',
-            'create students',
-            'edit students',
-            'view classes',
-            'create classes',
-            'edit classes',
-            'manage exams',
-            'manage accounts',
-            'view users'
-        ]);
+        foreach ($roles as $roleName => $rolePermissions) {
+            $role = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+            $role->syncPermissions($rolePermissions);
+        }
 
-        $teacher = Role::create(['name' => 'teacher', 'guard_name' => 'web']);
-        $teacher->givePermissionTo([
-            'view dashboard',
-            'view students',
-            'view classes',
-            'manage exams'
-        ]);
+        // Create users and assign roles
+        $users = [
+            [
+                'name' => 'Super Admin',
+                'email' => 'superadmin@example.com',
+                'password' => Hash::make('password123'),
+                'role' => 'super-admin'
+            ],
+            [
+                'name' => 'Admin User',
+                'email' => 'admin@example.com',
+                'password' => Hash::make('password123'),
+                'role' => 'admin'
+            ],
+            [
+                'name' => 'Teacher User',
+                'email' => 'teacher@example.com',
+                'password' => Hash::make('password123'),
+                'role' => 'teacher'
+            ],
+            [
+                'name' => 'Student User',
+                'email' => 'student@example.com',
+                'password' => Hash::make('password123'),
+                'role' => 'student'
+            ]
+        ];
 
-        // Create a super-admin user
-        $user = User::create([
-            'name' => 'Super Admin',
-            'email' => 'superadmin@example.com',
-            'password' => Hash::make('password123'),
-        ]);
+        foreach ($users as $userData) {
+            $user = User::firstOrCreate([
+                'email' => $userData['email']
+            ], [
+                'name' => $userData['name'],
+                'password' => $userData['password']
+            ]);
 
-        $user->assignRole($superAdmin);
-
-        // Create an admin user
-        $user = User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('password123'),
-        ]);
-
-        $user->assignRole($admin);
-
-        // Create a teacher user
-        $user = User::create([
-            'name' => 'Teacher User',
-            'email' => 'teacher@example.com',
-            'password' => Hash::make('password123'),
-        ]);
-
-        $user->assignRole($teacher);
+            $user->assignRole($userData['role']);
+        }
     }
-} 
+}

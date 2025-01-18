@@ -9,11 +9,7 @@ class CheckPermission
 {
     public function handle(Request $request, Closure $next, $permission)
     {
-        if (!auth()->check()) {
-            return redirect('login');
-        }
-
-        if (!auth()->user()->hasPermissionTo($permission)) {
+        if (!auth()->user()->checkPermission($permission)) {
             abort(403, 'Unauthorized action.');
         }
 

@@ -7,7 +7,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use Notifiable, HasRoles;
+    use HasRoles, Notifiable;
 
     protected $fillable = [
         'name',
@@ -23,4 +23,16 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Check if user has permission through role or is super-admin
+     */
+    public function checkPermission($permission): bool
+    {
+        if ($this->hasRole('super-admin')) {
+            return true;
+        }
+
+        return $this->hasPermissionTo($permission);
+    }
 }

@@ -11,7 +11,7 @@ use App\Http\Controllers\AccountController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -31,13 +31,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Exam Management
-    Route::middleware(['permission:manage exams'])->group(function () {
+    Route::middleware(['permission:view exams'])->group(function () {
         Route::resource('exams', ExamController::class);
         Route::get('/student-grades', [ExamController::class, 'studentGrades'])->name('student.grades');
     });
 
     // Account Management
-    Route::middleware(['permission:manage accounts'])->group(function () {
+    Route::middleware(['permission:view accounts'])->group(function () {
         Route::resource('accounts', AccountController::class);
     });
 
@@ -48,9 +48,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/change-password', [UserController::class, 'changePassword'])->name('change.password');
     });
 
-    // Role & Permission Management
+    // Role Management
     Route::middleware(['permission:view roles'])->group(function () {
         Route::resource('roles', RoleController::class);
+    });
+
+    // Permission Management
+    Route::middleware(['permission:view permissions'])->group(function () {
         Route::resource('permissions', PermissionController::class);
     });
 

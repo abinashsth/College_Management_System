@@ -11,7 +11,10 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'permission:view users']);
+        $this->middleware('permission:view users', ['only' => ['index', 'show']]);
+        $this->middleware('permission:create users', ['only' => ['create', 'store']]);
+        $this->middleware('permission:edit users', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:delete users', ['only' => ['destroy']]);
     }
 
     public function index()
@@ -22,7 +25,8 @@ class UserController extends Controller
 
     public function create()
     {
-        $roles = Role::all();
+        $roles = Role::whereNotIn('name', ['super-admin'])->get();
+        \Log::info('Available roles: ' . $roles->pluck('name'));
         return view('users.create', compact('roles'));
     }
 
@@ -32,24 +36,38 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'roles' => 'required|array'
+            'roles' => 'required|array',
+            'roles.*' => 'exists:roles,name'
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        \DB::beginTransaction();
 
-        $user->assignRole($request->roles);
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
 
-        return redirect()->route('users.index')
-            ->with('success', 'User created successfully');
+            // Assign multiple roles
+            $roles = Role::whereIn('name', $request->roles)->get();
+            $user->syncRoles($roles);
+
+            \DB::commit();
+
+            return redirect()->route('users.index')
+                ->with('success', 'User created successfully with roles: ' . $roles->pluck('name')->implode(', '));
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error creating user: ' . $e->getMessage());
+            return back()->withInput()
+                ->with('error', 'Error creating user: ' . $e->getMessage());
+        }
     }
 
     public function edit(User $user)
     {
-        $roles = Role::all();
+        $roles = Role::whereNotIn('name', ['super-admin'])->get();
         $userRoles = $user->roles->pluck('name')->toArray();
         return view('users.edit', compact('user', 'roles', 'userRoles'));
     }
@@ -59,23 +77,41 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'roles' => 'required|array',
+            'roles.*' => 'exists:roles,name',
             'password' => 'nullable|string|min:8|confirmed',
-            'roles' => 'required|array'
         ]);
 
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-        ]);
+        \DB::beginTransaction();
 
-        if ($request->filled('password')) {
-            $user->update(['password' => Hash::make($request->password)]);
+        try {
+            // Update basic info
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
+
+            // Update password if provided
+            if ($request->filled('password')) {
+                $user->update([
+                    'password' => Hash::make($request->password)
+                ]);
+            }
+
+            // Sync roles
+            $roles = Role::whereIn('name', $request->roles)->get();
+            $user->syncRoles($roles);
+
+            \DB::commit();
+
+            return redirect()->route('users.index')
+                ->with('success', 'User updated successfully with roles: ' . $roles->pluck('name')->implode(', '));
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error updating user: ' . $e->getMessage());
+            return back()->withInput()
+                ->with('error', 'Error updating user: ' . $e->getMessage());
         }
-
-        $user->syncRoles($request->roles);
-
-        return redirect()->route('users.index')
-            ->with('success', 'User updated successfully');
     }
 
     public function destroy(User $user)

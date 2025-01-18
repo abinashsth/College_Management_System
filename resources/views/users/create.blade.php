@@ -1,85 +1,129 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <!-- Header Section -->
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Create User</h1>
-        <a href="{{ route('users.index') }}" class="text-gray-600 hover:text-gray-800">
-            Back to Users
-        </a>
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h3 class="text-2xl font-bold text-gray-900">Create New User</h3>
+        <p class="mt-1 text-sm text-gray-600">
+            Add a new user and assign their roles.
+        </p>
     </div>
 
-    <div class="bg-white rounded shadow-md max-w-3xl mx-auto p-6">
-        <form action="{{ route('users.store') }}" method="POST">
+    <!-- Form -->
+    <div class="bg-white shadow rounded-lg">
+        <form method="POST" action="{{ route('users.store') }}">
             @csrf
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="mb-4">
-                    <label for="name" class="block text-gray-700 font-medium mb-2">Name</label>
-                    <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                           placeholder="Enter name">
-                    @error('name')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="mb-4">
-                    <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email') }}" required
-                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                           placeholder="Enter email">
-                    @error('email')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="mb-4">
-                    <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
-                    <input type="password" id="password" name="password" required
-                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                           placeholder="Enter password">
-                    @error('password')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="mb-4">
-                    <label for="password_confirmation" class="block text-gray-700 font-medium mb-2">Confirm Password</label>
-                    <input type="password" id="password_confirmation" name="password_confirmation" required
-                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                           placeholder="Confirm password">
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-gray-700 font-medium mb-2">Roles</label>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-md">
-                    @foreach($roles as $role)
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" name="roles[]" value="{{ $role->id }}"
-                               class="text-teal-600 focus:ring-teal-500 rounded"
-                               {{ in_array($role->id, old('roles', [])) ? 'checked' : '' }}>
-                        <span class="ml-2">{{ $role->name }}</span>
+            
+            <!-- Form Fields -->
+            <div class="p-6 space-y-6">
+                <!-- Name -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">
+                        Full Name
                     </label>
-                    @endforeach
+                    <input type="text" name="name" id="name" 
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('name') border-red-500 @enderror"
+                        value="{{ old('name') }}" required>
+                    @error('name')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
-                @error('roles')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">
+                        Email Address
+                    </label>
+                    <input type="email" name="email" id="email" 
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('email') border-red-500 @enderror"
+                        value="{{ old('email') }}" required>
+                    @error('email')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Password -->
+                <div class="space-y-4">
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">
+                            Password
+                        </label>
+                        <input type="password" name="password" id="password" 
+                            class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('password') border-red-500 @enderror"
+                            required>
+                        @error('password')
+                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="password_confirmation" class="block text-sm font-medium text-gray-700">
+                            Confirm Password
+                        </label>
+                        <input type="password" name="password_confirmation" id="password_confirmation" 
+                            class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                            required>
+                    </div>
+                </div>
+
+                <!-- Roles -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Assign Roles
+                    </label>
+                    <div class="bg-gray-50 p-4 rounded-md grid grid-cols-2 gap-4">
+                        @foreach($roles as $role)
+                            <div class="flex items-center">
+                                <input type="checkbox" 
+                                    name="roles[]" 
+                                    value="{{ $role->name }}"
+                                    id="role_{{ $role->id }}"
+                                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    {{ in_array($role->name, old('roles', [])) ? 'checked' : '' }}>
+                                <label for="role_{{ $role->id }}" 
+                                    class="ml-2 block text-sm text-gray-900">
+                                    {{ ucfirst($role->name) }}
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                    @error('roles')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
-            <div class="flex justify-end space-x-2">
+            <!-- Form Actions -->
+            <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end space-x-3">
                 <a href="{{ route('users.index') }}" 
-                   class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Cancel
                 </a>
-                <button type="submit" class="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700">
+                <button type="submit"
+                    class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Create User
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+@if(session('success'))
+    <div class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg" 
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => show = false, 3000)">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg"
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => show = false, 3000)">
+        {{ session('error') }}
+    </div>
+@endif
 @endsection

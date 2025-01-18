@@ -33,7 +33,10 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('home');
+        // Add session flash message
+        session()->flash('status', 'Registration successful! Please log in.');
+
+        return redirect()->route('login'); // Redirect to login page
     }
 
     public function showLoginForm()

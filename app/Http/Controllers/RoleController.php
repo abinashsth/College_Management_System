@@ -10,12 +10,15 @@ class RoleController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'permission:view roles']);
+        $this->middleware('permission:view roles', ['only' => ['index']]);
+        $this->middleware('permission:create roles', ['only' => ['create', 'store']]);
+        $this->middleware('permission:edit roles', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:delete roles', ['only' => ['destroy']]);
     }
 
     public function index()
     {
-        $roles = Role::withCount('permissions')->paginate(10);
+        $roles = Role::whereNotIn('name', ['super-admin'])->paginate(10);
         return view('roles.index', compact('roles'));
     }
 
@@ -28,50 +31,86 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:roles',
+            'name' => 'required|unique:roles,name',
             'permissions' => 'required|array',
-            'permissions.*' => 'exists:permissions,id',
+            'permissions.*' => 'exists:permissions,name'
         ]);
 
-        $role = Role::create(['name' => $request->name]);
-        $role->syncPermissions($request->permissions);
+        try {
+            $role = Role::create([
+                'name' => $request->name,
+                'guard_name' => 'web'
+            ]);
 
-        return redirect()->route('roles.index')
-            ->with('success', 'Role created successfully');
+            $permissions = Permission::whereIn('name', $request->permissions)->get();
+            
+            $role->syncPermissions($permissions);
+
+            return redirect()->route('roles.index')
+                ->with('success', 'Role created successfully');
+        } catch (\Exception $e) {
+            return back()->withInput()
+                ->with('error', 'Error creating role: ' . $e->getMessage());
+        }
     }
 
     public function edit(Role $role)
     {
+        if ($role->name === 'super-admin') {
+            abort(403);
+        }
+        
         $permissions = Permission::all();
         $rolePermissions = $role->permissions->pluck('name')->toArray();
+        
         return view('roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
     public function update(Request $request, Role $role)
     {
+        if ($role->name === 'super-admin') {
+            abort(403);
+        }
+
         $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'name' => 'required|unique:roles,name,' . $role->id,
             'permissions' => 'required|array',
-            'permissions.*' => 'exists:permissions,id',
+            'permissions.*' => 'exists:permissions,name'
         ]);
 
-        $role->update(['name' => $request->name]);
-        $role->syncPermissions($request->permissions);
+        try {
+            $role->update(['name' => $request->name]);
+            
+            $permissions = Permission::whereIn('name', $request->permissions)->get();
+            
+            $role->syncPermissions($permissions);
 
-        return redirect()->route('roles.index')
-            ->with('success', 'Role updated successfully');
+            return redirect()->route('roles.index')
+                ->with('success', 'Role updated successfully');
+        } catch (\Exception $e) {
+            return back()->withInput()
+                ->with('error', 'Error updating role: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Role $role)
     {
-        if($role->name === 'super-admin') {
-            return redirect()->route('roles.index')
-                ->with('error', 'Cannot delete super-admin role');
+        if ($role->name === 'super-admin') {
+            abort(403);
         }
 
         $role->delete();
 
         return redirect()->route('roles.index')
             ->with('success', 'Role deleted successfully');
+    }
+
+    public function show(Role $role)
+    {
+        if ($role->name === 'super-admin') {
+            abort(403);
+        }
+        
+        return view('roles.show', compact('role'));
     }
 }

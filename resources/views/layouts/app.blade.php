@@ -60,13 +60,17 @@
             </div>
 
             <!-- Navigation -->
+            @php
+                $user = Auth::user();
+            @endphp
+
             <nav class="flex-1 mt-6">
                 <a href="{{ route('dashboard') }}" class="sidebar-item">
                     <i class="fas fa-home sidebar-icon"></i>
                     Dashboard
                 </a>
 
-                @can('view students')
+                @if($user->hasRole('super-admin') || $user->checkPermission('view students'))
                     <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('studentManagement')">
                         <i class="fas fa-user-graduate sidebar-icon"></i>
                         Students
@@ -76,9 +80,9 @@
                         <a href="{{ route('students.index') }}" class="sidebar-item">All Students</a>
                         <a href="{{ route('students.create') }}" class="sidebar-item">Add Student</a>
                     </div>
-                @endcan
+                @endif
 
-                @can('view classes')
+                @if($user->hasRole('super-admin') || $user->checkPermission('view classes'))
                     <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('classManagement')">
                         <i class="fas fa-chalkboard sidebar-icon"></i>
                         Class
@@ -88,9 +92,9 @@
                         <a href="{{ route('classes.index') }}" class="sidebar-item">All Classes</a>
                         <a href="{{ route('classes.create') }}" class="sidebar-item">Add Class</a>
                     </div>
-                @endcan
+                @endif
 
-                @can('manage exams')
+                @if($user->hasRole('super-admin') || $user->checkPermission('view exams'))
                     <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('examManagement')">
                         <i class="fas fa-file-alt sidebar-icon"></i>
                         Exam
@@ -101,9 +105,9 @@
                         <a href="{{ route('exams.create') }}" class="sidebar-item">Create Exam</a>
                         <a href="{{ route('student.grades') }}" class="sidebar-item">Results</a>
                     </div>
-                @endcan
+                @endif
 
-                @can('manage accounts')
+                @if($user->hasRole('super-admin') || $user->checkPermission('view accounts'))
                     <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('accountManagement')">
                         <i class="fas fa-coins sidebar-icon"></i>
                         Account
@@ -112,9 +116,9 @@
                     <div id="accountManagement" class="hidden pl-8">
                         <a href="{{ route('accounts.index') }}" class="sidebar-item">Settings</a>
                     </div>
-                @endcan
+                @endif
 
-                @can('view users')
+                @if($user->hasRole('super-admin') || $user->checkPermission('view users'))
                     <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('userManagement')">
                         <i class="fas fa-users sidebar-icon"></i>
                         User management
@@ -125,7 +129,7 @@
                         <a href="{{ route('roles.index') }}" class="sidebar-item">Roles</a>
                         <a href="{{ route('users.index') }}" class="sidebar-item">Users</a>
                     </div>
-                @endcan
+                @endif
 
                 @role('super-admin')
                 <a href="{{ route('change.password.form') }}" class="sidebar-item">

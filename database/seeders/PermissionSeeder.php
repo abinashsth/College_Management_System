@@ -49,12 +49,14 @@ class PermissionSeeder extends Seeder
             'edit exams',
             'delete exams',
             'grade exams',
+            'manage exams',
             
             // Account Management
             'view accounts',
             'create accounts',
             'edit accounts',
             'delete accounts',
+            'manage accounts',
             
             // Profile
             'view profile',
@@ -62,7 +64,7 @@ class PermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
     }
 } 
