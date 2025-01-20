@@ -4,166 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
-    <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f5f5f5;
-        }
-
-        .register-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .register-title {
-            font-size: 1.5rem;
-            color: #333;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        .welcome-text {
-            color: #666;
-            margin-bottom: 2rem;
-            font-size: 0.9rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-            text-align: left;
-        }
-
-        .error-message {
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .form-input.is-invalid {
-            border-color: #dc3545;
-        }
-
-        .register-button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            margin-top: 1rem;
-        }
-
-        .register-button:hover {
-            background-color: #1976D2;
-        }
-
-        .login-text {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        .login-link {
-            color: #2196F3;
-            text-decoration: none;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="register-container">
-        <h1 class="register-title">Welcome, Create your account</h1>
-        <p class="welcome-text">It is our great pleasure to have you join us!</p>
-        
-        <form method="POST" action="{{ route('register') }}">
-            @csrf
-            
-            <div class="form-group">
-                <x-input-error :messages="$errors->get('name')" class="error-message" />
-                <x-text-input 
-                    id="name"
-                    name="name"
-                    type="text"
-                    class="form-input"
-                    :value="old('name')"
-                    required
-                    autofocus
-                    autocomplete="name"
-                    placeholder="Enter your name"
-                />
+<body class="bg-gray-100">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Create Account</h1>
+                <p class="text-gray-600">It is our great pleasure to have you join us!</p>
             </div>
 
-            <div class="form-group">
-                <x-input-error :messages="$errors->get('email')" class="error-message" />
-                <x-text-input 
-                    id="email"
-                    name="email"
-                    type="email"
-                    class="form-input"
-                    :value="old('email')"
-                    required
-                    autocomplete="username"
-                    placeholder="Enter your email"
-                />
-            </div>
+            <form method="POST" action="{{ url('/register') }}" class="space-y-6">
+                @csrf
 
-            <div class="form-group">
-                <x-input-error :messages="$errors->get('password')" class="error-message" />
-                <x-text-input 
-                    id="password"
-                    name="password"
-                    type="password"
-                    class="form-input"
-                    required
-                    autocomplete="new-password"
-                    placeholder="Enter password"
-                />
-            </div>
+                <!-- Name Input -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input 
+                        id="name" 
+                        type="text" 
+                        name="name" 
+                        value="{{ old('name') }}"
+                        class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors @error('name') border-red-500 @enderror"
+                        required 
+                        autofocus 
+                        autocomplete="name" 
+                        placeholder="Enter your full name"
+                    />
+                    @error('name')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
 
-            <div class="form-group">
-                <x-input-error :messages="$errors->get('password_confirmation')" class="error-message" />
-                <x-text-input 
-                    id="password_confirmation"
-                    name="password_confirmation"
-                    type="password"
-                    class="form-input"
-                    required
-                    autocomplete="new-password"
-                    placeholder="Confirm password"
-                />
-            </div>
+                <!-- Email Input -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input 
+                        id="email" 
+                        type="email" 
+                        name="email" 
+                        value="{{ old('email') }}"
+                        class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors @error('email') border-red-500 @enderror"
+                        required 
+                        autocomplete="email" 
+                        placeholder="Enter your email"
+                    />
+                    @error('email')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
 
-            <x-primary-button class="register-button">
-                {{ __('Register') }}
-            </x-primary-button>
+                <!-- Password Input -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input 
+                        id="password" 
+                        type="password" 
+                        name="password" 
+                        class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors @error('password') border-red-500 @enderror"
+                        required 
+                        autocomplete="new-password" 
+                        placeholder="Enter password"
+                    />
+                    @error('password')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
 
-            <p class="login-text">
-                Already have an account? 
-                <a class="login-link" href="{{ route('login') }}">
-                    {{ __('Login here') }}
-                </a>
-            </p>
-        </form>
+                <!-- Confirm Password Input -->
+                <div>
+                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <input 
+                        id="password_confirmation" 
+                        type="password" 
+                        name="password_confirmation" 
+                        class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required 
+                        autocomplete="new-password" 
+                        placeholder="Confirm your password"
+                    />
+                </div>
+
+                <!-- Register Button -->
+                <button 
+                    type="submit" 
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                    Register
+                </button>
+
+                <!-- Login Link -->
+                <p class="text-center text-sm text-gray-600">
+                    Already have an account? 
+                    <a href="{{ url('/login') }}" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+                        Login here
+                    </a>
+                </p>
+            </form>
+        </div>
     </div>
 </body>
 </html>

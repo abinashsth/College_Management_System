@@ -43,7 +43,8 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
+        // Remove automatic login
+        // Auth::login($user);
 
         // Add session flash message
         session()->flash('status', 'Registration successful! Please log in.');

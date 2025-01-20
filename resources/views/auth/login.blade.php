@@ -3,141 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
-    <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f5f5f5;
-        }
-
-        .login-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .login-title {
-            font-size: 1.5rem;
-            color: #333;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        .welcome-text {
-            color: #666;
-            margin-bottom: 2rem;
-            font-size: 0.9rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-            text-align: left;
-        }
-
-        .error-message {
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .form-input.is-invalid {
-            border-color: #dc3545;
-        }
-
-        .login-button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .login-button:hover {
-            background-color: #1976D2;
-        }
-
-        .signup-text {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        .signup-link {
-            color: #2196F3;
-            text-decoration: none;
-        }
-
-        /* Status message styling */
-        .status-message {
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            border-radius: 4px;
-            background-color: #e3f2fd;
-            color: #0d47a1;
-        }
-    </style>
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="login-container">
-        <h1 class="login-title">Welcome, Log into your account</h1>
-        <p class="welcome-text">It is our great pleasure to have you on board!</p>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+            <!-- Success Message -->
+            @if (session('status'))
+                <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
+                    {{ session('status') }}
+                </div>
+            @endif
 
-        <!-- Session Status -->
-        <x-auth-session-status class="status-message" :status="session('status')" />
-        
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-            
-            <div class="form-group">
-                <x-input-error :messages="$errors->get('email')" class="error-message" />
-                <input 
-                    type="email" 
-                    name="email" 
-                    placeholder="Enter the name" 
-                    class="form-input {{ $errors->has('email') ? 'is-invalid' : '' }}"
-                    value="{{ old('email') }}"
-                    required
-                >
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">Welcome Back</h1>
+                <p class="text-gray-600">It is our great pleasure to have you on board!</p>
             </div>
 
-            <div class="form-group">
-                <x-input-error :messages="$errors->get('password')" class="error-message" />
-                <input 
-                    type="password" 
-                    name="password" 
-                    placeholder="Enter Password" 
-                    class="form-input {{ $errors->has('password') ? 'is-invalid' : '' }}"
-                    required
+            <form method="POST" action="{{ url('/login') }}" class="space-y-6">
+                @csrf
+
+                <!-- Email Input -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input 
+                        id="email" 
+                        type="email" 
+                        name="email" 
+                        value="{{ old('email') }}"
+                        class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors @error('email') border-red-500 @enderror"
+                        required 
+                        autofocus 
+                        autocomplete="email" 
+                        placeholder="Enter your email"
+                    />
+                    @error('email')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Password Input -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input 
+                        id="password" 
+                        type="password" 
+                        name="password" 
+                        class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors @error('password') border-red-500 @enderror"
+                        required 
+                        autocomplete="current-password" 
+                        placeholder="Enter your password"
+                    />
+                    @error('password')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Login Button -->
+                <button 
+                    type="submit" 
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 >
-            </div>
+                    Login
+                </button>
 
-            <button type="submit" class="login-button">Login</button>
-        </form>
-
-        <p class="signup-text">
-            If you don't have an account? <a href="{{ route('register') }}" class="signup-link">Sign up</a>
-        </p>
+                <!-- Sign up Link -->
+                <p class="text-center text-sm text-gray-600">
+                    If you don't have an account? 
+                    <a href="{{ url('/register') }}" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+                        Sign up
+                    </a>
+                </p>
+            </form>
+        </div>
     </div>
 </body>
 </html>
