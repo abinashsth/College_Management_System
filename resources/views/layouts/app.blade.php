@@ -94,16 +94,39 @@
                     </div>
                 @endif
 
-                @if($user->hasRole('super-admin') || $user->checkPermission('view exams'))
+                @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->checkPermission('view exams'))
                     <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('examManagement')">
                         <i class="fas fa-file-alt sidebar-icon"></i>
-                        Exam
+                        Exam Management
                         <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
                     </div>
                     <div id="examManagement" class="hidden pl-8">
-                        <a href="{{ route('exams.index') }}" class="sidebar-item">All Exams</a>
-                        <a href="{{ route('exams.create') }}" class="sidebar-item">Create Exam</a>
-                        <a href="{{ route('student.grades') }}" class="sidebar-item">Results</a>
+                        @if($user->hasRole('examiner') || $user->hasRole('super-admin') || $user->hasRole('admin'))
+                            <a href="{{ route('subjects.index') }}" class="sidebar-item">Subjects</a>
+                            <a href="{{ route('class.add-subjects.form') }}" class="sidebar-item">Add Subjects to Class</a>
+                            <a href="{{ route('marks.add.form') }}" class="sidebar-item">Add Marks</a>
+                        @endif
+                    </div>
+                @endif
+
+                @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->hasRole('examiner') || $user->checkPermission('view results'))
+                    <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('resultManagement')">
+                        <i class="fas fa-chart-bar sidebar-icon"></i>
+                        Result Management
+                        <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+                    </div>
+                    <div id="resultManagement" class="hidden pl-8">
+                        @if($user->hasRole('super-admin') || $user->hasRole('admin'))
+                            <a href="{{ route('marksheet.class', ['classId' => 'all']) }}" class="sidebar-item">All Class Results</a>
+                        @endif
+                        
+                        @if($user->hasRole('examiner'))
+                            <a href="{{ route('marksheet.class', ['classId' => Auth::user()->class_id]) }}" class="sidebar-item">My Class Results</a>
+                        @endif
+                        
+                        @if($user->hasRole('student'))
+                            <a href="{{ route('marksheet.student', ['studentId' => Auth::id()]) }}" class="sidebar-item">View My Results</a>
+                        @endif
                     </div>
                 @endif
 

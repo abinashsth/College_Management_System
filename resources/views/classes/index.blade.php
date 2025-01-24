@@ -1,71 +1,111 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <!-- Header Section -->
+<div class="container mx-auto px-6 py-8">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Classes</h1>
-        <a href="{{ route('classes.create') }}" class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">
-            Create Class
+        <h2 class="text-2xl font-semibold text-gray-700">Classes</h2>
+        <a href="{{ route('classes.create') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Add New Class
         </a>
     </div>
 
-    <!-- Success Message -->
-    @if (session('success'))
-    <div id="success-alert" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6" role="alert">
-        <span class="block sm:inline">{{ session('success') }}</span>
-        <button type="button" class="float-right text-green-700" onclick="this.parentElement.remove();">&times;</button>
-    </div>
+    @if(session('success'))
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6">
+            {{ session('success') }}
+        </div>
     @endif
 
-    <!-- Classes Table -->
-    <div class="overflow-x-auto bg-white rounded shadow-md">
-        <table class="w-full text-left border-collapse">
-            <thead class="bg-gray-100">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
                 <tr>
-                    <th class="border-b py-3 px-4">ID</th>
-                    <th class="border-b py-3 px-4">Class Name</th>
-                    <th class="border-b py-3 px-4">Section</th>
-                    <th class="border-b py-3 px-4">Total Students</th>
-                    <th class="border-b py-3 px-4">Created At</th>
-                    <th class="border-b py-3 px-4">Actions</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Class Name
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Section
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Total Students
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Total Exams
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created At
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
                 </tr>
             </thead>
-            <tbody>
-                @forelse ($classes as $class)
-                <tr class="hover:bg-gray-50">
-                    <td class="border-b py-3 px-4">{{ $class->id }}</td>
-                    <td class="border-b py-3 px-4">{{ $class->class_name }}</td>
-                    <td class="border-b py-3 px-4">{{ $class->section }}</td>
-                    <td class="border-b py-3 px-4">{{ $class->students_count }}</td>
-                    <td class="border-b py-3 px-4">{{ $class->created_at->format('d m, Y') }}</td>
-                    <td class="border-b py-3 px-4 flex space-x-2">
-                        <a href="{{ route('classes.edit', $class->id) }}" 
-                           class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
-                            Edit
-                        </a>
-                        <form action="{{ route('classes.destroy', $class->id) }}" method="POST" 
-                              onsubmit="return confirm('Are you sure you want to delete this class?');" class="inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" 
-                                    class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                                Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @forelse($classes as $class)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ $class->class_name }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ $class->section }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $class->students_count ?? 0 }} students
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $class->exams_count ?? 0 }} exams
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $class->created_at->format('M d, Y') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end items-center space-x-3">
+                                <a href="{{ route('reports.class', $class->id) }}" 
+                                   class="text-gray-600 hover:text-gray-900"
+                                   title="View Report">
+                                    <i class="fas fa-chart-bar"></i>
+                                </a>
+                                <a href="#" 
+                                   class="text-gray-600 hover:text-gray-900"
+                                   title="View Students">
+                                    <i class="fas fa-users"></i>
+                                </a>
+                                <a href="{{ route('classes.edit', $class->id) }}" 
+                                   class="text-blue-500 hover:text-blue-700"
+                                   title="Edit Class">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('classes.destroy', $class->id) }}" 
+                                      method="POST" 
+                                      class="inline"
+                                      onsubmit="return confirm('Are you sure you want to delete this class?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            class="text-red-500 hover:text-red-700"
+                                            title="Delete Class">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
                 @empty
-                <tr>
-                    <td colspan="6" class="text-center py-4 text-gray-500">No classes found.</td>
-                </tr>
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            No classes found. 
+                            <a href="{{ route('classes.create') }}" class="text-blue-500 hover:text-blue-700">
+                                Create your first class
+                            </a>
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    <!-- Pagination Links -->
-    <div class="mt-4">
+    <div class="mt-6">
         {{ $classes->links() }}
     </div>
 </div>

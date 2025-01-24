@@ -1,72 +1,116 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div class="container mx-auto px-6 py-8">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Roles Management</h2>
+        <h2 class="text-2xl font-semibold text-gray-700">Roles</h2>
         @can('create roles')
-        <a href="{{ route('roles.create') }}" 
-           class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Create New Role
+        <a href="{{ route('roles.create') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Add New Role
         </a>
         @endcan
     </div>
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+    @if(session('success'))
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permissions</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Guard Name
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Permissions
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Users
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($roles as $role)
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">{{ $role->name }}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex flex-wrap gap-2">
-                            @foreach($role->permissions as $permission)
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                {{ $permission->name }}
+                @forelse($roles as $role)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ $role->name }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ $role->guard_name }}
                             </span>
-                            @endforeach
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex items-center space-x-3">
-                            <a href="{{ route('roles.show', $role) }}" 
-                               class="text-indigo-600 hover:text-indigo-900">View</a>
-                            @can('edit roles')
-                            <a href="{{ route('roles.edit', $role) }}" 
-                               class="text-blue-600 hover:text-blue-900">Edit</a>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1">
+                                @foreach($role->permissions as $permission)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ $permission->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $role->users_count ?? 0 }} users
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end items-center space-x-3">
+                                <a href="{{ route('roles.show', $role) }}" 
+                                   class="text-gray-600 hover:text-gray-900"
+                                   title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                @can('edit roles')
+                                <a href="{{ route('roles.edit', $role) }}" 
+                                   class="text-blue-500 hover:text-blue-700"
+                                   title="Edit Role">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                @endcan
+                                @can('delete roles')
+                                @if(!$role->is_default)
+                                <form action="{{ route('roles.destroy', $role) }}" 
+                                      method="POST" 
+                                      class="inline"
+                                      onsubmit="return confirm('Are you sure you want to delete this role? This action cannot be undone.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            class="text-red-500 hover:text-red-700"
+                                            title="Delete Role">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                @endif
+                                @endcan
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                            No roles found. 
+                            @can('create roles')
+                            <a href="{{ route('roles.create') }}" class="text-blue-500 hover:text-blue-700">
+                                Create your first role
+                            </a>
                             @endcan
-                            @can('delete roles')
-                            <form action="{{ route('roles.destroy', $role) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" 
-                                        onclick="return confirm('Are you sure you want to delete this role?')"
-                                        class="text-red-600 hover:text-red-900">
-                                    Delete
-                                </button>
-                            </form>
-                            @endcan
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
 
-    <div class="mt-4">
+    <div class="mt-6">
         {{ $roles->links() }}
     </div>
 </div>

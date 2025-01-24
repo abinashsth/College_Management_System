@@ -11,11 +11,21 @@ class Classes extends Model
 
     protected $fillable = [
         'class_name',
-        'section'
+        'section',
+        'is_active'
     ];
 
     public function students()
     {
         return $this->hasMany(Student::class, 'class_id');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($model) {
+            $model->is_active = $model->is_active ?? true;
+        });
     }
 } 

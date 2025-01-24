@@ -26,40 +26,61 @@ class UserController extends Controller
     public function create()
     {
         $roles = Role::whereNotIn('name', ['super-admin'])->get();
-        \Log::info('Available roles: ' . $roles->pluck('name'));
+        \Log::info('Available roles for user creation:', [
+            'count' => $roles->count(),
+            'roles' => $roles->map(function($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name
+                ];
+            })
+        ]);
         return view('users.create', compact('roles'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        \Log::info('Creating new user with data:', $request->all());
+
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'roles' => 'required|array',
-            'roles.*' => 'exists:roles,name'
+            'roles.*' => 'exists:roles,id'
         ]);
 
+        \Log::info('Validation passed');
         \DB::beginTransaction();
 
         try {
+            \Log::info('Creating user record');
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
             ]);
+            \Log::info('User record created:', ['user_id' => $user->id]);
 
-            // Assign multiple roles
-            $roles = Role::whereIn('name', $request->roles)->get();
+            if ($request->hasFile('profile_photo')) {
+                \Log::info('Processing profile photo');
+                $user->updateProfilePhoto($request->file('profile_photo'));
+            }
+
+            \Log::info('Assigning roles:', ['roles' => $request->roles]);
+            $roles = Role::whereIn('id', $request->roles)->get();
+            \Log::info('Found roles:', ['role_count' => $roles->count(), 'roles' => $roles->pluck('name')]);
             $user->syncRoles($roles);
 
             \DB::commit();
+            \Log::info('User created successfully');
 
             return redirect()->route('users.index')
-                ->with('success', 'User created successfully with roles: ' . $roles->pluck('name')->implode(', '));
+                ->with('success', 'User created successfully.');
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Error creating user: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
             return back()->withInput()
                 ->with('error', 'Error creating user: ' . $e->getMessage());
         }
@@ -78,8 +99,9 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'roles' => 'required|array',
-            'roles.*' => 'exists:roles,name',
+            'roles.*' => 'exists:roles,id',
             'password' => 'nullable|string|min:8|confirmed',
+            'profile_photo' => 'nullable|image|max:1024'
         ]);
 
         \DB::beginTransaction();
@@ -98,14 +120,19 @@ class UserController extends Controller
                 ]);
             }
 
-            // Sync roles
-            $roles = Role::whereIn('name', $request->roles)->get();
+            // Update profile photo if provided
+            if ($request->hasFile('profile_photo')) {
+                $user->updateProfilePhoto($request->file('profile_photo'));
+            }
+
+            // Sync roles using IDs
+            $roles = Role::whereIn('id', $request->roles)->get();
             $user->syncRoles($roles);
 
             \DB::commit();
 
             return redirect()->route('users.index')
-                ->with('success', 'User updated successfully with roles: ' . $roles->pluck('name')->implode(', '));
+                ->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Error updating user: ' . $e->getMessage());
