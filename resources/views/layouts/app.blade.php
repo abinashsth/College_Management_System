@@ -137,8 +137,23 @@
                         <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
                     </div>
                     <div id="accountManagement" class="hidden pl-8">
-                        <a href="{{ route('accounts.index') }}" class="sidebar-item">Settings</a>
+                        <a href="{{ route('account.index') }}" class="sidebar-item">Students</a>
+                        <a href="{{ route('account.index') }}" class="sidebar-item">Employee</a>
+                        <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('payrollManagement')">
+                            <i class="fas fa-coins sidebar-icon"></i>
+                            Payroll Management
+                            <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+                        </div>
+                        <div id="payrollManagement" class="hidden pl-8">
+                            <a href="{{ route('account.index') }}" class="sidebar-item">Salary Management</a>
+                            <a href="{{ route('account.index') }}" class="sidebar-item">Fee management</a>
+                        </div>
+
+                        
                     </div>
+
+                   
+
                 @endif
 
                 @if($user->hasRole('super-admin') || $user->checkPermission('view users'))

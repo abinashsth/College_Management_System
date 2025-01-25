@@ -135,7 +135,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Account Management
     Route::middleware(['permission:view accounts'])->group(function () {
-        Route::resource('accounts', AccountController::class);
+
+        Route::resource('account', AccountController::class);
+        Route::get('/account', [AccountController::class, 'index'])->name('account.index');
+        Route::get('/account/create', [AccountController::class, 'create'])->name('account.create');
+
     });
 
     // User Management

@@ -9,6 +9,10 @@ class PermissionSeeder extends Seeder
 {
     public function run()
     {
+
+        Permission::create(['name' => 'view results', 'guard_name' => 'web']);
+
+        
         $permissions = [
             // Dashboard
             'view dashboard',
