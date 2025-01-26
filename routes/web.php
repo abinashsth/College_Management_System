@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
@@ -133,14 +134,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-    // Account Management
+    // Employee Management
     Route::middleware(['permission:view accounts'])->group(function () {
 
-        Route::resource('account', AccountController::class);
-        Route::get('/account', [AccountController::class, 'index'])->name('account.index');
-        Route::get('/account/create', [AccountController::class, 'create'])->name('account.create');
+        Route::resource('account/employee', EmployeeController::class);
+        Route::get('/account/employee', [EmployeeController::class, 'index'])->name('account.employee.index');
+        Route::get('/account/employee/create', [EmployeeController::class, 'create'])->name('account.employee.create');
+        Route::post('/account/employee/store', [EmployeeController::class, 'store'])->name('account.employee.store');
 
     });
+    
 
     // User Management
     Route::middleware(['permission:view users'])->group(function () {
