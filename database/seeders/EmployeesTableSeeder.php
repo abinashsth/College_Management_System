@@ -4,7 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
+use Illuminate\Support\Facades\DB;
+use App\Models\Employee;    
 class EmployeesTableSeeder extends Seeder
 {
     /**
@@ -13,9 +14,9 @@ class EmployeesTableSeeder extends Seeder
     public function run(): void
     {
        
-    DB::table('employees')->insert([
-        ['name' => 'John Doe', 'email' => 'john.doe@example.com', 'position' => 'Manager'],
-        ['name' => 'Jane Smith', 'email' => 'jane.smith@example.com', 'position' => 'Developer'],
-    ]);
+        Employee::create([
+        ['name' => 'John Doe', 'email' => 'john.doe@example.com', 'department' => 'Manager', 'designation' => 'Manager', 'contact' => '9814798598', 'status' => 'Active'],
+        ['name' => 'Jane Smith', 'email' => 'jane.smith@example.com', 'department' => 'Developer', 'designation' => 'Developer', 'contact' => '9814785698', 'status' => 'Active'],
+            ]);
     }
 }

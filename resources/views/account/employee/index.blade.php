@@ -18,13 +18,14 @@
     </div>
     @endif
 
-    <!-- Students Table -->
+    <!-- Employees Table -->
     <div class="overflow-x-auto bg-white rounded shadow-md">
         <table class="w-full text-left border-collapse">
             <thead class="bg-gray-100">
                 <tr>
-                    <th class="border-b py-3 px-4">Employee_ID</th>
+                    <th class="border-b py-3 px-4">Employee ID</th>
                     <th class="border-b py-3 px-4">Name</th>
+                    <th class="border-b py-3 px-4">Email</th>
                     <th class="border-b py-3 px-4">Department</th>
                     <th class="border-b py-3 px-4">Designation</th>
                     <th class="border-b py-3 px-4">Contact</th>
@@ -36,23 +37,23 @@
                 @forelse ($employees as $employee)
                 <tr class="hover:bg-gray-50">
                     <td class="border-b py-3 px-4">{{ $employee->id }}</td>
-                    <td class="border-b py-3 px-4">{{ $employee->name }}</td>
-                    <td class="border-b py-3 px-4">{{ $employee->email }}</td>
-                    <td class="border-b py-3 px-4">{{ $employee->contact_number }}</td>
-                    <td class="border-b py-3 px-4">{{ $employee->designation }}</td>
-                    <td class="border-b py-3 px-4">{{ $employee->department }}</td>
-                    <td class="border-b py-3 px-4">
-                        <span class="px-2 py-1 rounded text-sm {{ $student->status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                            {{ $student->status ? 'Active' : 'Inactive' }}
+                    <td class="border-b py-3 px-4">{{ $employee->name ?? 'N/A' }}</td>
+                    <td class="border-b py-3 px-4">{{ $employee->email ?? 'N/A' }}</td>
+                    <td class="border-b py-3 px-4">{{ $employee->department ?? 'N/A' }}</td>
+                    <td class="border-b py-3 px-4">{{ $employee->designation ?? 'N/A' }}</td>
+                    <td class="border-b py-3 px-4">{{ $employee->contact ?? 'N/A' }}</td>
+                     <td class="border-b py-3 px-4">
+                        <span class="px-2 py-1 rounded text-sm {{ $employee->status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                            {{ $employee->status ? 'Active' : 'Inactive' }}
                         </span>
                     </td>
                     <td class="border-b py-3 px-4 flex space-x-2">
-                        <a href="{{ route('employee.edit', $employee->id) }}" 
+                        <a href="{{ route('account.employee.edit', $employee->id) }}" 
                            class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
                             Edit
                         </a>
-                        <form action="{{ route('employee.destroy', $employee->id) }}" method="POST" 
-                              onsubmit="return confirm('Are you sure you want to delete this student?');" class="inline">
+                        <form action="{{ route('account.employee.destroy', $employee->id) }}" method="POST" 
+                              onsubmit="return confirm('Are you sure you want to delete this employee?');" class="inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" 
@@ -64,7 +65,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-gray-500">No employee found.</td>
+                    <td colspan="8" class="text-center py-4 text-gray-500">No employees found.</td>
                 </tr>
                 @endforelse
             </tbody>

@@ -145,8 +145,32 @@
                             <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
                         </div>
                         <div id="payrollManagement" class="hidden pl-8">
-                            <a href="{{ route('account.employee.index') }}" class="sidebar-item">Salary Management</a>
-                            <a href="{{ route('account.employee.index') }}" class="sidebar-item">Fee management</a>
+                            <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('salaryManagement')">
+                                <i class="fas fa-coins sidebar-icon"></i>
+                                Salary Management
+                                <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+                            </div>
+                            <div id="salaryManagement" class="hidden pl-8">
+                                <a href="{{ route('account.salary_management.employee_salary.index') }}" class="sidebar-item">Employee Salary</a>
+                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Salary Increment</a>
+                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Salary Component</a>
+                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Generate Salary Sheet</a>
+                            </div>
+                           
+                            
+                            <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('feeManagement')">
+                                <i class="fas fa-coins sidebar-icon"></i>
+                                Fee Management
+                                <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+                            </div>
+                            <div id="feeManagement" class="hidden pl-8">
+                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Salary Management</a>
+                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Fee management</a>
+                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Salary Management</a>
+                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Fee management</a>
+                            </div>
+
+
                         </div>
 
                         

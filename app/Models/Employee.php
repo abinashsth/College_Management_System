@@ -9,22 +9,33 @@ class Employee extends Model
 {
     use HasFactory;
 
+     // Add this to your Employee model if the table name is singular
+    protected $table = 'employee';
+
+
     // Specify fillable attributes for mass assignment
     protected $fillable = [
         'name',
         'email',
-        'position',
-        'salary',
+        'department',
+        'designation',
+        'contact',
+
+
+        'status',
+        'verified_at'
     ];
 
-    // Define relationship with User model
-    public function user()
-    {
-       
-        $employeeCount = Employee::count();
 
-        return $this->belongsTo(User::class);
-    }
+
+    // Define relationship with User model
+    // public function user()
+    // {
+       
+    //     $employeeCount = Employee::count();
+
+    //     return $this->belongsTo(User::class);
+    // }
 
     
 }

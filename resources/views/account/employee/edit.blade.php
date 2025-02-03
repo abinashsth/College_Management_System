@@ -4,21 +4,22 @@
 <div class="container mx-auto px-4 py-6">
     <!-- Header Section -->
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Create Employee</h1>
+        <h1 class="text-2xl font-bold text-gray-800">Update Employee</h1>
         <a href="{{ route('account.employee.index') }}" class="text-gray-600 hover:text-gray-800">
             Back to Employees
         </a>
     </div>
 
     <div class="bg-white rounded shadow-md max-w-3xl mx-auto p-6">
-        <form action="{{ route('account.employee.store') }}" method="POST">
+        <form action="{{ route('account.employee.update', $employee->id) }}" method="POST">
             @csrf
-
+            @method('PUT') <!-- Use PUT for updates -->
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Employee Name -->
                 <div class="mb-4">
                     <label for="name" class="block text-gray-700 font-medium mb-2">Employee Name</label>
-                    <input type="text" id="name" name="name" value="{{ old('name') }}" required
+                    <input type="text" id="name" name="name" value="{{ old('name', $employee->name) }}" required
                            class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
                            placeholder="Enter employee name">
                     @error('name')
@@ -29,7 +30,7 @@
                 <!-- Email -->
                 <div class="mb-4">
                     <label for="email" class="block text-gray-700 font-medium mb-2">Employee email</label>
-                    <input type="text" id="email" name="email" value="{{ old('email') }}" required
+                    <input type="text" id="email" name="email" value="{{ old('email', $employee->email) }}" required
                            class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
                            placeholder="Enter employee email">
                     @error('email')
@@ -40,7 +41,7 @@
                 <!-- Department -->
                 <div class="mb-4">
                     <label for="department" class="block text-gray-700 font-medium mb-2">Department</label>
-                    <input type="text" id="department" name="department" value="{{ old('department') }}" required
+                    <input type="text" id="department" name="department" value="{{ old('department', $employee->department) }}" required
                            class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
                            placeholder="Enter department">
                     @error('department')
@@ -51,7 +52,7 @@
                 <!-- Designation -->
                 <div class="mb-4">
                     <label for="designation" class="block text-gray-700 font-medium mb-2">Designation</label>
-                    <input type="text" id="designation" name="designation" value="{{ old('designation') }}" required
+                    <input type="text" id="designation" name="designation" value="{{ old('designation', $employee->designation) }}" required
                            class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
                            placeholder="Enter designation">
                     @error('designation')
@@ -62,7 +63,7 @@
                 <!-- Contact -->
                 <div class="mb-4">
                     <label for="contact" class="block text-gray-700 font-medium mb-2">Contact</label>
-                    <input type="text" id="contact" name="contact" value="{{ old('contact') }}" required
+                    <input type="text" id="contact" name="contact" value="{{ old('contact', $employee->contact) }}" required
                            class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
                            placeholder="Enter contact number">
                     @error('contact')
@@ -100,7 +101,7 @@
                     Cancel
                 </a>
                 <button type="submit" class="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700">
-                    Create Employee
+                    Update Employee
                 </button>
             </div>
         </form>

@@ -18,6 +18,7 @@ class Student extends Model
         'dob',
         'class_id',
         'status',
+        
         'verified_at'
     ];
 
