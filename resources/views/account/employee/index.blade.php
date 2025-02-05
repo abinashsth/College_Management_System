@@ -31,12 +31,12 @@
                     <th class="border-b py-3 px-4">Contact</th>
                     <th class="border-b py-3 px-4">Status</th>
                     <th class="border-b py-3 px-4">Actions</th>
-                </tr>
+                </tr> 
             </thead>
             <tbody>
                 @forelse ($employees as $employee)
                 <tr class="hover:bg-gray-50">
-                    <td class="border-b py-3 px-4">{{ $employee->id }}</td>
+                    <td class="border-b py-3 px-4">{{ $employee->employee_id }}</td>
                     <td class="border-b py-3 px-4">{{ $employee->name ?? 'N/A' }}</td>
                     <td class="border-b py-3 px-4">{{ $employee->email ?? 'N/A' }}</td>
                     <td class="border-b py-3 px-4">{{ $employee->department ?? 'N/A' }}</td>

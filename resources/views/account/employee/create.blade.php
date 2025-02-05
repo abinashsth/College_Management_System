@@ -14,6 +14,18 @@
         <form action="{{ route('account.employee.store') }}" method="POST">
             @csrf
 
+            <!-- Employee ID -->
+            <div class="mb-4">
+                <label for="employee_id" class="block text-gray-700 font-medium mb-2">Employee ID</label>
+                <input type="text" id="employee_id" name="employee_id" value="{{ old('employee_id') }}" required
+                       class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                       placeholder="Enter employee ID">
+                @error('employee_id')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Employee Name -->
                 <div class="mb-4">

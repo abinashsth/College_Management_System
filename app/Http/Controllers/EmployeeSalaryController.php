@@ -30,31 +30,43 @@ class EmployeeSalaryController extends Controller
     public function create()
     {
         $employees = Employee::all();
-        return view('account.salary_management.employee_salary.create', compact('employees'));
+        return view('account.salary_management.employee_salary.create', compact('employees'));   
     }
 
   
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'amount' => 'required|numeric|min:0',
-            'effective_date' => 'required|date',
-            'notes' => 'nullable|string'
+            'employee_id' => 'required|exists:employee,id',
+            'basic_salary' => 'required|numeric',
+            'allowances' => 'nullable|numeric',
+            'deductions' => 'nullable|numeric',
+            'payment_date' => 'required|date',
+            'payment_method' => 'required|string',
+            'status' => 'required|string',
+            'remarks' => 'nullable|string'
         ]);
+        
 
-        EmployeeSalary::create($validated);
-
-        return redirect()->route('employee_salary.index')
-            ->with('success', 'Employee salary created successfully.');
+        EmployeeSalary::create([
+            'employee_id' => $request->employee_id,
+            'basic_salary' => $request->basic_salary,
+            'allowances' => $request->allowances,
+            'deductions' => $request->deductions,
+            'status' => $request->status,
+            'payment_date' => $request->payment_date ?? now(),
+            'payment_method' => $request->payment_method ?? 'cash', // Default to 'cash'
+        ]);
     }
+        
 
   
     public function show(EmployeeSalary $employeeSalary)
     {
-        return view('account.salary_management.employee_salary.show', compact('employeeSalary'));
-    }
+        $employeeSalary = EmployeeSalary::findOrFail($employeeSalary->id);
+    return view('account.salary_management.employee_salary.show', compact('employeeSalary'));
 
+    }
   
     public function edit(EmployeeSalary $employeeSalary)
     {
@@ -65,17 +77,30 @@ class EmployeeSalaryController extends Controller
   
     public function update(Request $request, EmployeeSalary $employeeSalary)
     {
-        $validated = $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'amount' => 'required|numeric|min:0',
-            'effective_date' => 'required|date',
-            'notes' => 'nullable|string'
+        $request->validate([
+            'basic_salary' => 'required|numeric',
+            'allowances' => 'nullable|numeric',
+            'deductions' => 'nullable|numeric',
+            'payment_date' => 'required|date',
+            'payment_method' => 'required|string', // Ensure this field is required
+            'status' => 'required|string|in:paid,unpaid',
+            'remarks' => 'nullable|string',
         ]);
-
-        $employeeSalary->update($validated);
-
-        return redirect()->route('employee_salary.index')
-            ->with('success', 'Employee salary updated successfully.');
+    
+        $employeeSalary = EmployeeSalary::findOrFail($employeeSalary->id);
+    
+        $employeeSalary->update([
+            'basic_salary' => $request->basic_salary,
+            'allowances' => $request->allowances ?? 0,
+            'deductions' => $request->deductions ?? 0,
+            'payment_date' => $request->payment_date,
+            'payment_method' => $request->payment_method ?? 'cash', // ✅ Default to 'cash'
+            'status' => $request->status,
+            'remarks' => $request->remarks,
+        ]);
+    
+        return redirect()->route('account.salary_management.employee_salary.index')
+            ->with('success', 'Salary record updated successfully.');
     }
 
    
@@ -83,7 +108,7 @@ class EmployeeSalaryController extends Controller
     {
         $employeeSalary->delete();
 
-        return redirect()->route('employee_salary.index')
+        return redirect()->route('account.salary_management.employee_salary.index')
             ->with('success', 'Employee salary deleted successfully.');
     }
 }

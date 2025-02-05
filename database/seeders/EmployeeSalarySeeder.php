@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Employee;
+use App\Models\EmployeeSalary;
 
 class EmployeeSalarySeeder extends Seeder
 {
@@ -12,22 +14,20 @@ class EmployeeSalarySeeder extends Seeder
      */
     public function run(): void
     {
-        EmployeeSalary::create([
-            'employee_name' => 'John Doe',
-            'salary' => 5000.00,
-            'salary_date' => '2023-10-01',
-        ]);
+        $employee = Employee::first(); // Assuming you have employees
 
-        EmployeeSalary::create([
-            'employee_name' => 'Jane Smith',
-            'salary' => 6000.00, 
-            'salary_date' => '2023-10-01',
-        ]);
 
-        EmployeeSalary::create([
-            'employee_name' => 'Alice Johnson',
-            'salary' => 5500.00,
-            'salary_date' => '2023-10-01',
-        ]);
+        if ($employee) {
+            
+            EmployeeSalary::create([
+                'employee_id' => $employee->id,
+                'basic_salary' => 50000,
+                'allowances' => 5000,
+                'deductions' => 2000,
+                'status' => 'Paid',
+                'payment_date' => now(), // Set default date
+            ]);
+            
+        }
     }
 }

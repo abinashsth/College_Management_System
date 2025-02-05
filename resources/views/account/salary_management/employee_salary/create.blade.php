@@ -14,10 +14,15 @@
                 </label>
                 <select name="employee_id" id="employee" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     <option value="">Select Employee</option>
+                    
+                    
                     @foreach($employees as $employee)
                         <option value="{{ $employee->id }}">{{ $employee->name }} - {{ $employee->designation }}</option>
                     @endforeach
                 </select>
+                @error('employee_id')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="mb-4">
@@ -25,6 +30,9 @@
                     Basic Salary
                 </label>
                 <input type="number" name="basic_salary" id="basic_salary" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                @error('basic_salary')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="mb-4">
@@ -32,6 +40,9 @@
                     Allowances
                 </label>
                 <input type="number" name="allowances" id="allowances" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                @error('allowances')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="mb-4">
@@ -39,6 +50,16 @@
                     Deductions
                 </label>
                 <input type="number" name="deductions" id="deductions" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                @error('deductions')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="total_salary">
+                    Total Salary
+                </label>
+                <input type="number" name="total_salary" id="total_salary" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
             </div>
 
             <div class="mb-4">
@@ -46,6 +67,9 @@
                     Payment Date
                 </label>
                 <input type="date" name="payment_date" id="payment_date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                @error('payment_date')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="mb-4">
@@ -57,13 +81,32 @@
                     <option value="cash">Cash</option>
                     <option value="check">Check</option>
                 </select>
+                @error('payment_method')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                @enderror
             </div>
+
+            <div class="mb-4">  
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="status">
+                    Status
+                </label>
+                <select name="status" id="status" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                </select>
+                @error('status')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                @enderror
+            </div>  
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="remarks">
                     Remarks
                 </label>
                 <textarea name="remarks" id="remarks" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                @error('remarks')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="flex items-center justify-between">
@@ -80,7 +123,9 @@
 
     @if($errors->any())
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <ul>
+            <strong class="font-bold">Whoops!</strong>
+            <span class="block sm:inline">There were some problems with your input.</span>
+            <ul class="mt-2">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -98,13 +143,16 @@
         
         const totalSalary = basicSalary + allowances - deductions;
         
-        // You can add a display element for total salary if needed
-        console.log('Total Salary:', totalSalary);
+        // Update the total salary field
+        document.getElementById('total_salary').value = totalSalary.toFixed(2);
     }
 
     // Add event listeners to recalculate when values change
     document.getElementById('basic_salary').addEventListener('input', calculateTotal);
     document.getElementById('allowances').addEventListener('input', calculateTotal);
     document.getElementById('deductions').addEventListener('input', calculateTotal);
+
+    // Initial calculation on page load
+    calculateTotal();
 </script>
 @endsection

@@ -10,11 +10,12 @@ class Employee extends Model
     use HasFactory;
 
      // Add this to your Employee model if the table name is singular
-    protected $table = 'employee';
+        protected $table = 'employee';
 
 
     // Specify fillable attributes for mass assignment
     protected $fillable = [
+        'employee_id',
         'name',
         'email',
         'department',

@@ -19,31 +19,36 @@ class EmployeeController extends Controller
 
     public function create()
     {
-       
-
-        // Pass the classes to the view
+        // Just return the view for creating a new employee
         return view('account.employee.create');
     }
 
     public function store(Request $request)
     {
         // Validate the incoming request
-         $request->validate([
+        $request->validate([
+            'employee_id' => 'required|numeric',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:employee',
             'department' => 'required|string|max:255',
-            'designation' => 'required|string|max:255',
+            'designation' => 'required|string|max:255', 
             'contact' => 'required|numeric',
+            'status' => 'required|string|max:255',
+        ]);
+        
+        Employee::create([
+            'employee_id' => $request->employee_id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'department' => $request->department,
+            'designation' => $request->designation,
+            'contact' => $request->contact,
+            'status' => $request->status,
         ]);
 
-        
-            // Save the employee to the database
-            Employee::create($request->all());
-            return redirect()->route('account.employee.index')->with('success', 'Employee created successfully.');
-       
+        return redirect()->route('account.employee.index')->with('success', 'Employee created successfully.');
     }
 
-    
     public function show(Employee $employee)
     {
         return view('account.employee.show', compact('employee'));
@@ -58,9 +63,6 @@ class EmployeeController extends Controller
         return view('account.employee.edit', compact('employee'));
     }
     
-
-
-
     public function update(Request $request, $id)
     {
         // Find the employee record by ID
@@ -89,7 +91,7 @@ class EmployeeController extends Controller
         $employee->delete();
     
         // Redirect with a success message
-        return redirect()->route('account.employee.destroy')->with('success', 'Employee deleted successfully.');
+        return redirect()->route('account.employee.index')->with('success', 'Employee deleted successfully.');
     }
     
 }

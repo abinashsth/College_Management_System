@@ -11,7 +11,7 @@
     </div>
 
     <div class="bg-white rounded shadow-md max-w-3xl mx-auto p-6">
-        <form action="{{ route('account.employee.update', $employee->id) }}" method="POST">
+        <form action="{{ route('account.employee.update', $employee->employee_id) }}" method="POST">
             @csrf
             @method('PUT') <!-- Use PUT for updates -->
             
