@@ -21,22 +21,17 @@ class Employee extends Model
         'department',
         'designation',
         'contact',
-
-
+        'salary',
         'status',
         'verified_at'
+
     ];
 
-
-
-    // Define relationship with User model
-    // public function user()
-    // {
-       
-    //     $employeeCount = Employee::count();
-
-    //     return $this->belongsTo(User::class);
-    // }
+    public function salaryIncrements()
+    {
+        return $this->hasMany(SalaryIncrement::class);
+    }
+    
 
     
 }

@@ -12,12 +12,12 @@
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="employee">
                     Select Employee
                 </label>
-                <select name="employee_id" id="employee" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <select name="employee_id" id="employee" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     <option value="">Select Employee</option>
-                    
-                    
                     @foreach($employees as $employee)
-                        <option value="{{ $employee->id }}">{{ $employee->name }} - {{ $employee->designation }}</option>
+                        <option value="{{ $employee->id }}" data-basic-salary="{{ $employee->basic_salary }}">
+                            {{ $employee->name }} - {{ $employee->department }} ({{ $employee->employee_id }})
+                        </option>
                     @endforeach
                 </select>
                 @error('employee_id')
@@ -27,9 +27,9 @@
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="basic_salary">
-                    Basic Salary
+                    Basic Salary (&#8377;)
                 </label>
-                <input type="number" name="basic_salary" id="basic_salary" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                <input type="number" name="basic_salary" id="basic_salary" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                 @error('basic_salary')
                     <p class="text-red-500 text-xs italic">{{ $message }}</p>
                 @enderror
@@ -37,9 +37,9 @@
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="allowances">
-                    Allowances
+                    Allowances (&#8377;)
                 </label>
-                <input type="number" name="allowances" id="allowances" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <input type="number" name="allowances" id="allowances" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 @error('allowances')
                     <p class="text-red-500 text-xs italic">{{ $message }}</p>
                 @enderror
@@ -47,9 +47,9 @@
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="deductions">
-                    Deductions
+                    Deductions (&#8377;)
                 </label>
-                <input type="number" name="deductions" id="deductions" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <input type="number" name="deductions" id="deductions" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 @error('deductions')
                     <p class="text-red-500 text-xs italic">{{ $message }}</p>
                 @enderror
@@ -57,9 +57,9 @@
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="total_salary">
-                    Total Salary
+                    Net Salary (&#8377;)
                 </label>
-                <input type="number" name="total_salary" id="total_salary" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
+                <input type="number" name="total_salary" id="total_salary" step="0.01" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 bg-gray-100 leading-tight focus:outline-none focus:shadow-outline" readonly>
             </div>
 
             <div class="mb-4">
@@ -76,7 +76,8 @@
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="payment_method">
                     Payment Method
                 </label>
-                <select name="payment_method" id="payment_method" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <select name="payment_method" id="payment_method" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                    <option value="">Select Payment Method</option>
                     <option value="bank_transfer">Bank Transfer</option>
                     <option value="cash">Cash</option>
                     <option value="check">Check</option>
@@ -90,9 +91,10 @@
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="status">
                     Status
                 </label>
-                <select name="status" id="status" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    <option value="paid">Paid</option>
-                    <option value="unpaid">Unpaid</option>
+                <select name="status" id="status" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                    <option value="">Select Status</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Pending">Pending</option>
                 </select>
                 @error('status')
                     <p class="text-red-500 text-xs italic">{{ $message }}</p>
@@ -135,6 +137,14 @@
 </div>
 
 <script>
+    // Auto-populate basic salary when employee is selected
+    document.getElementById('employee').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const basicSalary = selectedOption.dataset.basicSalary || '';
+        document.getElementById('basic_salary').value = basicSalary;
+        calculateTotal();
+    });
+
     // Calculate total salary
     function calculateTotal() {
         const basicSalary = parseFloat(document.getElementById('basic_salary').value) || 0;
@@ -151,6 +161,9 @@
     document.getElementById('basic_salary').addEventListener('input', calculateTotal);
     document.getElementById('allowances').addEventListener('input', calculateTotal);
     document.getElementById('deductions').addEventListener('input', calculateTotal);
+
+    // Set default payment date to today
+    document.getElementById('payment_date').valueAsDate = new Date();
 
     // Initial calculation on page load
     calculateTotal();

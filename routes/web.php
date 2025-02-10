@@ -16,6 +16,8 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AcademicSessionController;
 use App\Http\Controllers\ExamResultController;
 use App\Http\Controllers\EmployeeSalaryController;
+use App\Http\Controllers\SalaryIncrementController;
+use App\Http\Controllers\SalaryComponentController;
 use App\Http\Controllers\ExaminerAssignmentController;
 use App\Http\Controllers\MarksEntryController;
 use Illuminate\Support\Facades\Route;
@@ -162,7 +164,35 @@ Route::prefix('account/salary_management')->group(function () {
     Route::put('/employee_salary/{employeeSalary}', [EmployeeSalaryController::class, 'update'])->name('account.salary_management.employee_salary.update');
     Route::delete('/employee_salary/{employeeSalary}', [EmployeeSalaryController::class, 'destroy'])->name('account.salary_management.employee_salary.destroy');
 });
-    
+
+
+// Salary Increment
+Route::prefix('account/salary_increment')->group(function () {
+    Route::resource('salary_increment', SalaryIncrementController::class);
+    Route::get('/salary_increment', [SalaryIncrementController::class, 'index'])->name('account.salary_management.salary_increment.index');
+    Route::get('/salary_increment/create', [SalaryIncrementController::class, 'create'])->name('account.salary_management.salary_increment.create');
+    Route::post('/salary_increment', [SalaryIncrementController::class, 'store'])->name('account.salary_management.salary_increment.store');
+    Route::get('/salary_increment/{salaryIncrement}/edit', [SalaryIncrementController::class, 'edit'])->name('account.salary_management.salary_increment.edit');
+    Route::put('/salary_increment/{salaryIncrement}', [SalaryIncrementController::class, 'update'])->name('account.salary_management.salary_increment.update');
+    Route::delete('/salary_increment/{salaryIncrement}', [SalaryIncrementController::class, 'destroy'])->name('account.salary_management.salary_increment.destroy');    
+}); 
+
+
+// Salary Component
+Route::prefix('account/salary_component')->group(function () {
+    Route::resource('salary_component', SalaryComponentController::class);
+    Route::get('/salary_component', [SalaryComponentController::class, 'index'])->name('account.salary_management.salary_component.index');
+    Route::get('/salary_component/create', [SalaryComponentController::class, 'create'])->name('account.salary_management.salary_component.create');    
+    Route::post('/salary_component', [SalaryComponentController::class, 'store'])->name('account.salary_management.salary_component.store');
+    Route::get('/salary_component/{salaryComponent}/edit', [SalaryComponentController::class, 'edit'])->name('account.salary_management.salary_component.edit');
+    Route::put('/salary_component/{salaryComponent}', [SalaryComponentController::class, 'update'])->name('account.salary_management.salary_component.update');
+    Route::delete('/salary_component/{salaryComponent}', [SalaryComponentController::class, 'destroy'])->name('account.salary_management.salary_component.destroy');
+}); 
+
+
+
+
+
 
     // User Management
     Route::middleware(['permission:view users'])->group(function () {

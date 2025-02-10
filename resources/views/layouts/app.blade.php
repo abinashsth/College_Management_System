@@ -152,8 +152,8 @@
                             </div>
                             <div id="salaryManagement" class="hidden pl-8">
                                 <a href="{{ route('account.salary_management.employee_salary.index') }}" class="sidebar-item">Employee Salary</a>
-                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Salary Increment</a>
-                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Salary Component</a>
+                                <a href="{{ route('account.salary_management.salary_increment.index') }}" class="sidebar-item">Salary Increment</a>
+                                <a href="{{ route('account.salary_management.salary_component.index') }}" class="sidebar-item">Salary Component</a>
                                 <a href="{{ route('account.employee.index') }}" class="sidebar-item">Generate Salary Sheet</a>
                             </div>
                            

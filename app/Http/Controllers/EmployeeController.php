@@ -49,10 +49,12 @@ class EmployeeController extends Controller
         return redirect()->route('account.employee.index')->with('success', 'Employee created successfully.');
     }
 
-    public function show(Employee $employee)
+    public function show($id)
     {
-        return view('account.employee.show', compact('employee'));
+        $employee = Employee::with('salaryIncrements')->findOrFail($id);
+        return response()->json($employee);
     }
+    
 
     public function edit($id)
     {
