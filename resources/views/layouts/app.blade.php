@@ -94,20 +94,21 @@
                     </div>
                 @endif
 
-                @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->checkPermission('view exams'))
+                @can('view exams')
                     <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('examManagement')">
                         <i class="fas fa-file-alt sidebar-icon"></i>
                         Exam Management
                         <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
                     </div>
                     <div id="examManagement" class="hidden pl-8">
-                        @if($user->hasRole('examiner') || $user->hasRole('super-admin') || $user->hasRole('admin'))
-                            <a href="{{ route('subjects.index') }}" class="sidebar-item">Subjects</a>
-                            <a href="{{ route('class.add-subjects.form') }}" class="sidebar-item">Add Subjects to Class</a>
-                            <a href="{{ route('marks.add.form') }}" class="sidebar-item">Add Marks</a>
-                        @endif
+                        <a href="{{ route('exams.index') }}" class="sidebar-item">Exam List</a>
+                        <a href="{{ route('grades.index') }}" class="sidebar-item">Grades</a>
+                        <a href="{{ route('tabulation.index') }}" class="sidebar-item">Tabulation Sheet</a>
+                        <a href="{{ route('batch.fix') }}" class="sidebar-item">Batch Fix</a>
+                        <a href="{{ route('marks.index') }}" class="sidebar-item">Marks</a>
+                        <a href="{{ route('marksheet.index') }}" class="sidebar-item">Marksheet</a>
                     </div>
-                @endif
+                @endcan
 
                 @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->hasRole('examiner') || $user->checkPermission('view results'))
                     <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('resultManagement')">

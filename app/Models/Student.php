@@ -15,10 +15,16 @@ class Student extends Model
         'password',
         'address',
         'contact_number',
+        'telephone',
+        'gender',
         'dob',
-        'class_id',
+        'nationality',
+        'state',
+        'lga',
+        'blood_group',
+        'passport_photo',
         'status',
-        'verified_at'
+        'class_id'
     ];
 
     protected $casts = [

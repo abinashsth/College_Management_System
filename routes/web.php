@@ -16,6 +16,12 @@ use App\Http\Controllers\AcademicSessionController;
 use App\Http\Controllers\ExamResultController;
 use App\Http\Controllers\ExaminerAssignmentController;
 use App\Http\Controllers\MarksEntryController;
+use App\Http\Controllers\StudentAdmissionController;
+use App\Http\Controllers\GradeController;
+use App\Http\Controllers\TabulationController;
+use App\Http\Controllers\BatchController;
+use App\Http\Controllers\MarkController;
+use App\Http\Controllers\MarksheetController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -31,6 +37,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Student Management
     Route::middleware(['permission:view students'])->group(function () {
         Route::resource('students', StudentController::class);
+    });
+
+    // Student Admission Routes
+    Route::middleware(['permission:view students'])->group(function () {
+        Route::get('/students/admit', [StudentAdmissionController::class, 'create'])->name('students.admit');
+        Route::post('/students', [StudentAdmissionController::class, 'store'])->name('students.store');
     });
 
     // Class Management
@@ -87,6 +99,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('exam-results/calculate-ranks/{exam}', [ExamResultController::class, 'calculateRanks'])->name('exam-results.calculate-ranks');
         Route::get('exam-results/{exam}/summary', [ExamResultController::class, 'examSummary'])->name('exam-results.summary');
         Route::get('exam-results/{student}/marksheet', [ExamResultController::class, 'studentMarksheet'])->name('exam-results.marksheet');
+
+        // Exam Management Routes
+        Route::middleware(['permission:view exams'])->group(function () {
+            // Exam routes
+            Route::resource('exams', ExamController::class);
+
+            // Grade routes
+            Route::resource('grades', GradeController::class);
+
+            // Tabulation routes
+            Route::get('/tabulation', [TabulationController::class, 'index'])->name('tabulation.index');
+            Route::get('/tabulation/generate', [TabulationController::class, 'generate'])->name('tabulation.generate');
+
+            // Batch fix routes
+            Route::get('/batch-fix', [BatchController::class, 'fix'])->name('batch.fix');
+            Route::post('/batch-fix/process', [BatchController::class, 'process'])->name('batch.fix.process');
+
+            // Marks routes
+            Route::get('/marks', [MarkController::class, 'index'])->name('marks.index');
+            Route::get('/marks/search', [MarkController::class, 'search'])->name('marks.search');
+            Route::post('/marks', [MarkController::class, 'store'])->name('marks.store');
+
+            // Marksheet routes
+            Route::get('/marksheet', [MarksheetController::class, 'index'])->name('marksheet.index');
+            Route::get('/marksheet/generate', [MarksheetController::class, 'generate'])->name('marksheet.generate');
+            Route::get('/marksheet/{exam}/{student}/download', [MarksheetController::class, 'download'])->name('marksheet.download');
+
+            // API routes for dynamic loading
+            Route::get('/api/classes/{class}/subjects', [MarkController::class, 'getSubjects']);
+            Route::get('/api/classes/{class}/students', [MarksheetController::class, 'getStudents']);
+        });
     });
 
     // Result Management
