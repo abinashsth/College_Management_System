@@ -21,11 +21,13 @@
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="type">
-                    Type
+                    Component Type
                 </label>
                 <select name="type" id="type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                    <option value="addition" {{ old('type', $salaryComponent->type) == 'addition' ? 'selected' : '' }}>Addition</option>
-                    <option value="deduction" {{ old('type', $salaryComponent->type) == 'deduction' ? 'selected' : '' }}>Deduction</option>
+                    <option value="">Select Type</option>
+                    <option value="Fixed" {{ old('type', $salaryComponent->type) == 'Fixed' ? 'selected' : '' }}>Fixed Asset</option>
+                    <option value="Allowance" {{ old('type', $salaryComponent->type) == 'Allowance' ? 'selected' : '' }}>Allowance</option>
+                    <option value="Deduction" {{ old('type', $salaryComponent->type) == 'Deduction' ? 'selected' : '' }}>Deduction</option>
                 </select>
                 @error('type')
                     <p class="text-red-500 text-xs italic">{{ $message }}</p>
@@ -67,7 +69,7 @@
     </div>
 
     @if($errors->any())
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
             <strong class="font-bold">Whoops!</strong>
             <span class="block sm:inline">There were some problems with your input.</span>
             <ul class="mt-2">

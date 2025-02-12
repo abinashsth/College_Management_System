@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-md mx-auto bg-white p-8 border rounded-lg shadow-lg">
         <h2 class="text-2xl font-bold mb-6">Create Salary Component</h2>
 
         <form action="{{ route('account.salary_management.salary_component.store') }}" method="POST">
@@ -10,7 +10,7 @@
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
-                    Component Name
+                    Name
                 </label>
                 <input type="text" name="name" id="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ old('name') }}" required>
                 @error('name')
@@ -24,6 +24,7 @@
                 </label>
                 <select name="type" id="type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     <option value="">Select Type</option>
+                    <option value="Fixed" {{ old('type') == 'Fixed' ? 'selected' : '' }}>Fixed Asset</option>
                     <option value="Allowance" {{ old('type') == 'Allowance' ? 'selected' : '' }}>Allowance</option>
                     <option value="Deduction" {{ old('type') == 'Deduction' ? 'selected' : '' }}>Deduction</option>
                 </select>
@@ -37,7 +38,7 @@
                     Status
                 </label>
                 <select name="status" id="status" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                    <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Active</option>
+                    <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
                     <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
                 </select>
                 @error('status')
@@ -67,7 +68,7 @@
     </div>
 
     @if($errors->any())
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
             <strong class="font-bold">Whoops!</strong>
             <span class="block sm:inline">There were some problems with your input.</span>
             <ul class="mt-2">

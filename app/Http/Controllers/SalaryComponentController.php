@@ -25,7 +25,7 @@ class SalaryComponentController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:Allowance,Deduction',
+            'type' => 'required|in:Fixed,Allowance,Deduction',
             'status' => 'required|boolean',
             'description' => 'nullable|string'
         ]);
@@ -36,22 +36,24 @@ class SalaryComponentController extends Controller
             ->with('success', 'Salary component created successfully.');
     }
 
-        public function edit(SalaryComponent $salaryComponent)
+    public function edit(SalaryComponent $salaryComponent)
     {
         return view('account.salary_management.salary_component.edit', compact('salaryComponent'));
-        
-
-
     }
 
     public function update(Request $request, SalaryComponent $salaryComponent)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:Allowance,Deduction',
+            'type' => 'required|in:Fixed,Allowance,Deduction',
             'status' => 'required|boolean',
             'description' => 'nullable|string'
         ]);
+
+        // Check if the salary component is being used before allowing type change
+        if ($salaryComponent->type !== $validated['type'] && $salaryComponent->employeeSalaries()->exists()) {
+            return back()->withErrors(['type' => 'Cannot change type of salary component that is in use']);
+        }
 
         $salaryComponent->update($validated);
 

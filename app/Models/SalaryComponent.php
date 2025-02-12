@@ -30,6 +30,11 @@ class SalaryComponent extends Model
         return $query->where('status', true);
     }
 
+    
+    public function scopeFixed($query)
+    {
+        return $query->where('type', 'Fixed');
+    }
     public function scopeAllowances($query)
     {
         return $query->where('type', 'Allowance');
