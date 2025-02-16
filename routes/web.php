@@ -20,7 +20,11 @@ use App\Http\Controllers\SalaryIncrementController;
 use App\Http\Controllers\SalaryComponentController;
 use App\Http\Controllers\ExaminerAssignmentController;
 use App\Http\Controllers\MarksEntryController;
+use App\Http\Controllers\SalaryGenerationController;
+use App\Http\Controllers\FeeStructureController;
+use App\Http\Controllers\FeeCategoryController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', function () {
     return view('auth.login');
@@ -190,7 +194,41 @@ Route::prefix('account/salary_component')->group(function () {
 }); 
 
 
+// Salary Generation
+    Route::prefix('account/generate_salary')->group(function () {
+    Route::resource('generate_salary', SalaryGenerationController::class);
+    Route::get('/generate_salary', [SalaryGenerationController::class, 'index'])->name('account.salary_management.generate_salary.index');
+    Route::get('/generate_salary/create', [SalaryGenerationController::class, 'create'])->name('account.salary_management.generate_salary.create'); 
+    Route::post('/generate_salary', [SalaryGenerationController::class, 'store'])->name('account.salary_management.generate_salary.store');
+    Route::get('/generate_salary/{salaryGeneration}/edit', [SalaryGenerationController::class, 'edit'])->name('account.salary_management.generate_salary.edit');
+    Route::put('/generate_salary/{salaryGeneration}', [SalaryGenerationController::class, 'update'])->name('account.salary_management.generate_salary.update');
+    Route::delete('/generate_salary/{salaryGeneration}', [SalaryGenerationController::class, 'destroy'])->name('account.salary_management.generate_salary.destroy');
+    Route::get('/generate-salary', [SalaryGenerationController::class, 'generate'])->name('account.salary_management.generate_salary.generate');  
+});  
 
+
+// Fee Management
+Route::prefix('account/fee_management')->group(function () {
+    Route::resource('fee_structure', FeeStructureController::class);
+    Route::get('/fee_structure', [FeeStructureController::class, 'index'])->name('account.fee_management.fee_structure.index');
+    Route::get('/fee_structure/create', [FeeStructureController::class, 'create'])->name('account.fee_management.fee_structure.create');        
+    Route::post('/fee_structure', [FeeStructureController::class, 'store'])->name('account.fee_management.fee_structure.store');
+    Route::get('/fee_structure/{feeStructure}/edit', [FeeStructureController::class, 'edit'])->name('account.fee_management.fee_structure.edit');
+    Route::put('/fee_structure/{feeStructure}', [FeeStructureController::class, 'update'])->name('account.fee_management.fee_structure.update');
+    Route::delete('/fee_structure/{feeStructure}', [FeeStructureController::class, 'destroy'])->name('account.fee_management.fee_structure.destroy');
+}); 
+
+    
+// Fee Category
+Route::prefix('account/fee_category')->group(function () {
+    Route::resource('fee_category', FeeCategoryController::class);
+    Route::get('/fee_category', [FeeCategoryController::class, 'index'])->name('account.fee_management.fee_category.index');
+    Route::get('/fee_category/create', [FeeCategoryController::class, 'create'])->name('account.fee_management.fee_category.create');
+    Route::post('/fee_category', [FeeCategoryController::class, 'store'])->name('account.fee_management.fee_category.store');
+    Route::get('/fee_category/{feeCategory}/edit', [FeeCategoryController::class, 'edit'])->name('account.fee_management.fee_category.edit');
+    Route::put('/fee_category/{feeCategory}', [FeeCategoryController::class, 'update'])->name('account.fee_management.fee_category.update');
+    Route::delete('/fee_category/{feeCategory}', [FeeCategoryController::class, 'destroy'])->name('account.fee_management.fee_category.destroy');
+});
 
 
 

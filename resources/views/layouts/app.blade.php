@@ -154,7 +154,7 @@
                                 <a href="{{ route('account.salary_management.employee_salary.index') }}" class="sidebar-item">Employee Salary</a>
                                 <a href="{{ route('account.salary_management.salary_increment.index') }}" class="sidebar-item">Salary Increment</a>
                                 <a href="{{ route('account.salary_management.salary_component.index') }}" class="sidebar-item">Salary Component</a>
-                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Generate Salary Sheet</a>
+                                <a href="{{ route('account.salary_management.generate_salary.index') }}" class="sidebar-item">Generate Salary Sheet</a>   
                             </div>
                            
                             
@@ -164,10 +164,9 @@
                                 <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
                             </div>
                             <div id="feeManagement" class="hidden pl-8">
-                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Salary Management</a>
-                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Fee management</a>
-                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Salary Management</a>
-                                <a href="{{ route('account.employee.index') }}" class="sidebar-item">Fee management</a>
+                                <a href="{{ route('account.fee_management.fee_structure.index') }}" class="sidebar-item">Fee Structure</a>
+                                <a href="{{ route('account.fee_management.fee_category.index') }}" class="sidebar-item">Fee Category</a>
+                               
                             </div>
 
 

@@ -15,6 +15,11 @@ class Classes extends Model
         'is_active'
     ];
 
+    public function feeStructures()
+    {
+        return $this->hasMany(FeeStructure::class);
+    }
+
     public function students()
     {
         return $this->hasMany(Student::class, 'class_id');

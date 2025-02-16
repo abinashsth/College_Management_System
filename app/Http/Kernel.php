@@ -3,7 +3,7 @@
 namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
-
+use Illuminate\Console\Scheduling\Schedule;
 class Kernel extends HttpKernel
 {
     protected $middleware = [
@@ -45,4 +45,11 @@ class Kernel extends HttpKernel
         'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
         'check.permission' => \App\Http\Middleware\CheckPermission::class,
     ];
+
+    protected function schedule(Schedule $schedule)
+{
+    // Backup database every day a t 2 AM
+    $schedule->command('backup:run')->dailyAt('11:00');
+}
+
 }

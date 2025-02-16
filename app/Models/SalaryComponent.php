@@ -9,6 +9,7 @@ class SalaryComponent extends Model
 {
     use HasFactory;
 
+    protected $table = 'salary_Components';
     protected $fillable = [
         'name',
         'type',

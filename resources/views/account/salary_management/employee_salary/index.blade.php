@@ -17,15 +17,15 @@
         </div>
         <div class="bg-white rounded-lg shadow p-6 text-center">
             <div class="text-gray-500">Total Salary Paid</div>
-            <div class="text-2xl font-bold">&#8377;{{ number_format($totalSalary ?? 0, 2) }}</div>
+            <div class="text-2xl font-bold">{{ number_format($totalSalary ?? 0, 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-6 text-center">
             <div class="text-gray-500">Average Salary</div>
-            <div class="text-2xl font-bold">&#8377;{{ number_format($averageSalary ?? 0, 2) }}</div>
+            <div class="text-2xl font-bold">{{ number_format($averageSalary ?? 0, 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-6 text-center">
             <div class="text-gray-500">Pending Payments</div>
-            <div class="text-2xl font-bold">{{ $pendingPayments ?? 0 }}</div>
+            <div class="text-2xl font-bold">{{ number_format($pendingPayments ?? 0, 2) }}</div>
         </div>
     </div>
 
@@ -36,14 +36,16 @@
             <div class="flex space-x-4">
                 <select class="border rounded px-4 py-2" wire:model="department">
                     <option value="">All Departments</option>
-                    <option value="IT">IT</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
+                    @foreach($departments as $department)
+                        <option value="{{ $department->id }}">{{ $department->name }}</option>
+                    @endforeach
                 </select>
                 <select class="border rounded px-4 py-2" wire:model="status">
                     <option value="">All Status</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Pending">Pending</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="paid">Paid</option>
                 </select>
             </div>
         </div>
@@ -72,10 +74,10 @@
                     </td>
                     <td class="px-6 py-4 text-sm">{{  $employee->employee->name }}</td>
                     <td class="px-6 py-4 text-sm">{{ $employee->employee->department }}</td>
-                    <td class="px-6 py-4 text-sm">&#8377;{{ number_format($employee->basic_salary ?? 0, 2) }}</td>
-                    <td class="px-6 py-4 text-sm">&#8377;{{ number_format($employee->allowances ?? 0, 2) }}</td>
-                    <td class="px-6 py-4 text-sm">&#8377;{{ number_format($employee->deductions ?? 0, 2) }}</td>
-                    <td class="px-6 py-4 text-sm">&#8377;{{ number_format(($employee->basic_salary + $employee->allowances - $employee->deductions) ?? 0, 2) }}</td>
+                    <td class="px-6 py-4 text-sm">৳{{ number_format($employee->basic_salary ?? 0, 2) }}</td>
+                    <td class="px-6 py-4 text-sm">৳{{ number_format($employee->allowances ?? 0, 2) }}</td>
+                    <td class="px-6 py-4 text-sm">৳{{ number_format($employee->deductions ?? 0, 2) }}</td>
+                    <td class="px-6 py-4 text-sm">৳{{ number_format($employee->net_salary ?? 0, 2) }}</td>
                     <td class="px-6 py-4">
                         <span class="px-2 inline-flex text-xs font-semibold leading-5 rounded-full {{ $employee->status == 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                             {{ $employee->status }}

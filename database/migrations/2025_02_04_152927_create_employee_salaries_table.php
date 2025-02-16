@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('net_salary', 10, 2)->storedAs('basic_salary + COALESCE(allowances, 0) - COALESCE(deductions, 0)');
             $table->date('payment_date')->default(now());
             $table->string('payment_method')->nullable()->default('cash');
-            $table->enum('status', ['paid', 'unpaid'])->default('unpaid');
+            $table->enum('status', ['paid', 'unpaid', 'pending', 'rejected', 'approved'])->default('unpaid');
             $table->text('remarks')->nullable();
             $table->timestamps();
         });

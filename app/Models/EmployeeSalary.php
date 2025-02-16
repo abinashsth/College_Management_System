@@ -3,6 +3,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Employee;
+
+
 
 class EmployeeSalary extends Model
 {
@@ -10,7 +13,7 @@ class EmployeeSalary extends Model
 
     protected $fillable = [
         'employee_id', 'basic_salary', 'allowances', 'deductions',
-        'status', 'payment_date', 'payment_method'
+        'status', 'payment_date', 'payment_method', 'remarks', 'net_salary' 
     ];
     
     // ✅ Define the missing relationship
@@ -18,4 +21,6 @@ class EmployeeSalary extends Model
     {
         return $this->belongsTo(Employee::class, 'employee_id');
     }
+
+    
 }

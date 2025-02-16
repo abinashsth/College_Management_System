@@ -82,10 +82,10 @@
             </div>
 
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="total_salary">
-                    Total Salary
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="net_salary">
+                    Net Salary
                 </label>
-                <input type="number" name="total_salary" id="total_salary" value="{{ $employeeSalary->basic_salary + $employeeSalary->allowances - $employeeSalary->deductions }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
+                <input type="number" name="net_salary" id="net_salary" value="{{ $employeeSalary->net_salary }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
             </div>
 
             <div class="mb-4">
@@ -119,6 +119,9 @@
                 <select name="status" id="status" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     <option value="paid" {{ $employeeSalary->status == 'paid' ? 'selected' : '' }}>Paid</option>
                     <option value="unpaid" {{ $employeeSalary->status == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                    <option value="pending" {{ $employeeSalary->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="rejected" {{ $employeeSalary->status == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                    <option value="approved" {{ $employeeSalary->status == 'approved' ? 'selected' : '' }}>Approved</option>    
                 </select>
                 @error('status')
                     <p class="text-red-500 text-xs italic">{{ $message }}</p>

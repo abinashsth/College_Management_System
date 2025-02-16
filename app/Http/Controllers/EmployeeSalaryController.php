@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\EmployeeSalary;
 use App\Models\Employee;
-
+use App\Models\Department;
+use App\Models\SalaryComponent;
 
 use Illuminate\Http\Request;
 
@@ -22,7 +23,9 @@ class EmployeeSalaryController extends Controller
     $totalSalary = $employeeSalaries->sum('amount');
     $averageSalary = $employeeSalaries->avg('amount');
 
-    return view('account.salary_management.employee_salary.index', compact('employeeSalaries', 'employees', 'totalSalary', 'averageSalary'));
+    $departments = Department::all(); // Fetch all departments
+
+    return view('account.salary_management.employee_salary.index', compact('employeeSalaries', 'employees', 'totalSalary', 'averageSalary', 'departments'));
 }
 
 
@@ -30,7 +33,9 @@ class EmployeeSalaryController extends Controller
     public function create()
     {
         $employees = Employee::all();
-        return view('account.salary_management.employee_salary.create', compact('employees'));   
+        $departments = Department::all();
+        $salaryComponents = SalaryComponent::all();
+        return view('account.salary_management.employee_salary.create', compact('employees', 'departments', 'salaryComponents'));   
     }
 
   
@@ -43,8 +48,9 @@ class EmployeeSalaryController extends Controller
             'deductions' => 'nullable|numeric',
             'payment_date' => 'required|date',
             'payment_method' => 'required|string',
-            'status' => 'required|string',
-            'remarks' => 'nullable|string'
+            'status' => 'required|string|in:paid,unpaid,pending,rejected,approved',
+            'remarks' => 'nullable|string',
+            'net_salary' => 'required|numeric',
         ]);
         
 
@@ -54,6 +60,8 @@ class EmployeeSalaryController extends Controller
             'allowances' => $request->allowances,
             'deductions' => $request->deductions,
             'status' => $request->status,
+            'remarks' => $request->remarks,
+            'net_salary' => $request->net_salary,
             'payment_date' => $request->payment_date ?? now(),
             'payment_method' => $request->payment_method ?? 'cash', // Default to 'cash'
         ]);
@@ -69,7 +77,7 @@ class EmployeeSalaryController extends Controller
     }
   
     public function edit(EmployeeSalary $employeeSalary)
-    {
+    {   
         $employees = Employee::all();
         return view('account.salary_management.employee_salary.edit', compact('employeeSalary', 'employees'));
     }
@@ -83,8 +91,9 @@ class EmployeeSalaryController extends Controller
             'deductions' => 'nullable|numeric',
             'payment_date' => 'required|date',
             'payment_method' => 'required|string', // Ensure this field is required
-            'status' => 'required|string|in:paid,unpaid',
+            'status' => 'required|string|in:paid,unpaid,pending,rejected,approved', 
             'remarks' => 'nullable|string',
+            'net_salary' => 'required|numeric',
         ]);
     
         $employeeSalary = EmployeeSalary::findOrFail($employeeSalary->id);
@@ -97,6 +106,7 @@ class EmployeeSalaryController extends Controller
             'payment_method' => $request->payment_method ?? 'cash', // ✅ Default to 'cash'
             'status' => $request->status,
             'remarks' => $request->remarks,
+            'net_salary' => $request->net_salary,
         ]);
     
         return redirect()->route('account.salary_management.employee_salary.index')
@@ -111,4 +121,13 @@ class EmployeeSalaryController extends Controller
         return redirect()->route('account.salary_management.employee_salary.index')
             ->with('success', 'Employee salary deleted successfully.');
     }
+
+
+    public function showEmployeeSalary()
+    {
+        $departments = Department::all();  // Fetch all departments
+    
+        return view('account.salary_management.employee_salary.index', compact('departments'));
+    }
+
 }

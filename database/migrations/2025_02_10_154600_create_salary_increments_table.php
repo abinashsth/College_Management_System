@@ -14,7 +14,7 @@ return new class extends Migration
             if (!Schema::hasTable('salary_increments')) {
             Schema::create('salary_increments', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('employee_id')->constrained()->onDelete('cascade');
+                $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
                 $table->decimal('increment_amount', 10, 2);
                 $table->date('increment_date');
                 $table->timestamps();

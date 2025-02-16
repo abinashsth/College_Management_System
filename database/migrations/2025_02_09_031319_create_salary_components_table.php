@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // Name of the salary component
             $table->string('type'); // Type of the salary component (e.g., Allowance, Deduction)
+            $table->decimal('amount', 10, 2); // Amount of the salary component
             $table->boolean('status'); // Status of the salary component (e.g., Active, Inactive)
-            $table->text('description')->nullable(); // Description of the salary component
+          
             $table->timestamps(); // Created at and updated at timestamps
         });
     }   

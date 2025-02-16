@@ -18,7 +18,9 @@ class Student extends Model
         'dob',
         'class_id',
         'status',
-        
+        'academic_year',
+        'fee_structure_id',
+        'student_id',
         'verified_at'
     ];
 

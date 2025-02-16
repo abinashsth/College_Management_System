@@ -18,7 +18,8 @@ class SalaryComponentController extends Controller
 
     public function create()
     {
-        return view('account.salary_management.salary_component.create');
+        $salaryComponents = SalaryComponent::all();
+        return view('account.salary_management.salary_component.create', compact('salaryComponents'));
     }
 
     public function store(Request $request)
