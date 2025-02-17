@@ -17,15 +17,10 @@
                 <select class="border rounded px-4 py-2" wire:model="class">
                     <option value="">All Classes</option>
                     @foreach($classes as $class)
-                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                        <option value="{{ $class->id }}">{{ $class->class_name }}</option>
                     @endforeach
                 </select>
-                <select class="border rounded px-4 py-2" wire:model="academic_year">
-                    <option value="">All Academic Years</option>
-                    @foreach($academicYears as $year)
-                        <option value="{{ $year->id }}">{{ $year->year }}</option>
-                    @endforeach
-                </select>
+               
             </div>
         </div>
 
@@ -36,10 +31,8 @@
                     <th class="px-6 py-3 font-medium text-gray-500">Student</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Class</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Academic Year</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Tuition Fee</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Admission Fee</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Exam Fee</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Total Fee</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Fee Head</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Amount</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Status</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Actions</th>
                 </tr>
@@ -49,11 +42,15 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 text-sm">{{ $feeStructure->id }}</td>
                     <td class="px-6 py-4 text-sm">{{ $feeStructure->student->name }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $feeStructure->class->name }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $feeStructure->academicYear->year }}</td>
-                    <td class="px-6 py-4 text-sm">₹{{ number_format($feeStructure->tuition_fee, 2) }}</td>
-                    <td class="px-6 py-4 text-sm">₹{{ number_format($feeStructure->admission_fee, 2) }}</td>
-                    <td class="px-6 py-4 text-sm">₹{{ number_format($feeStructure->exam_fee, 2) }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $feeStructure->class->class_name }}</td>
+                    
+                    <td class="px-6 py-4 text-sm">
+                        <ul class="list-disc list-inside">
+                            @foreach($feeCategories as $category)
+                                <li>{{ $category->name }}</li>
+                            @endforeach
+                        </ul>
+                    </td>
                  
                     <td class="px-6 py-4 text-sm font-semibold">₹{{ number_format(
                         $feeStructure->tuition_fee + 

@@ -5,27 +5,26 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\FeeStructure;
 use App\Models\Classes;
-use App\Models\AcademicYear;
 use App\Models\Student;
-
+use App\Models\FeeCategory;
 
 class FeeStructureController extends Controller
 {
     public function index()
     {
-        $feeStructures = FeeStructure::with(['student', 'class', 'academicYear'])->paginate(10);
+        $feeStructures = FeeStructure::with(['student', 'class'])->paginate(10);
         $classes = Classes::all();
-        $academicYears = AcademicYear::all();
         $students = Student::all();
-        return view('account.fee_management.fee_structure.index', compact('feeStructures', 'classes', 'academicYears', 'students'));
+        $feeCategories = FeeCategory::all();
+        return view('account.fee_management.fee_structure.index', compact('feeStructures', 'classes', 'students', 'feeCategories'));
     }
 
     public function create()
     {
         $classes = Classes::all();
-        $academicYears = AcademicYear::where('status', 'active')->get();
         $students = Student::where('status', true)->get();
-        return view('account.fee_management.fee_structure.create', compact('classes', 'academicYears', 'students'));
+        $feeCategories = FeeCategory::all();
+        return view('account.fee_management.fee_structure.create', compact('classes', 'students', 'feeCategories'));
     }   
 
     public function store(Request $request)
@@ -33,7 +32,6 @@ class FeeStructureController extends Controller
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
             'class_id' => 'required|exists:classes,id',
-            'academic_year' => 'required|exists:academic_years,id',
             'tuition_fee' => 'required|numeric|min:0',
             'admission_fee' => 'required|numeric|min:0',
             'exam_fee' => 'required|numeric|min:0',
@@ -51,9 +49,8 @@ class FeeStructureController extends Controller
     {
         $feeStructure = FeeStructure::findOrFail($id);
         $classes = Classes::all();
-        $academicYears = AcademicYear::where('status', 'active')->get();
         $students = Student::where('status', true)->get();
-        return view('account.fee_management.fee_structure.edit', compact('feeStructure', 'classes', 'academicYears', 'students'));
+        return view('account.fee_management.fee_structure.edit', compact('feeStructure', 'classes', 'students'));
     }   
 
     public function update(Request $request, $id)
@@ -63,7 +60,6 @@ class FeeStructureController extends Controller
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
             'class_id' => 'required|exists:classes,id', 
-            'academic_year' => 'required|exists:academic_years,id',
             'tuition_fee' => 'required|numeric|min:0',
             'admission_fee' => 'required|numeric|min:0',
             'exam_fee' => 'required|numeric|min:0',
