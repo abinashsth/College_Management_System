@@ -1,0 +1,42 @@
+name: Publish Website to CPanel
+
+on:
+  push:
+    branches:
+      - main  # Change to your deployment branch if needed
+
+jobs:
+  deploy:
+    name: FTP Deployment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Assets
+        run: |
+          npm install
+          npm run build
+
+      - name: Set Up PHP and Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Deploy to cPanel via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: ${{ secrets.FTP_SERVER }}  # Set this in GitHub Secrets
+          username: ${{ secrets.FTP_USERNAME }}  # Set this in GitHub Secrets
+          password: ${{ secrets.FTP_PASSWORD }}  # Set this in GitHub Secrets
+          local-dir: "./build/"  # Change this based on your project structure
+          server-dir: "/public_html/"  # Change this based on your cPanel directory
