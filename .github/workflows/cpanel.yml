@@ -27,13 +27,13 @@ jobs:
           npm run build
 
       - name: Set Up PHP and Composer
-        uses: shivammathur/setup-php@v2
+        uses: abinashsth/setup-php@v2
         with:
           php-version: '8.2'
           tools: composer
 
       - name: Deploy to cPanel via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4
+        uses: abinashsth/FTP-Deploy-Action@v4
         with:
           server: ${{ secrets.FTP_SERVER }}  # Set this in GitHub Secrets
           username: ${{ secrets.FTP_USERNAME }}  # Set this in GitHub Secrets
