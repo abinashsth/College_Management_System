@@ -38,5 +38,4 @@ jobs:
           server: ${{ secrets.SERVER }}  # Set this in GitHub Secrets
           username: ${{ secrets.USERNAME }}  # Set this in GitHub Secrets
           password: ${{ secrets.PASSWORD }}  # Set this in GitHub Secrets
-          local-dir: "./build/"  # Change this based on your project structure
           server-dir: "/public_html/"  # Change this based on your cPanel directory
