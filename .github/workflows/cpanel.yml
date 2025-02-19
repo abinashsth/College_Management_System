@@ -38,6 +38,5 @@ jobs:
           server: ${{ secrets.SERVER }}  # Set this in GitHub Secrets
           username: ${{ secrets.USERNAME }}  # Set this in GitHub Secrets
           password: ${{ secrets.PASSWORD }}  # Set this in GitHub Secrets
-          server-dir: "/public_html/"  # Change this based on your cPanel directory
-          passive: true
+         
 
