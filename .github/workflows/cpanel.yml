@@ -29,5 +29,7 @@ jobs:
         server: ${{ secrets.SERVER }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
+        protocol: ftps
+        port: 21
         passive: true
         exclude: ".git*, node_modules/, vendor/, *.env, storage/"
