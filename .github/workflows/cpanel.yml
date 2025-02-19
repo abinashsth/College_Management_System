@@ -33,7 +33,7 @@ jobs:
           tools: composer
 
       - name: Deploy to cPanel via FTP
-        uses: SamKirkland/FTP-Deploy-Action@4.3.3
+        uses: SamKirkland/FTP-Deploy-Action@4.3.5
         with:
           server: ${{ secrets.SERVER }}  # Set this in GitHub Secrets
           username: ${{ secrets.USERNAME }}  # Set this in GitHub Secrets
