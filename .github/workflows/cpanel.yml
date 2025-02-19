@@ -31,4 +31,3 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         passive: true
         exclude: ".git*, node_modules/, vendor/, *.env, storage/"
-        log-level: debug
