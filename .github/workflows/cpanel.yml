@@ -24,12 +24,9 @@ jobs:
       run: composer install --no-dev --optimize-autoloader
         
     - name: FTP-Deploy-Action
-      uses: SamKirkland/FTP-Deploy-Action@4.3.3
+      uses: SamKirkland/FTP-Deploy-Action@4.3.5
       with:
         server: ${{ secrets.SERVER }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
-        protocol: ftps
-        port: 21
-        passive: true
         exclude: ".git*, node_modules/, vendor/, *.env, storage/"
