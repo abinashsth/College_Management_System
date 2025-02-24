@@ -22,7 +22,6 @@ jobs:
 
     - name: Install PHP dependencies
       run: composer install --no-dev --optimize-autoloader
-        
     
     - name: Deploy to cPanel via SSH
       uses: appleboy/scp-action@master
