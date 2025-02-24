@@ -23,10 +23,12 @@ jobs:
     - name: Install PHP dependencies
       run: composer install --no-dev --optimize-autoloader
         
-    - name: FTP-Deploy-Action
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+    
+    - name: Deploy to cPanel via SSH
+      uses: appleboy/scp-action@master
       with:
-        server: ${{ secrets.SERVER }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        exclude: ".git*, node_modules/, vendor/, *.env, storage/"
+          host: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USERNAME }}
+          key: ${{ secrets.CPANELSSHKEY }}
+          source: "./"
+          target: "/home3/adananep/college.adananepal.com"
