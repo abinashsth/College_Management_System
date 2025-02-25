@@ -29,18 +29,18 @@
                     @enderror
                 </div>
 
-                <!-- Department Selection -->
+                <!-- Salary Month    Selection -->
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="department">
-                        Department
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="salary_month">
+                        Salary Month
                     </label>
-                    <select name="department_id" id="department" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 bg-gray-100 leading-tight focus:outline-none focus:shadow-outline" readonly>
-                        <option value="">Select Department</option>
-                        @foreach($departments as $department)
-                            <option value="{{ $department->id }}">{{ $department->name }}</option>
-                        @endforeach
-                    </select>
+                    <input type="month" name="salary_month" id="salary_month" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" required>      
+                    @error('salary_month')
+                        <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                    @enderror   
                 </div>
+
+               
             </div>
 
             <!-- Salary Calculation Section -->
@@ -162,10 +162,10 @@
                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" 
                             required>
                         <option value="">Select Status</option>
-                        <option value="pending">Pending</option>
+                       
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
-                        <option value="paid">Paid</option>
+                     
                     </select>
                     @error('status')
                         <p class="text-red-500 text-xs italic">{{ $message }}</p>
@@ -269,7 +269,6 @@ class SalaryCalculator {
         this.form = document.getElementById('salaryForm');
         this.elements = {
             employee: document.getElementById('employee'),
-            department: document.getElementById('department'),
             basicSalary: document.getElementById('basic_salary'),
             totalAllowances: document.getElementById('total_allowances'),
             totalDeductions: document.getElementById('total_deductions'),

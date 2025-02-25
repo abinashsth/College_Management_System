@@ -31,15 +31,7 @@
                 </div>
             @endif
 
-            {{-- <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="employee_id">
-                    Employee ID
-                </label>
-                <input type="text" name="employee_id" id="employee_id" value="{{ $employeeSalary->employee->employee_id }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" disabled>
-                @error('employee_id')
-                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
-                @enderror
-            </div> --}}
+          
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="employee_id">
@@ -50,6 +42,17 @@
                     <option value="{{ $employeeSalary->employee_id }}">{{ $employeeSalary->employee->name }}</option>
                 </select>
             </div>
+
+            <!-- Salary Month Selection -->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="salary_month">
+                    Salary Month
+                </label>
+                <input type="month" name="salary_month" id="salary_month" value="{{ $employeeSalary->salary_month }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                @error('salary_month')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                @enderror   
+            </div>  
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="basic_salary">
@@ -118,10 +121,7 @@
                 </label>
                 <select name="status" id="status" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     <option value="paid" {{ $employeeSalary->status == 'paid' ? 'selected' : '' }}>Paid</option>
-                    <option value="unpaid" {{ $employeeSalary->status == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
                     <option value="pending" {{ $employeeSalary->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="rejected" {{ $employeeSalary->status == 'rejected' ? 'selected' : '' }}>Rejected</option>
-                    <option value="approved" {{ $employeeSalary->status == 'approved' ? 'selected' : '' }}>Approved</option>    
                 </select>
                 @error('status')
                     <p class="text-red-500 text-xs italic">{{ $message }}</p>

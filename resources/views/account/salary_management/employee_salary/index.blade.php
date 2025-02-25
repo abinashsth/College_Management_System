@@ -34,18 +34,13 @@
         <div class="p-4 flex justify-between items-center">
             <input type="text" placeholder="Search employees..." class="border rounded px-4 py-2 w-64" wire:model="search">
             <div class="flex space-x-4">
-                <select class="border rounded px-4 py-2" wire:model="department">
-                    <option value="">All Departments</option>
-                    @foreach($departments as $department)
-                        <option value="{{ $department->id }}">{{ $department->name }}</option>
-                    @endforeach
-                </select>
+              
                 <select class="border rounded px-4 py-2" wire:model="status">
                     <option value="">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
+                  
                     <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                 
                 </select>
             </div>
         </div>
@@ -55,10 +50,7 @@
                 <tr class="bg-gray-100 text-left">
                     <th class="px-6 py-3 font-medium text-gray-500">Employee ID</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Employee Name</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Department</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Basic Salary</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Allowances</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Deductions</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Salary Month</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Net Salary</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Status</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Actions</th>
@@ -73,11 +65,8 @@
                       
                     </td>
                     <td class="px-6 py-4 text-sm">{{  $employee->employee->name }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $employee->employee->department }}</td>
-                    <td class="px-6 py-4 text-sm">৳{{ number_format($employee->basic_salary ?? 0, 2) }}</td>
-                    <td class="px-6 py-4 text-sm">৳{{ number_format($employee->allowances ?? 0, 2) }}</td>
-                    <td class="px-6 py-4 text-sm">৳{{ number_format($employee->deductions ?? 0, 2) }}</td>
-                    <td class="px-6 py-4 text-sm">৳{{ number_format($employee->net_salary ?? 0, 2) }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $employee->salary_month }}</td>
+                    <td class="px-6 py-4 text-sm">{{ number_format($employee->net_salary ?? 0, 2) }}</td>
                     <td class="px-6 py-4">
                         <span class="px-2 inline-flex text-xs font-semibold leading-5 rounded-full {{ $employee->status == 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                             {{ $employee->status }}

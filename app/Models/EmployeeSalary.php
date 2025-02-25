@@ -13,7 +13,7 @@ class EmployeeSalary extends Model
 
     protected $fillable = [
         'employee_id', 'basic_salary', 'allowances', 'deductions',
-        'status', 'payment_date', 'payment_method', 'remarks', 'net_salary' 
+        'status', 'payment_date', 'payment_method', 'remarks', 'net_salary', 'salary_month'
     ];
     
     // ✅ Define the missing relationship
