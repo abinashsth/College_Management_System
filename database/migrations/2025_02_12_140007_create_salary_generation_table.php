@@ -16,13 +16,13 @@ return new class extends Migration
                 $table->id();
                 $table->string('month');    
                 $table->date('payment_date');
-                $table->foreignId('department_id')->nullable()->constrained('departments');
+              
                 $table->foreignId('employee_id')->constrained('employees');
                 $table->decimal('basic_salary', 10, 2);
                 $table->decimal('allowance', 10, 2)->default(0);
                 $table->decimal('deduction', 10, 2)->default(0);
                 $table->decimal('total_salary', 10, 2);
-                $table->enum('status', ['pending', 'approved', 'rejected', 'paid'])->default('pending');
+                $table->enum('status', ['pending', 'paid'])->default('pending');    
                 $table->string('description')->nullable();
                 $table->foreignId('approved_by')->nullable()->constrained('users');
                 $table->timestamp('approved_at')->nullable();

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Department;
 use App\Models\Employee;
 use App\Models\SalarySheet;  
 
@@ -11,16 +10,14 @@ class SalaryGenerationController extends Controller
 {
     public function index()
     {
-        $departments = Department::all();
         $employees = Employee::all();
-        return view('account.salary_management.generate_salary.index', compact('departments', 'employees'));
+        return view('account.salary_management.generate_salary.index', compact('employees'));
     }
 
     public function create()
     {
-        $departments = Department::all();
         $employees = Employee::all();
-        return view('account.salary_management.generate_salary.create', compact('departments', 'employees'));
+        return view('account.salary_management.generate_salary.create', compact('employees'));
     }
 
     public function store(Request $request)
@@ -28,7 +25,6 @@ class SalaryGenerationController extends Controller
         $request->validate([
             'month' => 'required',
             'payment_date' => 'required|date',
-            'department' => 'nullable|exists:departments,id',
             'employee' => 'nullable|exists:employees,id',
             'basic_salary' => 'required|numeric|min:0',
             'allowances' => 'nullable|numeric|min:0',
@@ -39,7 +35,6 @@ class SalaryGenerationController extends Controller
         $salarySheet = new SalarySheet();
         $salarySheet->month = $request->month;
         $salarySheet->payment_date = $request->payment_date;
-        $salarySheet->department_id = $request->department;
         $salarySheet->employee_id = $request->employee;
         $salarySheet->basic_salary = $request->basic_salary;
         $salarySheet->allowances = $request->allowances ?? 0;
@@ -53,9 +48,8 @@ class SalaryGenerationController extends Controller
 
     public function edit(SalarySheet $salaryGeneration)
     {
-        $departments = Department::all();
         $employees = Employee::all();
-        return view('account.salary_management.generate_salary.edit', compact('salaryGeneration', 'departments', 'employees'));
+        return view('account.salary_management.generate_salary.edit', compact('salaryGeneration', 'employees'));
     }
 
     public function update(Request $request, SalarySheet $salaryGeneration)
@@ -63,7 +57,6 @@ class SalaryGenerationController extends Controller
         $request->validate([
             'month' => 'required',
             'payment_date' => 'required|date',
-            'department' => 'nullable|exists:departments,id',
             'employee' => 'nullable|exists:employees,id',
             'basic_salary' => 'required|numeric|min:0',
             'allowances' => 'nullable|numeric|min:0',
@@ -74,7 +67,6 @@ class SalaryGenerationController extends Controller
         $salaryGeneration->update([
             'month' => $request->month,
             'payment_date' => $request->payment_date,
-            'department_id' => $request->department,
             'employee_id' => $request->employee,
             'basic_salary' => $request->basic_salary,
             'allowances' => $request->allowances ?? 0,

@@ -18,17 +18,7 @@
                 @enderror
             </div>  
 
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="department">
-                    Department (Optional)
-                </label>
-                <select name="department" id="department" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    <option value="">All Departments</option>
-                    @foreach($departments as $department)
-                        <option value="{{ $department->id }}">{{ $department->name }}</option>
-                    @endforeach
-                </select>
-            </div>
+           
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="employee">
