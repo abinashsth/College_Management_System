@@ -12,11 +12,11 @@
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="employee">
                     Select Employee
                 </label>
-                <select name="employee_id" id="employee" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                <select name="employee_id" id="employee" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required onchange="updateCurrentSalary(this)">
                     <option value="">Select Employee</option>
                     @foreach($employees as $employee)
                         <option value="{{ $employee->id }}" data-current-salary="{{ $employee->salary }}">
-                            {{ $employee->name }} - {{ $employee->department }} ({{ $employee->employee_id }})
+                            {{ $employee->name }} ({{ $employee->employee_id }})
                         </option>
                     @endforeach
                 </select>
@@ -34,6 +34,14 @@
                     <p class="text-red-500 text-xs italic">{{ $message }}</p>
                 @enderror
             </div>
+
+            <script>
+                function updateCurrentSalary(selectElement) {
+                    const selectedOption = selectElement.options[selectElement.selectedIndex];
+                    const currentSalary = selectedOption.getAttribute('data-current-salary');
+                    document.getElementById('current_salary').value = currentSalary || '';
+                }
+            </script>
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="increment_amount">
@@ -71,9 +79,9 @@
                 </label>
                 <select name="status" id="status" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     <option value="">Select Status</option>
-                    <option value="Approved">Approved</option>
+                    <option value="Paid">Paid</option>
                     <option value="Pending">Pending</option>
-                    <option value="Rejected">Rejected</option>
+                   
                 </select>
                 @error('status')
                     <p class="text-red-500 text-xs italic">{{ $message }}</p>

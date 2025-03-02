@@ -8,11 +8,11 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ExamController;
-use App\Http\Controllers\ExamTypeController;
+
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\ResultController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\AccountController;
+
+
 use App\Http\Controllers\AcademicSessionController;
 use App\Http\Controllers\ExamResultController;
 use App\Http\Controllers\EmployeeSalaryController;
@@ -71,9 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('subjects/{subject}/assign-class', [SubjectController::class, 'assignClass'])->name('subjects.assign-class');
         Route::delete('subjects/{subject}/remove-class/{class}', [SubjectController::class, 'removeClass'])->name('subjects.remove-class');
         
-        // Exam Types
-        Route::resource('exam-types', ExamTypeController::class);
-        
+       
         // Examiner Assignments
         Route::resource('examiner-assignments', ExaminerAssignmentController::class);
         
@@ -122,37 +120,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-    // Report Management
-    Route::middleware(['permission:view reports'])->group(function () {
-        Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/students', [ReportController::class, 'studentReport'])->name('students');
-            Route::get('/classes', [ReportController::class, 'classIndex'])->name('classes');
-            Route::get('/class/{class}', [ReportController::class, 'classReport'])->name('class');
-            Route::get('/subjects', [ReportController::class, 'subjectIndex'])->name('subjects');
-            Route::get('/subject/{subject}', [ReportController::class, 'subjectShow'])->name('subject.show');
-            Route::get('/exams', [ReportController::class, 'examIndex'])->name('exams');
-            Route::get('/exam/{exam}', [ReportController::class, 'examShow'])->name('exam.show');
-            
-            // Download Reports
-            Route::get('/download/student/{student}', [ReportController::class, 'downloadStudentReport'])->name('download.student');
-            Route::get('/download/class/{class}', [ReportController::class, 'downloadClassReport'])->name('download.class');
-            Route::get('/download/subject/{subject}', [ReportController::class, 'downloadSubjectReport'])->name('download.subject');
-            Route::get('/download/exam/{exam}', [ReportController::class, 'downloadExamReport'])->name('download.exam');
-        });
-    });
-
+   
    //Employee Management
 
     Route::prefix('account')->group(function () {
-        Route::resource('account/employee', EmployeeController::class);
-        Route::get('/account/employee', [EmployeeController::class, 'index'])->name('account.employee.index');
-        Route::get('/account/employee/create', [EmployeeController::class, 'create'])->name('account.employee.create');
-        Route::post('/account/employee/store', [EmployeeController::class, 'store'])->name('account.employee.store');
-        Route::post('/account/employee/update', [EmployeeController::class, 'update'])->name('account.employee.update');
-        Route::get('account/employee/{id}/edit', [EmployeeController::class, 'edit'])->name('account.employee.edit');
-        Route::delete('account/employee/{id}', [EmployeeController::class, 'destroy'])->name('account.employee.destroy');
-
-
+        Route::resource('employee', EmployeeController::class);
+        Route::get('/employee', [EmployeeController::class, 'index'])->name('account.employee.index');
+        Route::get('/employee/create', [EmployeeController::class, 'create'])->name('account.employee.create');
+        Route::post('/employee', [EmployeeController::class, 'store'])->name('account.employee.store');
+        Route::get('/employee/{id}/edit', [EmployeeController::class, 'edit'])->name('account.employee.edit');
+        Route::put('/employee/{id}', [EmployeeController::class, 'update'])->name('account.employee.update');
+        Route::delete('/employee/{id}', [EmployeeController::class, 'destroy'])->name('account.employee.destroy');
     });
 
     

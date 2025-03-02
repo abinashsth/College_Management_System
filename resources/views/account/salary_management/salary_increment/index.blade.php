@@ -12,17 +12,12 @@
 
         <div class="mb-6 flex justify-between items-center">
             <div class="flex space-x-4">
-                <select class="border rounded px-4 py-2" wire:model="department">
-                    <option value="">All Departments</option>
-                    <option value="IT">IT</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                </select>
+              
                 <select class="border rounded px-4 py-2" wire:model="status">
                     <option value="">All Status</option>
-                    <option value="Approved">Approved</option>
+                    <option value="Paid">Paid</option>
                     <option value="Pending">Pending</option>
-                    <option value="Rejected">Rejected</option>
+              
                 </select>
             </div>
         </div>
@@ -32,7 +27,6 @@
                 <tr class="bg-gray-100 text-left">
                     <th class="px-6 py-3 font-medium text-gray-500">Employee ID</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Employee Name</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Department</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Current Salary</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Increment Amount</th>
                     <th class="px-6 py-3 font-medium text-gray-500">New Salary</th>
@@ -48,15 +42,14 @@
                         <div class="text-sm font-medium text-gray-900">{{ $increment->employee->employee_id }}</div>
                     </td>
                     <td class="px-6 py-4 text-sm">{{ $increment->employee->name }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $increment->employee->department }}</td>
                     <td class="px-6 py-4 text-sm">&#8377;{{ number_format($increment->current_salary, 2) }}</td>
                     <td class="px-6 py-4 text-sm">&#8377;{{ number_format($increment->increment_amount, 2) }}</td>
                     <td class="px-6 py-4 text-sm">&#8377;{{ number_format($increment->new_salary, 2) }}</td>
                     <td class="px-6 py-4 text-sm">{{ $increment->effective_date->format('d M Y') }}</td>
                     <td class="px-6 py-4">
                         <span class="px-2 inline-flex text-xs font-semibold leading-5 rounded-full 
-                            {{ $increment->status == 'Approved' ? 'bg-green-100 text-green-800' : 
-                               ($increment->status == 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                            {{ $increment->status == 'Paid' ? 'bg-green-100 text-green-800' : 
+                               ($increment->status == 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
                             {{ $increment->status }}
                         </span>
                     </td>

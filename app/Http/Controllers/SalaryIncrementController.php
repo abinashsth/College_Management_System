@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\SalaryIncrement;
-use App\Models\Employee;    
+use App\Models\Employee;
+use App\Models\EmployeeSalary;
 
 class SalaryIncrementController extends Controller
 {
     public function index()
     {
-        $salaryIncrements = SalaryIncrement::paginate(10); 
+        $salaryIncrements =SalaryIncrement::whereNull('deleted_at')->paginate(10);
         return view('account.salary_management.salary_increment.index', compact('salaryIncrements'));
     }   
 
@@ -25,17 +26,45 @@ class SalaryIncrementController extends Controller
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'increment_amount' => 'required|numeric|min:0', 
-            'increment_date' => 'required|date'
+            'effective_date' => 'required|date'
         ]);
 
-        $increment = SalaryIncrement::create($request->all());
-
-        // Update employee's salary
         $employee = Employee::find($request->employee_id);
-        $employee->salary += $request->increment_amount;
-        $employee->save();
+        
+        // Get current salary from employee_salaries table
+        $currentSalary = EmployeeSalary::where('employee_id', $employee->id)
+            ->orderBy('salary_month', 'desc')
+            ->first();
 
-        return redirect()->route('employees.index')->with('success', 'Salary increment added successfully.');
+        if (!$currentSalary) {
+            return redirect()->back()->with('error', 'No salary record found for this employee');
+        }
+
+        // Calculate new salary
+        $newSalary = $currentSalary->basic_salary + $request->increment_amount;
+
+        // Create salary increment record
+        $increment = SalaryIncrement::create([
+            'employee_id' => $request->employee_id,
+            'current_salary' => $currentSalary->basic_salary,
+            'increment_amount' => $request->increment_amount,
+            'new_salary' => $newSalary,
+            'effective_date' => $request->effective_date,
+            'remarks' => $request->remarks ?? null
+        ]);
+
+        // Create new salary record
+        EmployeeSalary::create([
+            'employee_id' => $employee->id,
+            'salary_month' => $request->effective_date,
+            'basic_salary' => $newSalary,
+            'allowances' => $currentSalary->allowances,
+            'deductions' => $currentSalary->deductions,
+            'payment_date' => now(),
+            'status' => 'Pending'
+        ]);
+
+        return redirect()->route('salary-increments.index')->with('success', 'Salary increment added successfully.');
     }
 
     public function edit(SalaryIncrement $salaryIncrement)
@@ -49,21 +78,47 @@ class SalaryIncrementController extends Controller
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'increment_amount' => 'required|numeric|min:0',
-            'increment_date' => 'required|date',
+            'effective_date' => 'required|date',
         ]);
 
-        $salaryIncrement->employee_id = $request->employee_id;
-        $salaryIncrement->increment_amount = $request->increment_amount;
-        $salaryIncrement->increment_date = $request->increment_date;
-        $salaryIncrement->save();
+        $currentSalary = EmployeeSalary::where('employee_id', $request->employee_id)
+            ->where('salary_month', '<', $request->effective_date)
+            ->orderBy('salary_month', 'desc')
+            ->first();
 
-        return redirect()->route('account.salary_management.salary_increment.index')->with('success', 'Salary increment updated successfully');
+        $newSalary = $currentSalary->basic_salary + $request->increment_amount;
+
+        $salaryIncrement->update([
+            'employee_id' => $request->employee_id,
+            'current_salary' => $currentSalary->basic_salary,
+            'increment_amount' => $request->increment_amount,
+            'new_salary' => $newSalary,
+            'effective_date' => $request->effective_date,
+            'remarks' => $request->remarks ?? null
+        ]);
+
+        // Update or create new salary record
+        EmployeeSalary::updateOrCreate(
+            [
+                'employee_id' => $request->employee_id,
+                'salary_month' => $request->effective_date
+            ],
+            [
+                'basic_salary' => $newSalary,
+                'allowances' => $currentSalary->allowances,
+                'deductions' => $currentSalary->deductions,
+                'payment_date' => now(),
+                'status' => 'Pending'
+            ]
+        );
+
+        return redirect()->route('salary-increments.index')->with('success', 'Salary increment updated successfully');
     }
 
     public function destroy(SalaryIncrement $salaryIncrement)
     {
         $salaryIncrement->delete();
 
-        return redirect()->route('account.salary_management.salary_increment.index')->with('success', 'Salary increment deleted successfully');
+        return redirect()->route('salary-increments.index')->with('success', 'Salary increment deleted successfully');
     }
 }

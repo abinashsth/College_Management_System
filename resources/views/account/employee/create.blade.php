@@ -52,9 +52,15 @@
                 <!-- Department -->
                 <div class="mb-4">
                     <label for="department" class="block text-gray-700 font-medium mb-2">Department</label>
-                    <input type="text" id="department" name="department" value="{{ old('department') }}" required
-                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                           placeholder="Enter department">
+                    <select id="department" name="department" required
+                            class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        <option value="">Select Department</option>
+                        <option value="HR" {{ old('department') == 'HR' ? 'selected' : '' }}>Human Resources</option>
+                        <option value="IT" {{ old('department') == 'IT' ? 'selected' : '' }}>Information Technology</option>
+                        <option value="Finance" {{ old('department') == 'Finance' ? 'selected' : '' }}>Finance</option>
+                        <option value="Marketing" {{ old('department') == 'Marketing' ? 'selected' : '' }}>Marketing</option>
+                        <option value="Operations" {{ old('department') == 'Operations' ? 'selected' : '' }}>Operations</option>
+                    </select>
                     @error('department')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -75,8 +81,10 @@
                 <div class="mb-4">
                     <label for="contact" class="block text-gray-700 font-medium mb-2">Contact</label>
                     <input type="text" id="contact" name="contact" value="{{ old('contact') }}" required
-                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                           placeholder="Enter contact number">
+                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none" 
+                           pattern="[0-9]{10}" maxlength="10"
+                           placeholder="Enter 10 digit contact number"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
                     @error('contact')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
