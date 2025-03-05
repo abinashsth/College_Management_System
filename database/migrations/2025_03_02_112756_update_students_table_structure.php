@@ -28,8 +28,8 @@ return new class extends Migration
             }
             
             // Add new columns if they don't exist
-            if (!Schema::hasColumn('students', 'student_name')) {
-                $table->string('student_name');
+            if (Schema::hasColumn('students', 'student_name')) {
+                $table->dropColumn('student_name');
             }
             
             if (!Schema::hasColumn('students', 'father_name')) {
@@ -52,25 +52,37 @@ return new class extends Migration
                 $table->text('address');
             }
             
-            if (!Schema::hasColumn('students', 'phone')) {
-                $table->string('phone');
+            if (Schema::hasColumn('students', 'phone')) {
+                $table->dropColumn('phone');
             }
             
-            if (!Schema::hasColumn('students', 'admission_number') && !in_array('admission_number', $columnsToDrop)) {
-                $table->string('admission_number')->unique();
+            if (Schema::hasColumn('students', 'admission_number')) {
+                $table->dropColumn('admission_number');
             }
             
-            if (!Schema::hasColumn('students', 'roll_no')) {
-                $table->string('roll_no')->unique();
+            if (Schema::hasColumn('students', 'roll_number')) {
+                $table->dropColumn('roll_number');
             }
             
             if (!Schema::hasColumn('students', 'admission_date')) {
                 $table->date('admission_date');
             }
             
+            if (!Schema::hasColumn('students', 'academic_session_id')) {
+                $table->foreignId('academic_session_id')->constrained()->onDelete('cascade');
+            }
+            
             // Add class_id if it doesn't exist
             if (!Schema::hasColumn('students', 'class_id')) {
                 $table->foreignId('class_id')->constrained()->onDelete('cascade');
+            }
+            
+            if (!Schema::hasColumn('students', 'status')) {
+                $table->enum('status', ['active', 'inactive'])->default('active');
+            }
+            
+            if (!Schema::hasColumn('students', 'email')) {
+                $table->string('email')->unique()->nullable();
             }
         });
     }
@@ -80,8 +92,24 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // This is a complex migration with many changes
-        // For safety, we'll do nothing in the down method
-        // as reversing this could cause data loss
+        Schema::table('students', function (Blueprint $table) {
+            // Drop the new columns
+            $table->dropColumn([
+                'student_name',
+                'father_name', 
+                'mother_name',
+                'date_of_birth',
+                'gender',
+                'address',
+                'phone',
+                'admission_number',
+                'roll_no',
+                'admission_date',
+                'academic_session_id',
+                'class_id',
+                'status',
+                'email'
+            ]);
+        });
     }
 };

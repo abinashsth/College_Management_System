@@ -11,12 +11,21 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\ClassesController;
+use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\ExamTypeController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\EmployeeSalaryController;
+use App\Http\Controllers\SalaryIncrementController;
+use App\Http\Controllers\SalaryComponentController;
+use App\Http\Controllers\SalaryGenerationController;
+use App\Http\Controllers\FeeStructureController;
+use App\Http\Controllers\FeeCategoryController;
 use App\Http\Controllers\ResultController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\AcademicSessionController;
 use App\Http\Controllers\ExamResultController;
 use App\Http\Controllers\ExaminerAssignmentController;
@@ -32,6 +41,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+
+     // Academic Management Routes
+     Route::resource('sessions', SessionController::class);
+     Route::resource('courses', CourseController::class);
+     Route::resource('faculties', FacultyController::class);
+     Route::resource('classes', ClassesController::class);
+     Route::resource('schools', SchoolController::class);
+     
+   // Finance Management Routes
+   Route::resource('ledgers', LedgerController::class);
+   Route::get('ledgers/student/{student}', [LedgerController::class, 'studentSummary'])->name('ledgers.student-summary');
+
+
 
     // Student Management
     Route::middleware(['permission:view students'])->group(function () {
@@ -142,6 +164,78 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['permission:view accounts'])->group(function () {
         Route::resource('accounts', AccountController::class);
     });
+
+    //Employee Management
+
+        Route::prefix('account')->group(function () {
+            Route::get('/employees', [EmployeeController::class, 'index'])->name('account.employee.index');
+        });
+
+        //Employee Salary
+        Route::prefix('account/salary_management')->group(function () {
+            Route::get('/employee_salary', [EmployeeSalaryController::class, 'index'])->name('account.salary_management.employee_salary.index');
+        });
+
+        //Salary Increment
+
+        Route::prefix('account/salary_management')->group(function () {
+            Route::get('/salary_increment', [SalaryIncrementController::class, 'index'])
+                ->name('account.salary_management.salary_increment.index');
+        });
+
+        //Salary component
+
+        Route::prefix('account/salary_management')->group(function () {
+            Route::get('/salary_component', [SalaryComponentController::class, 'index'])
+                ->name('account.salary_management.salary_component.index');
+        });
+
+        // Salary Generation
+
+        Route::prefix('account/salary_management')->group(function () {
+            Route::get('/generate_salary', [GenerateSalaryController::class, 'index'])
+                ->name('account.salary_management.generate_salary.index');
+        });
+
+
+        
+// Salary Generation
+    Route::prefix('account/generate_salary')->group(function () {
+        Route::resource('generate_salary', SalaryGenerationController::class);
+        Route::get('/generate_salary', [SalaryGenerationController::class, 'index'])->name('account.salary_management.generate_salary.index');
+        Route::get('/generate_salary/create', [SalaryGenerationController::class, 'create'])->name('account.salary_management.generate_salary.create'); 
+        Route::post('/generate_salary', [SalaryGenerationController::class, 'store'])->name('account.salary_management.generate_salary.store');
+        Route::get('/generate_salary/{salaryGeneration}/edit', [SalaryGenerationController::class, 'edit'])->name('account.salary_management.generate_salary.edit');
+        Route::put('/generate_salary/{salaryGeneration}', [SalaryGenerationController::class, 'update'])->name('account.salary_management.generate_salary.update');
+        Route::delete('/generate_salary/{salaryGeneration}', [SalaryGenerationController::class, 'destroy'])->name('account.salary_management.generate_salary.destroy');
+        Route::get('/generate-salary', [SalaryGenerationController::class, 'generate'])->name('account.salary_management.generate_salary.generate');  
+    });  
+    
+    
+    // Fee Management
+    Route::prefix('account/fee_management')->group(function () {
+        Route::resource('fee_structure', FeeStructureController::class);
+        Route::get('/fee_structure', [FeeStructureController::class, 'index'])->name('account.fee_management.fee_structure.index');
+        Route::get('/fee_structure/create', [FeeStructureController::class, 'create'])->name('account.fee_management.fee_structure.create');        
+        Route::post('/fee_structure', [FeeStructureController::class, 'store'])->name('account.fee_management.fee_structure.store');
+        Route::get('/fee_structure/{feeStructure}/edit', [FeeStructureController::class, 'edit'])->name('account.fee_management.fee_structure.edit');
+        Route::put('/fee_structure/{feeStructure}', [FeeStructureController::class, 'update'])->name('account.fee_management.fee_structure.update');
+        Route::delete('/fee_structure/{feeStructure}', [FeeStructureController::class, 'destroy'])->name('account.fee_management.fee_structure.destroy');
+    }); 
+    
+        
+    // Fee Category
+    Route::prefix('account/fee_category')->group(function () {
+        Route::resource('fee_category', FeeCategoryController::class);
+        Route::get('/fee_category', [FeeCategoryController::class, 'index'])->name('account.fee_management.fee_category.index');
+        Route::get('/fee_category/create', [FeeCategoryController::class, 'create'])->name('account.fee_management.fee_category.create');
+        Route::post('/fee_category', [FeeCategoryController::class, 'store'])->name('account.fee_management.fee_category.store');
+        Route::get('/fee_category/{feeCategory}/edit', [FeeCategoryController::class, 'edit'])->name('account.fee_management.fee_category.edit');
+        Route::put('/fee_category/{feeCategory}', [FeeCategoryController::class, 'update'])->name('account.fee_management.fee_category.update');
+        Route::delete('/fee_category/{feeCategory}', [FeeCategoryController::class, 'destroy'])->name('account.fee_management.fee_category.destroy');
+    });
+
+    
 
     // User Management
     Route::middleware(['permission:view users'])->group(function () {
