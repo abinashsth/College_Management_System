@@ -3,173 +3,127 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subject;
-use App\Models\Classes;
-use App\Models\AcademicSession;
+use App\Models\Course;
+use App\Models\Faculty;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class SubjectController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('permission:view subjects', ['only' => ['index', 'show']]);
-        $this->middleware('permission:create subjects', ['only' => ['create', 'store']]);
-        $this->middleware('permission:edit subjects', ['only' => ['edit', 'update']]);
-        $this->middleware('permission:delete subjects', ['only' => ['destroy']]);
-    }
-
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
-        $subjects = Subject::with('classes')
-            ->orderBy('name')
+        $subjects = Subject::with(['course'])
+            ->orderBy('id', 'desc')
             ->paginate(10);
-            
-        return view('exam-management.subjects.index', compact('subjects'));
+        return view('subjects.index', compact('subjects'));
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
-        $classes = Classes::where('is_active', true)->get();
-        $academicSessions = AcademicSession::where('is_active', true)->get();
-        return view('exam-management.subjects.create', compact('classes', 'academicSessions'));
+        $courses = Course::where('status', true)->get();
+        return view('subjects.create', compact('courses'));
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:subjects',
+        $validator = Validator::make($request->all(), [
+            'subject_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'total_theory_marks' => 'required|numeric|min:0',
-            'total_practical_marks' => 'required|numeric|min:0',
-            'passing_marks' => 'required|numeric|min:0',
-            'academic_session_id' => 'required|exists:academic_sessions,id',
-            'classes' => 'nullable|array',
-            'classes.*' => 'exists:classes,id'
+            'credit_hours' => 'required|integer|min:1',
+            'course_id' => 'required|exists:courses,id',
+            'status' => 'boolean'
         ]);
 
-        DB::beginTransaction();
-        try {
-            $subject = Subject::create([
-                'name' => $validated['name'],
-                'code' => $validated['code'],
-                'description' => $validated['description'] ?? null,
-                'total_theory_marks' => $validated['total_theory_marks'],
-                'total_practical_marks' => $validated['total_practical_marks'],
-                'passing_marks' => $validated['passing_marks'],
-                'status' => true
-            ]);
-
-            if (!empty($validated['classes'])) {
-                foreach ($validated['classes'] as $classId) {
-                    $subject->classes()->attach($classId, [
-                        'academic_session_id' => $validated['academic_session_id']
-                    ]);
-                }
-            }
-
-            DB::commit();
-            return redirect()->route('subjects.index')->with('success', 'Subject created successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withInput()->with('error', 'Failed to create subject. ' . $e->getMessage());
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
+
+        // Create subject
+        Subject::create([
+            'subject_name' => $request->subject_name,
+            'description' => $request->description,
+            'credit_hours' => $request->credit_hours,
+            'course_id' => $request->course_id,
+            'status' => $request->status ?? true,
+            'created_by' => Auth::id() ?? 1
+        ]);
+
+        return redirect()->route('subjects.index')
+            ->with('success', 'Subject created successfully.');
     }
 
+    /**
+     * Display the specified resource.
+     */
     public function show(Subject $subject)
     {
-        $subject->load('classes', 'exams', 'examinerAssignments.user');
-        return view('exam-management.subjects.show', compact('subject'));
+        $subject->load(['course', 'createdBy']);
+        return view('subjects.show', compact('subject'));
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(Subject $subject)
     {
-        $classes = Classes::where('is_active', true)->get();
-        $academicSessions = AcademicSession::where('is_active', true)->get();
-        $assignedClasses = $subject->classes->pluck('id')->toArray();
-        return view('exam-management.subjects.edit', compact('subject', 'classes', 'academicSessions', 'assignedClasses'));
+        $courses = Course::where('status', true)->get();
+        return view('subjects.edit', compact('subject', 'courses'));
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, Subject $subject)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:subjects,code,' . $subject->id,
+        $validator = Validator::make($request->all(), [
+            'subject_code' => 'required|string|max:50|unique:subjects,subject_code,' . $subject->id,
+            'subject_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'total_theory_marks' => 'required|numeric|min:0',
-            'total_practical_marks' => 'required|numeric|min:0',
-            'passing_marks' => 'required|numeric|min:0',
-            'academic_session_id' => 'required|exists:academic_sessions,id,is_active,true',
-            'classes' => 'array'
+            'credit_hours' => 'required|integer|min:1',
+            'course_id' => 'required|exists:courses,id',
+            'status' => 'boolean'
         ]);
 
-        DB::beginTransaction();
-        try {
-            $subject->update([
-                'name' => $validated['name'],
-                'code' => $validated['code'],
-                'description' => $validated['description'] ?? null,
-                'total_theory_marks' => $validated['total_theory_marks'],
-                'total_practical_marks' => $validated['total_practical_marks'],
-                'passing_marks' => $validated['passing_marks'],
-                'status' => true
-            ]);
-
-            if (isset($validated['classes'])) {
-                foreach ($validated['classes'] as $classId) {
-                    $subject->classes()->syncWithoutDetaching($classId, [
-                        'academic_session_id' => $validated['academic_session_id']
-                    ]);
-                }
-            }
-
-            DB::commit();
-            return redirect()->route('subjects.index')->with('success', 'Subject updated successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withInput()->with('error', 'Failed to update subject. ' . $e->getMessage());
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
+
+        // Update subject
+        $subject->update([
+            'subject_code' => $request->subject_code,
+            'subject_name' => $request->subject_name,
+            'description' => $request->description,
+            'credit_hours' => $request->credit_hours,
+            'course_id' => $request->course_id,
+            'status' => $request->status ?? $subject->status
+        ]);
+
+        return redirect()->route('subjects.index')
+            ->with('success', 'Subject updated successfully.');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(Subject $subject)
     {
-        if ($subject->exams()->exists() || $subject->examinerAssignments()->exists()) {
-            return back()->with('error', 'Cannot delete subject. It has associated exams or examiner assignments.');
-        }
+        $subject->delete();
 
-        DB::beginTransaction();
-        try {
-            $subject->classes()->detach();
-            $subject->delete();
-            DB::commit();
-            return redirect()->route('subjects.index')->with('success', 'Subject deleted successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Failed to delete subject. ' . $e->getMessage());
-        }
+        return redirect()->route('subjects.index')
+            ->with('success', 'Subject deleted successfully.');
     }
-
-    public function assignClass(Request $request, Subject $subject)
-    {
-        $validated = $request->validate([
-            'class_id' => 'required|exists:classes,id'
-        ]);
-
-        if (!$subject->classes()->where('class_id', $validated['class_id'])->exists()) {
-            $subject->classes()->attach($validated['class_id']);
-            return back()->with('success', 'Class assigned successfully.');
-        }
-
-        return back()->with('info', 'Class is already assigned to this subject.');
-    }
-
-    public function removeClass(Subject $subject, Classes $class)
-    {
-        if ($subject->exams()->where('class_id', $class->id)->exists()) {
-            return back()->with('error', 'Cannot remove class. There are exams associated with this subject-class combination.');
-        }
-
-        $subject->classes()->detach($class->id);
-        return back()->with('success', 'Class removed successfully.');
-    }
-}
+} 

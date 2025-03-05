@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Classes extends Model
 {
@@ -11,21 +13,49 @@ class Classes extends Model
 
     protected $fillable = [
         'class_name',
-        'section',
-        'is_active'
+        'course_id',
+        'session_id',
+        'faculty_id',
+        'status'
     ];
 
-    public function students()
+    /**
+     * Get the course that owns the class.
+     */
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    /**
+     * Get the session that owns the class.
+     */
+    public function session(): BelongsTo
+    {
+        return $this->belongsTo(Session::class);
+    }
+
+    /**
+     * Get the faculty that owns the class.
+     */
+    public function faculty(): BelongsTo
+    {
+        return $this->belongsTo(Faculty::class);
+    }
+
+    /**
+     * Get the students for the class.
+     */
+    public function students(): HasMany
     {
         return $this->hasMany(Student::class, 'class_id');
     }
 
-    protected static function boot()
+    /**
+     * Get the subjects for the class.
+     */
+    public function subjects(): HasMany
     {
-        parent::boot();
-        
-        static::creating(function ($model) {
-            $model->is_active = $model->is_active ?? true;
-        });
+        return $this->hasMany(Subject::class);
     }
 } 
