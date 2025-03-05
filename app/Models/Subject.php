@@ -4,46 +4,75 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class Subject extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'code',
+        'subject_code',
+        'subject_name',
         'description',
+        'credit_hours',
+        'course_id',
         'status',
-        'total_theory_marks',
-        'total_practical_marks',
-        'passing_marks'
+        'created_by'
     ];
 
     protected $casts = [
         'status' => 'boolean',
-        'total_theory_marks' => 'decimal:2',
-        'total_practical_marks' => 'decimal:2',
-        'passing_marks' => 'decimal:2'
+        'credit_hours' => 'integer'
     ];
 
-    public function classes()
+    protected static function boot()
     {
-        return $this->belongsToMany(Classes::class, 'class_subject', 'subject_id', 'class_id')
-            ->withTimestamps();
+        parent::boot();
+        
+        static::creating(function ($subject) {
+            // Set created_by if not set
+            if (!$subject->created_by) {
+                $subject->created_by = Auth::id() ?? 1;
+            }
+
+            // Set status to true if not set
+            if (!isset($subject->status)) {
+                $subject->status = true;
+            }
+
+            // Generate subject code if not set
+            if (!$subject->subject_code) {
+                $course = Course::find($subject->course_id);
+                if ($course) {
+                    // Format: COURSECODE-SEQUENCE (e.g., BCA-001)
+                    $lastSubject = static::where('course_id', $subject->course_id)
+                        ->orderBy('id', 'desc')
+                        ->first();
+                    
+                    $sequence = $lastSubject ? (int)substr($lastSubject->subject_code, -3) + 1 : 1;
+                    $subject->subject_code = sprintf("%s-%03d", 
+                        $course->course_code,
+                        $sequence
+                    );
+                }
+            }
+        });
     }
 
-    public function exams()
+    /**
+     * Get the course that owns the subject.
+     */
+    public function course(): BelongsTo
     {
-        return $this->hasMany(Exam::class);
+        return $this->belongsTo(Course::class);
     }
 
-    public function examinerAssignments()
+    /**
+     * Get the user that created the subject.
+     */
+    public function createdBy(): BelongsTo
     {
-        return $this->hasMany(ExaminerAssignment::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
-
-    public function examResults()
-    {
-        return $this->hasMany(ExamResult::class);
-    }
-}
+} 

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ExamController;
 use App\Http\Controllers\API\ResultController;
 use App\Http\Controllers\API\ReportController;
+use App\Http\Controllers\Api\ClassController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,4 +44,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('reports')->group(function () {
         Route::get('/student/{student}', [ReportController::class, 'studentReportApi']);
     });
+
+    // Class subjects
+    Route::get('/classes/{class}/subjects', [ClassController::class, 'subjects']);
+
+    // Exam routes
+    Route::get('/exams/get-exam', [ExamController::class, 'getExam']);
 });

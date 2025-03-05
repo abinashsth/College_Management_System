@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Classes extends Model
 {
@@ -15,22 +17,16 @@ class Classes extends Model
         'is_active'
     ];
 
-    public function feeStructures()
-    {
-        return $this->hasMany(FeeStructure::class);
-    }
-
     public function students()
     {
         return $this->hasMany(Student::class, 'class_id');
     }
 
-    protected static function boot()
+    /**
+     * Get the subjects for the class.
+     */
+    public function subjects(): HasMany
     {
-        parent::boot();
-        
-        static::creating(function ($model) {
-            $model->is_active = $model->is_active ?? true;
-        });
+        return $this->hasMany(Subject::class);
     }
 } 

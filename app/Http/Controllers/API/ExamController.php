@@ -7,6 +7,7 @@ use App\Models\Exam;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Gate;
 
 class ExamController extends Controller
 {
@@ -93,5 +94,35 @@ class ExamController extends Controller
         }
 
         return response()->json(['message' => 'Exam results stored successfully']);
+    }
+
+    public function getExam(Request $request)
+    {
+        if (!Gate::allows('enter marks')) {
+            abort(403);
+        }
+
+        $request->validate([
+            'class_id' => 'required|exists:classes,id',
+            'exam_type_id' => 'required|exists:exam_types,id',
+            'subject_id' => 'required|exists:subjects,id'
+        ]);
+
+        $exam = Exam::where([
+            'class_id' => $request->class_id,
+            'exam_type_id' => $request->exam_type_id,
+            'subject_id' => $request->subject_id,
+            'is_published' => true
+        ])->first();
+
+        if (!$exam) {
+            return response()->json([
+                'message' => 'Exam not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'exam' => $exam
+        ]);
     }
 }

@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false, examDropdown: false }" class="bg-white border-b border-gray-100">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -14,6 +14,9 @@
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('schools.index')" :active="request()->routeIs('schools.*')">
+                        {{ __('School Management') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -70,6 +73,9 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('schools.index')" :active="request()->routeIs('schools.*')">
+                {{ __('School Management') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->
@@ -97,4 +103,99 @@
             </div>
         </div>
     </div>
+</nav>
+
+<!-- Navigation -->
+@php
+    $user = Auth::user();
+@endphp
+
+<nav class="flex-1 mt-6">
+    <a href="{{ route('dashboard') }}" class="sidebar-item">
+        <i class="fas fa-home sidebar-icon"></i>
+        Dashboard
+    </a>
+
+    <!-- Academic Management System -->
+    <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('academicManagement')">
+        <i class="fas fa-graduation-cap sidebar-icon"></i>
+        Academic Management
+        <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+    </div>
+    <div id="academicManagement" class="hidden pl-8">
+        <a href="{{ route('sessions.index') }}" class="sidebar-item">
+            <i class="fas fa-calendar-alt sidebar-icon"></i>
+            Sessions
+        </a>
+        <a href="{{ route('courses.index') }}" class="sidebar-item">
+            <i class="fas fa-book sidebar-icon"></i>
+            Courses
+        </a>
+        <a href="{{ route('faculties.index') }}" class="sidebar-item">
+            <i class="fas fa-chalkboard-teacher sidebar-icon"></i>
+            Faculty
+        </a>
+        <a href="{{ route('classes.index') }}" class="sidebar-item">
+            <i class="fas fa-chalkboard sidebar-icon"></i>
+            Classes
+        </a>
+    </div>
+
+    <!-- Student Management -->
+        <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('studentManagement')">
+            <i class="fas fa-user-graduate sidebar-icon"></i>
+        Student Management
+            <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+        </div>
+        <div id="studentManagement" class="hidden pl-8">
+        <a href="{{ route('students.index') }}" class="sidebar-item">
+            <i class="fas fa-users sidebar-icon"></i>
+            Students
+        </a>
+        <a href="{{ route('students.create') }}" class="sidebar-item">
+            <i class="fas fa-user-plus sidebar-icon"></i>
+            Add Student
+        </a>
+        </div>
+
+    <!-- Subject Management -->
+    <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('subjectManagement')">
+        <i class="fas fa-book-open sidebar-icon"></i>
+        Subject Management
+            <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+        </div>
+    <div id="subjectManagement" class="hidden pl-8">
+        <a href="{{ route('subjects.index') }}" class="sidebar-item">
+            <i class="fas fa-list sidebar-icon"></i>
+            All Subjects
+        </a>
+        <a href="{{ route('subjects.create') }}" class="sidebar-item">
+            <i class="fas fa-plus sidebar-icon"></i>
+            Add Subject
+        </a>
+    </div>
+
+    <!-- Finance Management -->
+    <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('financeManagement')">
+        <i class="fas fa-money-bill-wave sidebar-icon"></i>
+        Finance Management
+            <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+        </div>
+    <div id="financeManagement" class="hidden pl-8">
+        <a href="{{ route('ledgers.index') }}" class="sidebar-item">
+            <i class="fas fa-file-invoice-dollar sidebar-icon"></i>
+            Ledgers
+        </a>
+    </div>
+
+    @if($user->hasRole('super-admin') || $user->checkPermission('view accounts'))
+        <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('accountManagement')">
+            <i class="fas fa-coins sidebar-icon"></i>
+            Account
+            <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+        </div>
+        <div id="accountManagement" class="hidden pl-8">
+            <a href="{{ route('accounts.index') }}" class="sidebar-item">Settings</a>
+        </div>
+    @endif
 </nav>
