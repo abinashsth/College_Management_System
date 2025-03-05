@@ -2,81 +2,104 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ClassModel;
 use App\Models\Employee;
+use App\Models\Department;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $employees = Employee::latest()->paginate(10);
-        return view('account.employee.index', compact('employees'));
+        $query = Employee::with('department');
+        
+        // Filter by department if provided
+        if ($request->has('department_id') && $request->department_id != 'all') {
+            $query->where('department_id', $request->department_id);
+        }
+        
+        // Search by employee name or ID
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('employee_id', 'like', "%{$search}%");
+            });
+        }
+        
+        $employees = $query->orderBy('name')->paginate(10);
+        $departments = Department::orderBy('name')->get();
+        
+        return view('employees.index', compact('employees', 'departments'));
     }
 
     public function create()
     {
-        return view('account.employee.create');
+        $departments = Department::orderBy('name')->get();
+        
+        return view('employees.create', compact('departments'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'employee_id' => 'required|numeric|unique:employee,employee_id',
+        $request->validate([
+            'employee_id' => 'required|unique:employees,employee_id',
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employee',
-            'department' => 'required|string|max:255',
-            'designation' => 'required|string|max:255', 
-            'contact' => 'required|string|max:20',
-            'status' => 'required|boolean',
+            'department_id' => 'required|exists:departments,id',
+            'designation' => 'required|string|max:255',
+            'basic_salary' => 'required|numeric|min:0',
+            'allowances' => 'required|numeric|min:0',
+            'deductions' => 'required|numeric|min:0',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'join_date' => 'nullable|date',
         ]);
         
-        $employee = Employee::create($validated);
-
-        return redirect()
-            ->route('account.employee.index')
+        Employee::create($request->all());
+        
+        return redirect()->route('employees.index')
             ->with('success', 'Employee created successfully.');
     }
 
     public function show(Employee $employee)
     {
-        return response()->json(
-            $employee->load('salaryIncrements')
-        );
+        $employee->load('department');
+        
+        return view('employees.show', compact('employee'));
     }
 
     public function edit(Employee $employee)
     {
-        return view('account.employee.edit', compact('employee'));
+        $departments = Department::orderBy('name')->get();
+        
+        return view('employees.edit', compact('employee', 'departments'));
     }
-    
+
     public function update(Request $request, Employee $employee)
     {
-        $validated = $request->validate([
+        $request->validate([
+            'employee_id' => 'required|unique:employees,employee_id,' . $employee->id,
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employee,email,' . $employee->id,
-            'department' => 'required|string|max:255',
+            'department_id' => 'required|exists:departments,id',
             'designation' => 'required|string|max:255',
-            'contact' => 'required|string|max:20',
-            'status' => 'required|boolean'
+            'basic_salary' => 'required|numeric|min:0',
+            'allowances' => 'required|numeric|min:0',
+            'deductions' => 'required|numeric|min:0',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'join_date' => 'nullable|date',
         ]);
-
-        $employee->update($validated);
-
-        return redirect()
-            ->route('account.employee.index')
+        
+        $employee->update($request->all());
+        
+        return redirect()->route('employees.index')
             ->with('success', 'Employee updated successfully.');
     }
 
     public function destroy(Employee $employee)
     {
         $employee->delete();
-    
-        return redirect()
-            ->route('account.employee.index')
+        
+        return redirect()->route('employees.index')
             ->with('success', 'Employee deleted successfully.');
     }
 }

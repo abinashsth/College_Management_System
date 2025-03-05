@@ -3,98 +3,43 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
-use App\Models\SalaryComponent;
-use App\Models\SalaryIncrement;
+use App\Models\Salary;
 use Illuminate\Http\Request;
 
 class SalaryController extends Controller
 {
-    public function index()
+    /**
+     * Display salary history for an employee.
+     */
+    public function history(Employee $employee)
     {
-        $employees = Employee::with(['salaries', 'salaryIncrements'])->get();
-        return view('account.salary_management.salary.index', compact('employees'));
+        $salaries = $employee->salaries()->orderBy('effective_date', 'desc')->get();
+        return view('salaries.history', compact('employee', 'salaries'));
     }
-
-    public function create()
+    
+    /**
+     * Show form to add new salary.
+     */
+    public function create(Employee $employee)
     {
-        $employees = Employee::all();
-        $salaryComponents = SalaryComponent::active()->get();
-        return view('account.salary_management.salary.create', compact('employees', 'salaryComponents'));
+        return view('salaries.create', compact('employee'));
     }
-
-    public function store(Request $request)
+    
+    /**
+     * Store a new salary record.
+     */
+    public function store(Request $request, Employee $employee)
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'components' => 'required|array',
-            'components.*.component_id' => 'required|exists:salary_components,id',
-            'components.*.amount' => 'required|numeric|min:0'
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0',
+            'effective_date' => 'required|date',
+            'payment_type' => 'required|string',
+            'notes' => 'nullable|string',
         ]);
-
-        $employee = Employee::findOrFail($request->employee_id);
         
-        foreach ($request->components as $component) {
-            $employee->salaries()->create([
-                'salary_component_id' => $component['component_id'],
-                'amount' => $component['amount']
-            ]);
-        }
-
-        return redirect()->route('account.salary_management.salary.index')
-            ->with('success', 'Salary details added successfully.');
-    }
-
-    public function show($id)
-    {
-        $employee = Employee::with(['salaries.component', 'salaryIncrements'])->findOrFail($id);
-        return view('account.salary_management.salary.show', compact('employee'));
-    }
-
-    public function edit($id)
-    {
-        $employee = Employee::with('salaries.component')->findOrFail($id);
-        $salaryComponents = SalaryComponent::active()->get();
-        return view('account.salary_management.salary.edit', compact('employee', 'salaryComponents'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'components' => 'required|array',
-            'components.*.component_id' => 'required|exists:salary_components,id',
-            'components.*.amount' => 'required|numeric|min:0'
-        ]);
-
-        $employee = Employee::findOrFail($id);
+        $employee->salaries()->create($validated);
         
-        // Delete existing salary components
-        $employee->salaries()->delete();
-        
-        // Add new salary components
-        foreach ($request->components as $component) {
-            $employee->salaries()->create([
-                'salary_component_id' => $component['component_id'],
-                'amount' => $component['amount']
-            ]);
-        }
-
-        return redirect()->route('account.salary_management.salary.index')
-            ->with('success', 'Salary details updated successfully.');
-    }
-
-    public function destroy($id)
-    {
-        $employee = Employee::findOrFail($id);
-        $employee->salaries()->delete();
-        
-        return redirect()->route('account.salary_management.salary.index')
-            ->with('success', 'Salary details deleted successfully.');
-    }
-
-    public function generate()
-    {
-        $employees = Employee::all();
-        $salaryComponents = SalaryComponent::active()->get();
-        return view('account.salary_management.generate_salary.index', compact('employees', 'salaryComponents'));
+        return redirect()->route('account.employee.show', $employee)
+            ->with('success', 'Salary information updated successfully');
     }
 }

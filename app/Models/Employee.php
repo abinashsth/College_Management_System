@@ -4,52 +4,42 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
     use HasFactory;
 
-    protected $table = 'employee';
-
     protected $fillable = [
         'employee_id',
-        'name', 
-        'email',
-        'department',
+        'name',
+        'department_id',
         'designation',
-        'contact',
-        'salary',
-        'status',
-        'verified_at'
+        'basic_salary',
+        'allowances',
+        'deductions',
+        'email',
+        'phone',
+        'join_date',
     ];
 
     protected $casts = [
-        'status' => 'boolean',
-        'verified_at' => 'datetime',
-        'salary' => 'decimal:2'
+        'join_date' => 'date',
     ];
 
-    public function salaryIncrements()
+    public function department(): BelongsTo
     {
-        return $this->hasMany(SalaryIncrement::class);
+        return $this->belongsTo(Department::class);
     }
 
-    public function getStatusLabelAttribute()
+    public function payrolls(): HasMany
     {
-        return $this->status ? 'Active' : 'Inactive';
+        return $this->hasMany(Payroll::class);
     }
 
-    public function getDepartmentLabelAttribute()
+    public function getNetSalaryAttribute()
     {
-        $departments = [
-            'HR' => 'Human Resources',
-            'IT' => 'Information Technology', 
-            'Finance' => 'Finance',
-            'Marketing' => 'Marketing',
-            'Operations' => 'Operations'
-        ];
-
-        return $departments[$this->department] ?? $this->department;
+        return $this->basic_salary + $this->allowances - $this->deductions;
     }
 }

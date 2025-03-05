@@ -77,6 +77,18 @@
                     @enderror
                 </div>
 
+
+                  <!-- Net Salary -->
+                  <div class="mb-4">
+                    <label for="net_salary" class="block text-gray-700 font-medium mb-2">Net Salary</label>
+                    <input type="text" id="net_salary" name="net_salary" value="{{ old('net_salary') }}" required
+                           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                           placeholder="Enter Net Salary">
+                    @error('net_salary')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <!-- Contact -->
                 <div class="mb-4">
                     <label for="contact" class="block text-gray-700 font-medium mb-2">Contact</label>
@@ -94,7 +106,8 @@
                 <div class="mb-4">
                     <label class="block text-gray-700 font-medium mb-2">Status</label>
                     <div class="flex items-center space-x-4">
-                        <label class="inline-flex items-center">
+                        <label class="inline-fl
+                        ex items-center">
                             <input type="radio" name="status" value="1" 
                                    {{ old('status', '1') === '1' ? 'checked' : '' }}
                                    class="text-teal-600 focus:ring-teal-500">

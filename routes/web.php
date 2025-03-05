@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\EmployeeController;
+
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
@@ -12,6 +12,8 @@ use App\Http\Controllers\ExamController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\ResultController;
 
+use App\Http\Controllers\SalaryController;
+use App\Http\Controllers\EmployeeController;
 
 use App\Http\Controllers\AcademicSessionController;
 use App\Http\Controllers\ExamResultController;
@@ -120,22 +122,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-   
-   //Employee Management
-
-    Route::prefix('account')->group(function () {
-        Route::resource('employee', EmployeeController::class);
-        Route::get('/employee', [EmployeeController::class, 'index'])->name('account.employee.index');
-        Route::get('/employee/create', [EmployeeController::class, 'create'])->name('account.employee.create');
-        Route::post('/employee', [EmployeeController::class, 'store'])->name('account.employee.store');
-        Route::get('/employee/{id}/edit', [EmployeeController::class, 'edit'])->name('account.employee.edit');
-        Route::put('/employee/{id}', [EmployeeController::class, 'update'])->name('account.employee.update');
-        Route::delete('/employee/{id}', [EmployeeController::class, 'destroy'])->name('account.employee.destroy');
-    });
+     // Employee Management
+     Route::resource('employees', EmployeeController::class);
 
     
+
+
+
     // Salary Management
-  
 Route::prefix('account/salary_management')->group(function () {
     Route::resource('employee_salary', EmployeeSalaryController::class);
     Route::get('/employee_salary', [EmployeeSalaryController::class, 'index'])->name('account.salary_management.employee_salary.index');
@@ -145,6 +139,27 @@ Route::prefix('account/salary_management')->group(function () {
     Route::get('/employee_salary/{employeeSalary}/edit', [EmployeeSalaryController::class, 'edit'])->name('account.salary_management.employee_salary.edit');
     Route::put('/employee_salary/{employeeSalary}', [EmployeeSalaryController::class, 'update'])->name('account.salary_management.employee_salary.update');
     Route::delete('/employee_salary/{employeeSalary}', [EmployeeSalaryController::class, 'destroy'])->name('account.salary_management.employee_salary.destroy');
+    
+    // Employee salary history
+    Route::get('/employee/{employee}/salary-history', [EmployeeSalaryController::class, 'salaryHistory'])->name('account.salary_management.employee_salary.history');
+    
+    // Salary processing
+    Route::get('/process-salary', [EmployeeSalaryController::class, 'processSalaryForm'])->name('account.salary_management.employee_salary.process-form');
+    Route::post('/process-salary', [EmployeeSalaryController::class, 'processSalary'])->name('account.salary_management.employee_salary.process');
+    
+    // Salary reports
+    Route::get('/reports', [EmployeeSalaryController::class, 'reports'])->name('account.salary_management.employee_salary.reports');
+    Route::get('/reports/download', [EmployeeSalaryController::class, 'downloadReport'])->name('account.salary_management.employee_salary.download-report');
+});
+
+// Salary routes
+Route::prefix('employee')->group(function () {
+    Route::get('{employee}/salaries', [SalaryController::class, 'history'])->name('salaries.history');
+    Route::get('{employee}/salaries/create', [SalaryController::class, 'create'])->name('salaries.create');
+    Route::post('{employee}/salaries', [SalaryController::class, 'store'])->name('salaries.store');
+    Route::get('{employee}/salaries/{salary}/edit', [SalaryController::class, 'edit'])->name('salaries.edit');
+    Route::put('{employee}/salaries/{salary}', [SalaryController::class, 'update'])->name('salaries.update');
+    Route::delete('{employee}/salaries/{salary}', [SalaryController::class, 'destroy'])->name('salaries.destroy');
 });
 
 

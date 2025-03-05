@@ -3,23 +3,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Employee;
 
 
 
-class EmployeeSalary extends Model
+
+class Salary extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'employee_id', 'basic_salary', 'allowances', 'deductions',
-        'status', 'payment_date', 'payment_method', 'remarks', 'net_salary', 'salary_month'
+        'employee_id',
+        'amount',
+        'effective_date',
+        'payment_type',
+        'notes',
+    ];
+
+    
+    protected $casts = [
+        'effective_date' => 'date',
     ];
     
     // ✅ Define the missing relationship
     public function employee()
     {
-        return $this->belongsTo(Employee::class, 'employee_id');
+        return $this->belongsTo(Employee::class);
     }
 
     
