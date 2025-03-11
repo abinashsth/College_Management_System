@@ -8,7 +8,7 @@
             <h1 class="text-2xl font-bold text-gray-800">Update Employee</h1>
             <p class="text-gray-600 text-sm mt-1">Edit employee information and details</p>
         </div>
-        <a href="{{ route('account.employee.index') }}" class="flex items-center text-gray-600 hover:text-gray-800">
+        <a href="{{ route('account.employees.index') }}" class="flex items-center text-gray-600 hover:text-gray-800">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
@@ -17,7 +17,7 @@
     </div>
 
     <div class="bg-white rounded-lg shadow-lg max-w-4xl mx-auto p-8">
-        <form action="{{ route('account.employee.update', $employee->employee_id) }}" method="POST" class="space-y-6">
+        <form action="{{ route('account.employees.update', $employee->employee_id) }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
             
@@ -110,7 +110,7 @@
 
             <!-- Form Buttons -->
             <div class="flex justify-end space-x-4 pt-6 border-t">
-                <a href="{{ route('account.employee.index') }}" 
+                <a href="{{ route('account.employees.index') }}" 
                    class="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition duration-200">
                     Cancel
                 </a>

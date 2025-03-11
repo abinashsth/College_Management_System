@@ -28,12 +28,13 @@ class Employee extends Model
         'join_date' => 'date',
     ];
 
-    public function department(): BelongsTo
+    public function department()
     {
         return $this->belongsTo(Department::class);
     }
+    
 
-    public function payrolls(): HasMany
+    public function payrolls()
     {
         return $this->hasMany(Payroll::class);
     }

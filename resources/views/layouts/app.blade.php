@@ -197,7 +197,7 @@
                     </div>
                     <div id="accountManagement" class="hidden pl-8">
                         {{-- <a href="{{ route('account.index') }}" class="sidebar-item">Students</a> --}}
-                        <a href="{{ route('account.employee.index') }}" class="sidebar-item">Employee</a>
+                        <a href="{{ route('account.employees.index') }}" class="sidebar-item">Employees</a>
                         <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('payrollManagement')">
                             <i class="fas fa-coins sidebar-icon"></i>
                             Payroll Management

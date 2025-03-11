@@ -5,13 +5,13 @@
     <!-- Header Section -->
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Create Employee</h1>
-        <a href="{{ route('account.employee.index') }}" class="text-gray-600 hover:text-gray-800">
+        <a href="{{ route('account.employees.index') }}" class="text-gray-600 hover:text-gray-800">
             Back to Employees
         </a>
     </div>
 
     <div class="bg-white rounded shadow-md max-w-3xl mx-auto p-6">
-        <form action="{{ route('account.employee.store') }}" method="POST">
+        <form action="{{ route('account.employees.store') }}" method="POST">
             @csrf
 
             <!-- Employee ID -->
@@ -128,7 +128,7 @@
 
             <!-- Form Buttons -->
             <div class="flex justify-end space-x-2 mt-6">
-                <a href="{{ route('account.employee.index') }}" 
+                <a href="{{ route('account.employees.index') }}" 
                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
                     Cancel
                 </a>

@@ -62,7 +62,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Class Management
     Route::middleware(['permission:view classes'])->group(function () {
-        Route::resource('classes', ClassController::class);
+        Route::resource('classes', ClassesController::class);
     });
 
     // Result Management Routes
@@ -165,38 +165,77 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('accounts', AccountController::class);
     });
 
-    //Employee Management
+    
+// Employee Management
+Route::prefix('account')->name('account.')->group(function () {
+    Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
+    Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
+    Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
+    Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+    Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+    Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+    Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+});
 
-        Route::prefix('account')->group(function () {
-            Route::get('/employees', [EmployeeController::class, 'index'])->name('account.employee.index');
-        });
 
-        //Employee Salary
-        Route::prefix('account/salary_management')->group(function () {
-            Route::get('/employee_salary', [EmployeeSalaryController::class, 'index'])->name('account.salary_management.employee_salary.index');
-        });
+        
 
-        //Salary Increment
+    // Salary Management
+Route::prefix('account/salary_management')->group(function () {
+    Route::resource('employee_salary', EmployeeSalaryController::class);
+    Route::get('/employee_salary', [EmployeeSalaryController::class, 'index'])->name('account.salary_management.employee_salary.index');
+    Route::get('/employee_salary/create', [EmployeeSalaryController::class, 'create'])->name('account.salary_management.employee_salary.create');
+    Route::post('/employee_salary', [EmployeeSalaryController::class, 'store'])->name('account.salary_management.employee_salary.store');
+    Route::get('/employee_salary/{employeeSalary}', [EmployeeSalaryController::class, 'show'])->name('account.salary_management.employee_salary.show');
+    Route::get('/employee_salary/{employeeSalary}/edit', [EmployeeSalaryController::class, 'edit'])->name('account.salary_management.employee_salary.edit');
+    Route::put('/employee_salary/{employeeSalary}', [EmployeeSalaryController::class, 'update'])->name('account.salary_management.employee_salary.update');
+    Route::delete('/employee_salary/{employeeSalary}', [EmployeeSalaryController::class, 'destroy'])->name('account.salary_management.employee_salary.destroy');
+    
+    // Employee salary history
+    Route::get('/employee/{employee}/salary-history', [EmployeeSalaryController::class, 'salaryHistory'])->name('account.salary_management.employee_salary.history');
+    
+    // Salary processing
+    Route::get('/process-salary', [EmployeeSalaryController::class, 'processSalaryForm'])->name('account.salary_management.employee_salary.process-form');
+    Route::post('/process-salary', [EmployeeSalaryController::class, 'processSalary'])->name('account.salary_management.employee_salary.process');
+    
+    // Salary reports
+    Route::get('/reports', [EmployeeSalaryController::class, 'reports'])->name('account.salary_management.employee_salary.reports');
+    Route::get('/reports/download', [EmployeeSalaryController::class, 'downloadReport'])->name('account.salary_management.employee_salary.download-report');
+});
 
-        Route::prefix('account/salary_management')->group(function () {
-            Route::get('/salary_increment', [SalaryIncrementController::class, 'index'])
-                ->name('account.salary_management.salary_increment.index');
-        });
+// Salary routes
+Route::prefix('employee')->group(function () {
+    Route::get('{employee}/salaries', [SalaryController::class, 'history'])->name('salaries.history');
+    Route::get('{employee}/salaries/create', [SalaryController::class, 'create'])->name('salaries.create');
+    Route::post('{employee}/salaries', [SalaryController::class, 'store'])->name('salaries.store');
+    Route::get('{employee}/salaries/{salary}/edit', [SalaryController::class, 'edit'])->name('salaries.edit');
+    Route::put('{employee}/salaries/{salary}', [SalaryController::class, 'update'])->name('salaries.update');
+    Route::delete('{employee}/salaries/{salary}', [SalaryController::class, 'destroy'])->name('salaries.destroy');
+});
 
-        //Salary component
 
-        Route::prefix('account/salary_management')->group(function () {
-            Route::get('/salary_component', [SalaryComponentController::class, 'index'])
-                ->name('account.salary_management.salary_component.index');
-        });
+// Salary Increment
+Route::prefix('account/salary_increment')->group(function () {
+    Route::resource('salary_increment', SalaryIncrementController::class);
+    Route::get('/salary_increment', [SalaryIncrementController::class, 'index'])->name('account.salary_management.salary_increment.index');
+    Route::get('/salary_increment/create', [SalaryIncrementController::class, 'create'])->name('account.salary_management.salary_increment.create');
+    Route::post('/salary_increment', [SalaryIncrementController::class, 'store'])->name('account.salary_management.salary_increment.store');
+    Route::get('/salary_increment/{salaryIncrement}/edit', [SalaryIncrementController::class, 'edit'])->name('account.salary_management.salary_increment.edit');
+    Route::put('/salary_increment/{salaryIncrement}', [SalaryIncrementController::class, 'update'])->name('account.salary_management.salary_increment.update');
+    Route::delete('/salary_increment/{salaryIncrement}', [SalaryIncrementController::class, 'destroy'])->name('account.salary_management.salary_increment.destroy');    
+}); 
 
-        // Salary Generation
 
-        Route::prefix('account/salary_management')->group(function () {
-            Route::get('/generate_salary', [GenerateSalaryController::class, 'index'])
-                ->name('account.salary_management.generate_salary.index');
-        });
-
+// Salary Component
+Route::prefix('account/salary_component')->group(function () {
+    Route::resource('salary_component', SalaryComponentController::class);
+    Route::get('/salary_component', [SalaryComponentController::class, 'index'])->name('account.salary_management.salary_component.index');
+    Route::get('/salary_component/create', [SalaryComponentController::class, 'create'])->name('account.salary_management.salary_component.create');    
+    Route::post('/salary_component', [SalaryComponentController::class, 'store'])->name('account.salary_management.salary_component.store');
+    Route::get('/salary_component/{salaryComponent}/edit', [SalaryComponentController::class, 'edit'])->name('account.salary_management.salary_component.edit');
+    Route::put('/salary_component/{salaryComponent}', [SalaryComponentController::class, 'update'])->name('account.salary_management.salary_component.update');
+    Route::delete('/salary_component/{salaryComponent}', [SalaryComponentController::class, 'destroy'])->name('account.salary_management.salary_component.destroy');
+}); 
 
         
 // Salary Generation
@@ -259,11 +298,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Exam Management Routes
-    Route::resource('exams', ExamController::class);
-    Route::get('exams/view', [ExamController::class, 'view'])->name('exams.view');
-    // Route::get('exams/{exam}/enter-marks', [ExamController::class, 'enterMarks'])->name('exams.enter-marks');
-    // Route::get('exams/{exam}/view-results', [ExamController::class, 'viewResults'])->name('exams.view-results');
+    
 });
 
 require __DIR__.'/auth.php';

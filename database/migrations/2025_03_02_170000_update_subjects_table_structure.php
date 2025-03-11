@@ -15,6 +15,7 @@ return new class extends Migration
             Schema::create('subjects', function (Blueprint $table) {
                 $table->id();
                 $table->string('subject_code')->unique();
+                $table->integer('roll_number');
                 $table->string('subject_name');
                 $table->text('description')->nullable();
                 $table->integer('credit_hours');

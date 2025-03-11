@@ -13,12 +13,12 @@ class EmployeeController extends Controller
         $query = Employee::with('department');
         
         // Filter by department if provided
-        if ($request->has('department_id') && $request->department_id != 'all') {
+        if ($request->filled('department_id') && $request->department_id != 'all') {
             $query->where('department_id', $request->department_id);
         }
         
         // Search by employee name or ID
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -26,17 +26,16 @@ class EmployeeController extends Controller
             });
         }
         
-        $employees = $query->orderBy('name')->paginate(10);
-        $departments = Department::orderBy('name')->get();
-        
-        return view('employees.index', compact('employees', 'departments'));
+        $departments = Department::all(); // Fetch all departments
+        $employees = $query->paginate(10); // Use pagination
+    
+        return view('account.employees.index', compact('departments', 'employees'));
     }
 
     public function create()
     {
         $departments = Department::orderBy('name')->get();
-        
-        return view('employees.create', compact('departments'));
+        return view('account.employees.create', compact('departments'));
     }
 
     public function store(Request $request)
@@ -56,22 +55,19 @@ class EmployeeController extends Controller
         
         Employee::create($request->all());
         
-        return redirect()->route('employees.index')
-            ->with('success', 'Employee created successfully.');
+        return redirect()->route('account.employees.index')->with('success', 'Employee created successfully.');
     }
 
     public function show(Employee $employee)
     {
         $employee->load('department');
-        
-        return view('employees.show', compact('employee'));
+        return view('account.employees.show', compact('employee'));
     }
 
     public function edit(Employee $employee)
     {
         $departments = Department::orderBy('name')->get();
-        
-        return view('employees.edit', compact('employee', 'departments'));
+        return view('account.employees.edit', compact('employee', 'departments'));
     }
 
     public function update(Request $request, Employee $employee)
@@ -91,15 +87,12 @@ class EmployeeController extends Controller
         
         $employee->update($request->all());
         
-        return redirect()->route('employees.index')
-            ->with('success', 'Employee updated successfully.');
+        return redirect()->route('account.employees.index')->with('success', 'Employee updated successfully.');
     }
 
     public function destroy(Employee $employee)
     {
         $employee->delete();
-        
-        return redirect()->route('employees.index')
-            ->with('success', 'Employee deleted successfully.');
+        return redirect()->route('account.employees.index')->with('success', 'Employee deleted successfully.');
     }
 }

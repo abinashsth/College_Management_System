@@ -38,7 +38,7 @@
                             </ul>
                             
                             <div class="mt-3">
-                                <a href="{{ route('employees.edit', $employee) }}" class="btn btn-warning">Edit Profile</a>
+                                <a href="{{ route('account.employees.edit', $employee) }}" class="btn btn-warning">Edit Profile</a>
                                 <a href="{{ route('salaries.history', $employee) }}" class="btn btn-info">Salary History</a>
                             </div>
                         </div>
@@ -126,7 +126,7 @@
             </div>
             
             <div class="mt-3">
-                <a href="{{ route('employees.index') }}" class="btn btn-secondary">Back to List</a>
+                <a href="{{ route('account.employees.index') }}" class="btn btn-secondary">Back to List</a>
             </div>
         </div>
     </div>
