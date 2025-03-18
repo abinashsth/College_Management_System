@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
@@ -13,33 +12,33 @@ class Employee extends Model
 
     protected $fillable = [
         'employee_id',
-        'name',
+        'full_name',
+        'email',
+        'phone',
         'department_id',
         'designation',
+        'joining_date',
         'basic_salary',
         'allowances',
         'deductions',
-        'email',
-        'phone',
-        'join_date',
+        'status',
+        'created_by',
+        'updated_by'
     ];
 
     protected $casts = [
-        'join_date' => 'date',
+        'joining_date' => 'date',
+        'basic_salary' => 'decimal:2',
+        'allowances' => 'decimal:2',
+        'deductions' => 'decimal:2',
     ];
 
-    public function department()
+    public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
     }
-    
 
-    public function payrolls()
-    {
-        return $this->hasMany(Payroll::class);
-    }
-
-    public function getNetSalaryAttribute()
+    public function getNetSalaryAttribute(): float
     {
         return $this->basic_salary + $this->allowances - $this->deductions;
     }

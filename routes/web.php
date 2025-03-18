@@ -116,66 +116,70 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('exam-results/{student}/marksheet', [ExamResultController::class, 'studentMarksheet'])->name('exam-results.marksheet');
     });
 
-    // Result Management
-    Route::middleware(['permission:view results'])->group(function () {
-        Route::prefix('results')->name('results.')->group(function () {
-            // Admin Routes
-            Route::middleware(['role:super-admin|admin'])->group(function () {
-                Route::get('/publish', [ResultController::class, 'publishIndex'])->name('publish');
-                Route::post('/publish/{exam}', [ResultController::class, 'publishResults'])->name('publish-exam');
-                Route::get('/classes', [ResultController::class, 'classesIndex'])->name('classes');
-                Route::get('/analysis', [ResultController::class, 'analysisIndex'])->name('analysis');
-            });
+    // // Result Management
+    // Route::middleware(['permission:view results'])->group(function () {
+    //     Route::prefix('results')->name('results.')->group(function () {
+    //         // Admin Routes
+    //         Route::middleware(['role:super-admin|admin'])->group(function () {
+    //             Route::get('/publish', [ResultController::class, 'publishIndex'])->name('publish');
+    //             Route::post('/publish/{exam}', [ResultController::class, 'publishResults'])->name('publish-exam');
+    //             Route::get('/classes', [ResultController::class, 'classesIndex'])->name('classes');
+    //             Route::get('/analysis', [ResultController::class, 'analysisIndex'])->name('analysis');
+    //         });
 
-            // Examiner Routes
-            Route::middleware(['role:examiner'])->group(function () {
-                Route::get('/my-classes', [ResultController::class, 'myClassesIndex'])->name('my-classes');
-                Route::get('/my-subjects', [ResultController::class, 'mySubjectsIndex'])->name('my-subjects');
-            });
+    //         // Examiner Routes
+    //         Route::middleware(['role:examiner'])->group(function () {
+    //             Route::get('/my-classes', [ResultController::class, 'myClassesIndex'])->name('my-classes');
+    //             Route::get('/my-subjects', [ResultController::class, 'mySubjectsIndex'])->name('my-subjects');
+    //         });
 
-            // Student Routes
-            Route::middleware(['role:student'])->group(function () {
-                Route::get('/view', [ResultController::class, 'viewResults'])->name('view');
-                Route::get('/download', [ResultController::class, 'downloadMarksheet'])->name('download');
-            });
-        });
-    });
+    //         // Student Routes
+    //         Route::middleware(['role:student'])->group(function () {
+    //             Route::get('/view', [ResultController::class, 'viewResults'])->name('view');
+    //             Route::get('/download', [ResultController::class, 'downloadMarksheet'])->name('download');
+    //         });
+    //     });
+    // });
 
-    // Report Management
-    Route::middleware(['permission:view reports'])->group(function () {
-        Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/students', [ReportController::class, 'studentReport'])->name('students');
-            Route::get('/classes', [ReportController::class, 'classIndex'])->name('classes');
-            Route::get('/class/{class}', [ReportController::class, 'classReport'])->name('class');
-            Route::get('/subjects', [ReportController::class, 'subjectIndex'])->name('subjects');
-            Route::get('/subject/{subject}', [ReportController::class, 'subjectShow'])->name('subject.show');
-            Route::get('/exams', [ReportController::class, 'examIndex'])->name('exams');
-            Route::get('/exam/{exam}', [ReportController::class, 'examShow'])->name('exam.show');
+    // // Report Management
+    // Route::middleware(['permission:view reports'])->group(function () {
+    //     Route::prefix('reports')->name('reports.')->group(function () {
+    //         Route::get('/students', [ReportController::class, 'studentReport'])->name('students');
+    //         Route::get('/classes', [ReportController::class, 'classIndex'])->name('classes');
+    //         Route::get('/class/{class}', [ReportController::class, 'classReport'])->name('class');
+    //         Route::get('/subjects', [ReportController::class, 'subjectIndex'])->name('subjects');
+    //         Route::get('/subject/{subject}', [ReportController::class, 'subjectShow'])->name('subject.show');
+    //         Route::get('/exams', [ReportController::class, 'examIndex'])->name('exams');
+    //         Route::get('/exam/{exam}', [ReportController::class, 'examShow'])->name('exam.show');
             
-            // Download Reports
-            Route::get('/download/student/{student}', [ReportController::class, 'downloadStudentReport'])->name('download.student');
-            Route::get('/download/class/{class}', [ReportController::class, 'downloadClassReport'])->name('download.class');
-            Route::get('/download/subject/{subject}', [ReportController::class, 'downloadSubjectReport'])->name('download.subject');
-            Route::get('/download/exam/{exam}', [ReportController::class, 'downloadExamReport'])->name('download.exam');
-        });
-    });
+    //         // Download Reports
+    //         Route::get('/download/student/{student}', [ReportController::class, 'downloadStudentReport'])->name('download.student');
+    //         Route::get('/download/class/{class}', [ReportController::class, 'downloadClassReport'])->name('download.class');
+    //         Route::get('/download/subject/{subject}', [ReportController::class, 'downloadSubjectReport'])->name('download.subject');
+    //         Route::get('/download/exam/{exam}', [ReportController::class, 'downloadExamReport'])->name('download.exam');
+    //     });
+    // });
 
     // Account Management
     Route::middleware(['permission:view accounts'])->group(function () {
         Route::resource('accounts', AccountController::class);
+        Route::get('/account/employees/export', [EmployeeController::class, 'export'])->name('account.employees.export');
+        
     });
 
-    
-// Employee Management
-Route::prefix('account')->name('account.')->group(function () {
-    Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
-    Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
-    Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
-    Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
-    Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
-    Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
-    Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
-});
+  
+    // Employee routes with account prefix
+    Route::prefix('account')->name('account.')->group(function () {
+        Route::resource('employees', EmployeeController::class);
+        Route::get('/account/employees/create', [EmployeeController::class, 'create'])->name('account.employees.create');   
+        Route::post('/account/employees', [EmployeeController::class, 'store'])->name('account.employees.store');   
+        Route::get('/account/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('account.employees.edit');
+        Route::put('/account/employees/{employee}', [EmployeeController::class, 'update'])->name('account.employees.update');
+        Route::delete('/account/employees/{employee}', [EmployeeController::class, 'destroy'])->name('account.employees.destroy');
+        
+        Route::get('/account/employees/export', [EmployeeController::class, 'export'])->name('account.employees.export');
+        Route::delete('employees/bulk-delete', [EmployeeController::class, 'bulkDelete'])->name('employees.bulk-delete');
+    });
 
 
         

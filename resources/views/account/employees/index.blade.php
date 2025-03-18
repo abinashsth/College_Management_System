@@ -1,30 +1,42 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Employees') }}
-            </h2>
-            <a href="{{ route('account.employees.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                </svg>
-                Add Employee
-            </a>
-        </div>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+{{-- 
+<head>
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+</head>  --}}
+
+@section('content')
+  <div    class="container mx-auto px-4 py-6">
+       <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Employees</h1>
+        <a href="{{ route('account.employees.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Add New Employee
+        </a>
+    </div>
+
+
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        {{-- <div class="max-w-7xl mx-auto sm:px-6 lg:px-8"> --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
-                    <!-- Export Button -->
-                    <div class="flex justify-end mb-4">
-                        <a href="#" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                            Export
-                        </a>
+                    <!-- Export and Bulk Actions -->
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex space-x-2">
+                            <button type="button" id="bulk-delete" class="hidden items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                {{ __('Delete Selected') }}
+                            </button>
+                        </div>
+                        <div class="flex space-x-2">
+                            <a href="{{ route('account.employees.export') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+                                <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                {{ __('Export') }}
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Search and Filter -->
@@ -48,7 +60,7 @@
                                         </svg>
                                     </div>
                                     <select name="department_id" id="department_id" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-2 border-gray-300 rounded-md appearance-none">
-                                        <option value="all">All Departments</option>
+                                        <option value="">All Departments</option>
                                         @foreach($departments as $department)
                                             <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
                                                 {{ $department->name }}
@@ -70,6 +82,11 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="select-all" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                        </div>
+                                    </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         ID
                                     </th>
@@ -102,14 +119,33 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse($employees as $employee)
                                 <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" name="selected[]" value="{{ $employee->id }}" class="employee-select h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ $employee->employee_id }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $employee->name }}
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                                                @if($employee->avatar && Storage::exists($employee->avatar))
+                                                <img src="{{ Storage::url($employee->avatar) }}" alt="{{ $employee->name }}" class="h-8 w-8 rounded-full">
+                                            @else
+                                                <span class="text-sm font-medium text-gray-500">{{ substr($employee->name, 0, 2) }}</span>
+                                            @endif
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">{{ $employee->name }}</div>
+                                                <div class="text-sm text-gray-500">{{ $employee->email }}</div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $employee->department ? $employee->department->name : 'No Department' }}
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            {{ $employee->department ? $employee->department->name : 'No Department' }}
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {{ $employee->designation }}
@@ -124,7 +160,7 @@
                                         ₹{{ number_format($employee->deductions, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        ₹{{ number_format($employee->basic_salary + $employee->allowances - $employee->deductions, 2) }}
+                                        ₹{{ number_format($employee->net_salary, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex space-x-2">
@@ -153,7 +189,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="9" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                    <td colspan="10" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         No employees found.
                                     </td>
                                 </tr>
@@ -165,12 +201,90 @@
                     <!-- Pagination -->
                     <div class="mt-4">
                         @if ($employees instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                        {{ $employees->appends(request()->query())->links() }}
-                    @endif
-                    
+                            {{ $employees->appends(request()->query())->links() }}
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</x-app-layout>
+    {{-- </div> --}}
+</div>
+    
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle select all checkbox
+            const selectAll = document.getElementById('select-all');
+            const employeeCheckboxes = document.getElementsByClassName('employee-select');
+            const bulkDeleteButton = document.getElementById('bulk-delete');
+    
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    Array.from(employeeCheckboxes).forEach(checkbox => {
+                        checkbox.checked = selectAll.checked;
+                    });
+                    updateBulkDeleteButton();
+                });
+            }
+    
+            Array.from(employeeCheckboxes).forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateBulkDeleteButton();
+                    // Update select all checkbox state
+                    if (selectAll) {
+                        selectAll.checked = Array.from(employeeCheckboxes).every(cb => cb.checked);
+                    }
+                });
+            });
+    
+            function updateBulkDeleteButton() {
+                if (bulkDeleteButton) {
+                    const hasSelection = Array.from(employeeCheckboxes).some(cb => cb.checked);
+                    bulkDeleteButton.style.display = hasSelection ? 'inline-flex' : 'none';
+                }
+            }
+    
+            // Handle bulk delete
+            if (bulkDeleteButton) {
+                bulkDeleteButton.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to delete the selected employees?')) {
+                        const selectedIds = Array.from(employeeCheckboxes)
+                            .filter(cb => cb.checked)
+                            .map(cb => cb.value);
+    
+                        // Create and submit form
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '{{ route('account.employees.bulk-delete') }}';
+                        
+                        const csrfToken = document.createElement('input');
+                        csrfToken.type = 'hidden';
+                        csrfToken.name = '_token';
+                        csrfToken.value = '{{ csrf_token() }}';
+                        form.appendChild(csrfToken);
+    
+                        const methodField = document.createElement('input');
+                        methodField.type = 'hidden';
+                        methodField.name = '_method';
+                        methodField.value = 'DELETE';
+                        form.appendChild(methodField);
+    
+                        selectedIds.forEach(id => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'ids[]';
+                            input.value = id;
+                            form.appendChild(input);
+                        });
+    
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            }
+        });
+    </script>
+    @endpush
+
+
+@endsection
