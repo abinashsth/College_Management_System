@@ -1,0 +1,90 @@
+/**
+ * Submit a public application form.
+ */
+public function submitApplication(Request $request)
+{
+    $request->validate([
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:students,email',
+        'gender' => 'required|in:male,female,other',
+        'dob' => 'required|date',
+        'address' => 'required|string',
+        'contact_number' => 'required|string|max:20',
+        'program_id' => 'required|exists:programs,id',
+        'department_id' => 'required|exists:departments,id',
+        'batch_year' => 'required|integer',
+        'profile_photo' => 'nullable|image|max:2048',
+        'previous_education' => 'required|string',
+        'emergency_contact_name' => 'required|string|max:255',
+        'emergency_contact_number' => 'required|string|max:20',
+        'emergency_contact_relationship' => 'required|string|max:255',
+        'guardian_name' => 'required|string|max:255',
+        'guardian_relation' => 'required|string|max:255',
+        'guardian_contact' => 'required|string|max:20',
+        'guardian_address' => 'required|string',
+        'guardian_occupation' => 'required|string|max:255',
+        'medical_information' => 'nullable|string',
+        'documents.*' => 'nullable|file|max:5120',
+        'declaration' => 'required|accepted',
+    ]);
+
+    try {
+        DB::beginTransaction();
+        
+        // Handle profile photo upload
+        $profilePhotoPath = null;
+        if ($request->hasFile('profile_photo')) {
+            $profilePhotoPath = $request->file('profile_photo')->store('students', 'public');
+        }
+        
+        // Handle document uploads
+        $documents = [];
+        if ($request->hasFile('documents')) {
+            foreach ($request->file('documents') as $file) {
+                $path = $file->store('student_documents', 'public');
+                $documents[] = [
+                    'path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'uploaded_at' => now()->toDateTimeString(),
+                ];
+            }
+        }
+        
+        // Create the student record
+        $student = new Student();
+        $student->first_name = $request->first_name;
+        $student->last_name = $request->last_name;
+        $student->email = $request->email;
+        // Generate a random password for now, they'll set their real password later
+        $student->password = Hash::make(Str::random(10));
+        $student->gender = $request->gender;
+        $student->dob = $request->dob;
+        $student->address = $request->address;
+        $student->contact_number = $request->contact_number;
+        $student->program_id = $request->program_id;
+        $student->department_id = $request->department_id;
+        $student->batch_year = $request->batch_year;
+        $student->profile_photo = $profilePhotoPath;
+        $student->previous_education = $request->previous_education;
+        $student->emergency_contact_name = $request->emergency_contact_name;
+        $student->emergency_contact_number = $request->emergency_contact_number;
+        $student->emergency_contact_relationship = $request->emergency_contact_relationship;
+        $student->guardian_name = $request->guardian_name;
+        $student->guardian_relation = $request->guardian_relation;
+        $student->guardian_contact = $request->guardian_contact;
+        $student->guardian_address = $request->guardian_address;
+        $student->guardian_occupation = $request->guardian_occupation;
+        $student->medical_information = $request->medical_information;
+        $student->documents = $documents;
+        $student->enrollment_status = 'applied';
+        $student->save();
+        
+        DB::commit();
+        return redirect()->route('admissions.thanks')->with('success', 'Your application has been submitted successfully. We will contact you soon.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error submitting application: ' . $e->getMessage());
+        return redirect()->back()->withInput()->with('error', 'Failed to submit application: ' . $e->getMessage());
+    }
+}

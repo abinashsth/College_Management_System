@@ -1,0 +1,16 @@
+<!-- Student Management -->
+@if($user->hasRole('super-admin') || $user->checkPermission('view students'))
+    <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('studentManagement')">
+        <i class="fas fa-user-graduate sidebar-icon"></i>
+        Student Management
+        <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+    </div>
+    <div id="studentManagement" class="hidden pl-8">
+        <a href="{{ route('students.index') }}" class="sidebar-item">All Students</a>
+        <a href="{{ route('admissions.index') }}" class="sidebar-item">Admissions</a>
+        <a href="{{ route('admissions.apply') }}" class="sidebar-item">Apply Online</a>
+        <a href="{{ route('student-records.index') }}" class="sidebar-item">Student Records</a>
+    </div>
+@endif
+
+<!-- Class Management -->

@@ -1,0 +1,42 @@
+// Fonts
+@import url('https://fonts.bunny.net/css?family=Nunito');
+
+// Variables
+@import 'variables';
+
+// Bootstrap
+@import 'bootstrap/scss/bootstrap';
+
+// Add these custom styles
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    background-color: #37a2bc;
+    color: white;
+    width: 250px;
+    padding: 1rem;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.welcome-section {
+    background: linear-gradient(to right, #37a2bc, #2980b9);
+    color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
