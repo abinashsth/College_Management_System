@@ -1,0 +1,5 @@
+// Find this line in the store method:
+'department_id' => 'required|exists:academic_structures,id',
+
+// Replace it with:
+'department_id' => 'required|exists:departments,id',

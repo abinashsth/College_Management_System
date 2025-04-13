@@ -2,120 +2,247 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class Student extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'student_name',
+        'user_id',
+        'student_id',
+        'registration_number',
+        'first_name',
+        'last_name',
+        'gender',
+        'profile_photo',
+        'email',
+        'password',
+        'student_address',
+        'city',
+        'state',
+        'phone_number',
+        'emergency_contact_name',
+        'emergency_contact_number',
+        'emergency_contact_relationship',
+        'dob',
+        'date_of_birth',
         'father_name',
         'mother_name',
-        'date_of_birth',
-        'gender',
-        'address',
-        'phone',
-        'email',
-        'roll_no',
+        'class_id',
+        'section_id',
+        'program_id',
+        'department_id',
+        'batch_year',
+        'years_of_study',
         'admission_number',
         'admission_date',
-        'class_id',
-        'session_id',
-        'faculty_id',
-        'course_id',
+        'current_semester',
+        'academic_session_id',
+        'guardian_name',
+        'guardian_relation',
+        'guardian_contact',
+        'guardian_address',
+        'guardian_occupation',
+        'previous_education',
+        'last_qualification',
+        'last_qualification_marks',
+        'medical_information',
+        'remarks',
+        'documents',
         'status',
-        'verified_at'
+        'enrollment_status',
+        'fee_status',
+        'verified_at',
+        'documents_verified_at',
+        'created_by',
+        'photo'
     ];
 
     protected $casts = [
-        'date_of_birth' => 'date',
+        'dob' => 'date',
         'admission_date' => 'date',
-        'status' => 'boolean'
+        'status' => 'boolean',
+        'fee_status' => 'boolean',
+        'verified_at' => 'datetime',
+        'documents_verified_at' => 'datetime',
+        'documents' => 'array',
     ];
 
-    protected static function boot()
+    protected $hidden = [
+        'password',
+    ];
+
+    /**
+     * Get the student's full name.
+     */
+    public function getNameAttribute()
     {
-        parent::boot();
-        
-        static::creating(function ($student) {
-            // Get the class details with course
-            $class = Classes::with(['course', 'faculty'])->find($student->class_id);
-            if (!$class) return;
-
-            // Set course_id from the class if not set
-            if (!$student->course_id) {
-                $student->course_id = $class->course_id;
-            }
-
-            // Set faculty_id from the class if not set
-            if (!$student->faculty_id) {
-                $student->faculty_id = $class->faculty_id;
-            }
-
-            // Set status to true if not set
-            if (!isset($student->status)) {
-                $student->status = true;
-            }
-
-            // Set created_by if not set
-            if (!$student->created_by) {
-                $student->created_by = Auth::id() ?? 1;
-            }
-
-            // Generate admission number if not set
-            if (!$student->admission_number) {
-                $year = date('Y');
-                
-                // Get the last sequence number for this year and course
-                $lastStudent = static::where('admission_number', 'like', $year . '-%')
-                    ->where('course_id', $student->course_id)
-                    ->orderBy('id', 'desc')
-                    ->first();
-
-                $sequence = $lastStudent ? (int)substr($lastStudent->admission_number, -3) + 1 : 1;
-                
-                // Format: YYYY-COURSE_CODE-XXX
-                $student->admission_number = sprintf("%s-%s-%03d", 
-                    $year, 
-                    $class->course->course_code ?? 'COURSE',
-                    $sequence
-                );
-            }
-        });
+        return trim($this->first_name . ' ' . $this->last_name);
     }
 
-    public function class(): BelongsTo
+    /**
+     * Generate a unique student ID based on admission year, program, and auto-increment.
+     */
+    public static function generateStudentId($programCode, $batchYear, $count)
+    {
+        // If any parameters are missing, return null
+        if (!$programCode || !$batchYear) {
+            return null;
+        }
+        
+        // Format: [YY]-[PROGRAM_CODE]-[SEQUENTIAL_NUMBER]
+        // Example: 23-CSE-0001
+        $year = substr($batchYear, -2); // Last two digits of year
+        $sequentialNumber = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        
+        return "{$year}-{$programCode}-{$sequentialNumber}";
+    }
+
+    /**
+     * Generate a unique registration number.
+     */
+    public static function generateRegistrationNumber($departmentCode, $batchYear, $count)
+    {
+        // Format: REG-[DEPARTMENT_CODE]-[YY]-[SEQUENTIAL_NUMBER]
+        // Example: REG-CSE-23-0001
+        $year = substr($batchYear, -2); // Last two digits of year
+        $sequentialNumber = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        
+        return "REG-{$departmentCode}-{$year}-{$sequentialNumber}";
+    }
+
+    /**
+     * Get the class that the student belongs to.
+     */
+    public function class()
     {
         return $this->belongsTo(Classes::class, 'class_id');
     }
 
-    public function session(): BelongsTo
+    /**
+     * Get the program that the student is enrolled in.
+     */
+    public function program()
     {
-        return $this->belongsTo(Session::class);
+        return $this->belongsTo(Program::class);
     }
 
-    public function faculty(): BelongsTo
+    /**
+     * Get the department that the student belongs to.
+     */
+    public function department()
     {
-        return $this->belongsTo(Faculty::class);
+        return $this->belongsTo(Department::class, 'department_id');
     }
 
-    public function examResults(): HasMany
+    /**
+     * Get the academic session that the student is currently in.
+     */
+    public function academicSession()
     {
-        return $this->hasMany(ExamResult::class);
+        return $this->belongsTo(AcademicSession::class);
     }
 
-    public function gradesheets(): HasMany
+    /**
+     * Get the user associated with the student.
+     */
+    public function user()
     {
-        return $this->hasMany(Gradesheet::class);
+        return $this->hasOne(User::class, 'email', 'email');
     }
 
-    public function ledgers(): HasMany
+    /**
+     * Get the exams that the student has taken.
+     */
+    public function exams()
     {
-        return $this->hasMany(Ledger::class);
+        return $this->belongsToMany(Exam::class, 'exam_student')
+            ->withPivot('grade', 'remarks')
+            ->withTimestamps();
+    }
+
+    /**
+     * Scope a query to only include students with verified documents.
+     */
+    public function scopeVerifiedDocuments($query)
+    {
+        return $query->whereNotNull('documents_verified_at');
+    }
+
+    /**
+     * Scope a query to only include students in a specific program.
+     */
+    public function scopeByProgram($query, $programId)
+    {
+        return $query->where('program_id', $programId);
+    }
+
+    /**
+     * Scope a query to only include students in a specific department.
+     */
+    public function scopeByDepartment($query, $departmentId)
+    {
+        return $query->where('department_id', $departmentId);
+    }
+
+    /**
+     * Scope a query to only include students from a specific batch year.
+     */
+    public function scopeByBatchYear($query, $batchYear)
+    {
+        return $query->where('batch_year', $batchYear);
+    }
+
+    /**
+     * Scope a query to only include students with a specific enrollment status.
+     */
+    public function scopeByEnrollmentStatus($query, $status)
+    {
+        return $query->where('enrollment_status', $status);
+    }
+
+    /**
+     * Scope a query to filter students by name.
+     */
+    public function scopeSearchByName($query, $name)
+    {
+        return $query->where(function($q) use ($name) {
+            $q->where('first_name', 'like', "%{$name}%")
+              ->orWhere('last_name', 'like', "%{$name}%");
+        });
+    }
+
+    /**
+     * Get the records for the student.
+     */
+    public function records()
+    {
+        return $this->hasMany(StudentRecord::class);
+    }
+
+    /**
+     * Log a change to the student record.
+     *
+     * @param string $recordType The type of record (e.g., 'personal', 'academic', 'enrollment')
+     * @param array $data The current data
+     * @param array|null $previousData The previous data
+     * @param int|null $changedBy The ID of the user who made the change
+     * @param string|null $reason The reason for the change
+     * @param string|null $notes Additional notes about the change
+     * @return StudentRecord
+     */
+    public function logChange(string $recordType, array $data, ?array $previousData = null, ?int $changedBy = null, ?string $reason = null, ?string $notes = null): StudentRecord
+    {
+        return $this->records()->create([
+            'record_type' => $recordType,
+            'record_data' => $data,
+            'previous_data' => $previousData,
+            'changed_by' => $changedBy ?? auth()->id(),
+            'reason' => $reason,
+            'notes' => $notes,
+        ]);
     }
 }

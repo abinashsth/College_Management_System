@@ -21,7 +21,7 @@
                         </a>
                     </li>
 
-                    @can('view users')
+                    @if(auth()->user()->hasRole('super-admin') || auth()->user()->can('view exams'))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('exam*') ? 'active' : '' }}" 
                            href="#examSubmenu" data-bs-toggle="collapse">
@@ -30,8 +30,8 @@
                         <div class="collapse {{ request()->is('exam*') ? 'show' : '' }}" id="examSubmenu">
                             <ul class="nav flex-column ms-3">
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('exams.index') }}">
-                                        <i class="fas fa-clipboard-list me-2"></i> Subject
+                                    <a class="nav-link" href="{{ route('subjects.index') }}">
+                                        <i class="fas fa-clipboard-list me-2"></i> Subjects
                                     </a>
                                 </li>
                                 <li class="nav-item">
@@ -40,19 +40,25 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('exams.index') }}">
+                                    <a class="nav-link" href="{{ route('student.grades') }}">
                                         <i class="fas fa-chart-bar me-2"></i> Grades
                                     </a>
                                 </li>
                             </ul>
                         </div>
                     </li>
-                    @endcan
+                    @endif
 
                     @role('super-admin')
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('change.password.form') }}">
                             <i class="fas fa-lock me-2"></i> Change Password
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('settings.college') }}">
+                            <i class="fas fa-university me-2"></i> College Settings
                         </a>
                     </li>
                     @endrole

@@ -17,70 +17,69 @@ class UserController extends Controller
         $this->middleware('permission:delete users', ['only' => ['destroy']]);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles')->paginate(10);
+        $query = User::with('roles');
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply role filter
+        if ($request->filled('role')) {
+            $role = $request->input('role');
+            $query->whereHas('roles', function($q) use ($role) {
+                $q->where('name', $role);
+            });
+        }
+
+        $users = $query->latest()->paginate(10);
+        
         return view('users.index', compact('users'));
     }
 
     public function create()
     {
         $roles = Role::whereNotIn('name', ['super-admin'])->get();
-        \Log::info('Available roles for user creation:', [
-            'count' => $roles->count(),
-            'roles' => $roles->map(function($role) {
-                return [
-                    'id' => $role->id,
-                    'name' => $role->name
-                ];
-            })
-        ]);
+        \Log::info('Available roles: ' . $roles->pluck('name'));
         return view('users.create', compact('roles'));
     }
 
     public function store(Request $request)
     {
-        \Log::info('Creating new user with data:', $request->all());
-
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'roles' => 'required|array',
-            'roles.*' => 'exists:roles,id'
+            'roles.*' => 'exists:roles,name'
         ]);
 
-        \Log::info('Validation passed');
         \DB::beginTransaction();
 
         try {
-            \Log::info('Creating user record');
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
             ]);
-            \Log::info('User record created:', ['user_id' => $user->id]);
 
-            if ($request->hasFile('profile_photo')) {
-                \Log::info('Processing profile photo');
-                $user->updateProfilePhoto($request->file('profile_photo'));
-            }
-
-            \Log::info('Assigning roles:', ['roles' => $request->roles]);
-            $roles = Role::whereIn('id', $request->roles)->get();
-            \Log::info('Found roles:', ['role_count' => $roles->count(), 'roles' => $roles->pluck('name')]);
+            // Assign multiple roles
+            $roles = Role::whereIn('name', $request->roles)->get();
             $user->syncRoles($roles);
 
             \DB::commit();
-            \Log::info('User created successfully');
 
             return redirect()->route('users.index')
-                ->with('success', 'User created successfully.');
+                ->with('success', 'User created successfully with roles: ' . $roles->pluck('name')->implode(', '));
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Error creating user: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
             return back()->withInput()
                 ->with('error', 'Error creating user: ' . $e->getMessage());
         }
@@ -99,9 +98,8 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'roles' => 'required|array',
-            'roles.*' => 'exists:roles,id',
+            'roles.*' => 'exists:roles,name',
             'password' => 'nullable|string|min:8|confirmed',
-            'profile_photo' => 'nullable|image|max:1024'
         ]);
 
         \DB::beginTransaction();
@@ -120,19 +118,14 @@ class UserController extends Controller
                 ]);
             }
 
-            // Update profile photo if provided
-            if ($request->hasFile('profile_photo')) {
-                $user->updateProfilePhoto($request->file('profile_photo'));
-            }
-
-            // Sync roles using IDs
-            $roles = Role::whereIn('id', $request->roles)->get();
+            // Sync roles
+            $roles = Role::whereIn('name', $request->roles)->get();
             $user->syncRoles($roles);
 
             \DB::commit();
 
             return redirect()->route('users.index')
-                ->with('success', 'User updated successfully.');
+                ->with('success', 'User updated successfully with roles: ' . $roles->pluck('name')->implode(', '));
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Error updating user: ' . $e->getMessage());

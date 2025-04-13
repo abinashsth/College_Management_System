@@ -20,7 +20,6 @@ class PermissionController extends Controller
 
     public function create()
     {
-        Permission::create(['name' => 'view results', 'guard_name' => 'web']);
         return view('permissions.create');
     }
 

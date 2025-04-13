@@ -1,65 +1,84 @@
 @extends('layouts.app')
 
+@section('title', 'Manage Faculties')
+
 @section('content')
-<div class="container mx-auto px-6 py-8">
-    <div class="flex justify-between items-center">
-        <h3 class="text-gray-700 text-3xl font-medium">Faculties</h3>
-        <a href="{{ route('faculties.create') }}" class="bg-[#37a2bc] hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-            <i class="fas fa-plus mr-2"></i>Create Faculty
+<div class="container mx-auto py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900">Faculty Management</h1>
+        <a href="{{ route('faculties.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
+            <i class="fas fa-plus mr-2"></i> Add New Faculty
         </a>
     </div>
 
-    <div class="mt-8">
-        @if (session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <span class="block sm:inline">{{ session('success') }}</span>
-            </div>
-        @endif
+    @if(session('success'))
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
 
-        <div class="flex flex-col mt-8">
-            <div class="py-2 -my-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-                <div class="inline-block min-w-full overflow-hidden align-middle border-b border-gray-200 shadow sm:rounded-lg">
-                    <table class="min-w-full">
-                        <thead>
-                            <tr>
-                                <th class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50">ID</th>
-                                <th class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50">Faculty Name</th>
-                                <th class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50">Description</th>
-                                <th class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white">
-                            @foreach ($faculties as $faculty)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{ $faculty->id }}</td>
-                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{ $faculty->name }}</td>
-                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{ $faculty->description }}</td>
-                                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                        <div class="flex items-center space-x-2">
-                                            <a href="{{ route('faculties.show', $faculty) }}" class="text-blue-600 hover:text-blue-900">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{{ route('faculties.edit', $faculty) }}" class="text-green-600 hover:text-green-900">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form action="{{ route('faculties.destroy', $faculty) }}" method="POST" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure you want to delete this faculty?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="mt-4">
-                {{ $faculties->links() }}
-            </div>
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead>
+                    <tr class="bg-gray-200 text-gray-700 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Name</th>
+                        <th class="py-3 px-6 text-left">Code</th>
+                        <th class="py-3 px-6 text-left">Departments</th>
+                        <th class="py-3 px-6 text-left">Status</th>
+                        <th class="py-3 px-6 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm">
+                    @forelse($faculties as $faculty)
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-3 px-6 text-left whitespace-nowrap font-medium">
+                                <a href="{{ route('faculties.show', $faculty) }}" class="text-blue-600 hover:text-blue-900">
+                                    {{ $faculty->name }}
+                                </a>
+                            </td>
+                            <td class="py-3 px-6 text-left">{{ $faculty->code }}</td>
+                            <td class="py-3 px-6 text-left">
+                                {{ $faculty->departments->count() }}
+                            </td>
+                            <td class="py-3 px-6 text-left">
+                                @if($faculty->status)
+                                    <span class="bg-green-100 text-green-800 py-1 px-3 rounded-full text-xs">Active</span>
+                                @else
+                                    <span class="bg-red-100 text-red-800 py-1 px-3 rounded-full text-xs">Inactive</span>
+                                @endif
+                            </td>
+                            <td class="py-3 px-6 text-center">
+                                <div class="flex justify-center space-x-2">
+                                    <a href="{{ route('faculties.dashboard', $faculty) }}" class="text-gray-600 hover:text-blue-600" title="Dashboard">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </a>
+                                    <a href="{{ route('faculties.show', $faculty) }}" class="text-gray-600 hover:text-blue-600" title="View details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('faculties.edit', $faculty) }}" class="text-gray-600 hover:text-yellow-600" title="Edit faculty">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ route('faculties.destroy', $faculty) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this faculty? All associated data will be lost.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-gray-600 hover:text-red-600" title="Delete faculty">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr class="border-b border-gray-200">
+                            <td class="py-4 px-6 text-center text-gray-500" colspan="5">No faculties found</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-3">
+            {{ $faculties->links() }}
         </div>
     </div>
 </div>

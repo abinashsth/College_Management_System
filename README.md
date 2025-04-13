@@ -9,7 +9,7 @@
 
 ## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects,such as:
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
 - [Simple, fast routing engine](https://laravel.com/docs/routing).
 - [Powerful dependency injection container](https://laravel.com/docs/container).
@@ -64,3 +64,40 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## College Management System
+
+The College Management System is a comprehensive solution designed to streamline academic administration, student management, and staff coordination for educational institutions.
+
+### Documentation
+
+The following documentation is available in the `docs` directory:
+
+- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)**: Instructions for deploying the system to a production environment
+- **[System Documentation](docs/SYSTEM_DOCUMENTATION.md)**: Technical architecture and component details
+- **[User Manual](docs/USER_MANUAL.md)**: Comprehensive guide for all system users
+- **[Security Review](docs/SECURITY_REVIEW.md)**: Security considerations and recommendations
+- **[Training Materials](docs/TRAINING_MATERIALS.md)**: Materials for training different user roles
+- **[Known Issues](docs/KNOWN_ISSUES.md)**: List of known issues and workarounds
+
+### Deployment Requirements
+
+- PHP 8.2 or higher
+- Composer 2.x
+- MySQL 8.0 or higher
+- Node.js 18.x or higher
+- Web server (Apache/Nginx)
+- SSL certificate for production
+
+### Quick Start
+
+1. Clone the repository
+2. Install dependencies: `composer install && npm install`
+3. Copy .env.example to .env and configure environment variables
+4. Generate application key: `php artisan key:generate`
+5. Run migrations: `php artisan migrate`
+6. Seed initial data: `php artisan db:seed`
+7. Compile assets: `npm run build`
+8. Start the development server: `php artisan serve`
+
+For production deployment, please refer to the [Deployment Guide](docs/DEPLOYMENT_GUIDE.md).

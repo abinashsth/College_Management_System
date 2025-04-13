@@ -1,0 +1,22 @@
+// Add these routes to your routes/web.php file before the last "require" statements:
+
+// Public admission application routes
+Route::get('/apply', [App\Http\Controllers\AdmissionController::class, 'apply'])->name('admissions.apply');
+Route::post('/apply/submit', [App\Http\Controllers\AdmissionController::class, 'submitApplication'])->name('admissions.submit');
+Route::get('/apply/thanks', [App\Http\Controllers\AdmissionController::class, 'thanks'])->name('admissions.thanks');
+
+// Admin admission management routes
+Route::middleware(['auth', 'permission:manage students'])->prefix('admissions')->name('admissions.')->group(function () {
+    Route::get('/', [App\Http\Controllers\AdmissionController::class, 'index'])->name('index');
+    Route::get('/create', [App\Http\Controllers\AdmissionController::class, 'create'])->name('create');
+    Route::post('/', [App\Http\Controllers\AdmissionController::class, 'store'])->name('store');
+    Route::get('/{application}', [App\Http\Controllers\AdmissionController::class, 'show'])->name('show');
+    Route::get('/{application}/edit', [App\Http\Controllers\AdmissionController::class, 'edit'])->name('edit');
+    Route::put('/{application}', [App\Http\Controllers\AdmissionController::class, 'update'])->name('update');
+    Route::delete('/{application}', [App\Http\Controllers\AdmissionController::class, 'destroy'])->name('destroy');
+    Route::get('/{application}/verify-documents', [App\Http\Controllers\AdmissionController::class, 'verifyDocuments'])->name('verify-documents');
+    Route::post('/{application}/verify-documents', [App\Http\Controllers\AdmissionController::class, 'processDocumentVerification'])->name('process-document-verification');
+    Route::post('/{application}/generate-id', [App\Http\Controllers\AdmissionController::class, 'generateId'])->name('generate-id');
+    Route::post('/{application}/admit', [App\Http\Controllers\AdmissionController::class, 'admit'])->name('admit');
+    Route::post('/{application}/reject', [App\Http\Controllers\AdmissionController::class, 'reject'])->name('reject');
+});

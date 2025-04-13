@@ -2,10 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Classes extends Model
 {
@@ -13,8 +11,16 @@ class Classes extends Model
 
     protected $fillable = [
         'class_name',
-        'section',
-        'is_active'
+        'academic_year_id',
+        'department_id',
+        'program_id',
+        'capacity',
+        'status',
+        'description'
+    ];
+
+    protected $casts = [
+        'status' => 'string',
     ];
 
     public function students()
@@ -22,11 +28,30 @@ class Classes extends Model
         return $this->hasMany(Student::class, 'class_id');
     }
 
-    /**
-     * Get the subjects for the class.
-     */
-    public function subjects(): HasMany
+    public function sections()
     {
-        return $this->hasMany(Subject::class);
+        return $this->hasMany(Section::class, 'class_id');
+    }
+
+    public function academicYear()
+    {
+        return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function program()
+    {
+        return $this->belongsTo(Program::class);
+    }
+    
+    public function courses()
+    {
+        return $this->belongsToMany(Course::class, 'class_courses', 'class_id', 'course_id')
+            ->withPivot('semester', 'year', 'is_active', 'notes')
+            ->withTimestamps();
     }
 } 

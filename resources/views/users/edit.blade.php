@@ -1,29 +1,34 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-6 py-8">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-semibold text-gray-700">Edit User</h2>
-        <a href="{{ route('users.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-            Back to Users
-        </a>
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h3 class="text-2xl font-bold text-gray-900">Edit User</h3>
+        <p class="mt-1 text-sm text-gray-600">
+            Update user information and manage their roles.
+        </p>
+        <p class="mt-2 text-sm text-gray-500">
+            Last updated: {{ $user->updated_at->format('M d, Y H:i A') }}
+        </p>
     </div>
 
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <form action="{{ route('users.update', $user) }}" method="POST" enctype="multipart/form-data">
+    <!-- Form -->
+    <div class="bg-white shadow rounded-lg">
+        <form method="POST" action="{{ route('users.update', $user) }}">
             @csrf
             @method('PUT')
-
-            <div class="space-y-6">
+            
+            <!-- Form Fields -->
+            <div class="p-6 space-y-6">
                 <!-- Name -->
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                    <input type="text" 
-                           name="name" 
-                           id="name" 
-                           value="{{ old('name', $user->name) }}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('name') border-red-500 @enderror"
-                           placeholder="Enter user's name">
+                    <label for="name" class="block text-sm font-medium text-gray-700">
+                        Full Name
+                    </label>
+                    <input type="text" name="name" id="name" 
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('name') border-red-500 @enderror"
+                        value="{{ old('name', $user->name) }}" required>
                     @error('name')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -31,79 +36,58 @@
 
                 <!-- Email -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" 
-                           name="email" 
-                           id="email" 
-                           value="{{ old('email', $user->email) }}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('email') border-red-500 @enderror"
-                           placeholder="Enter user's email">
+                    <label for="email" class="block text-sm font-medium text-gray-700">
+                        Email Address
+                    </label>
+                    <input type="email" name="email" id="email" 
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('email') border-red-500 @enderror"
+                        value="{{ old('email', $user->email) }}" required>
                     @error('email')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- Password -->
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">
-                        Password 
-                        <span class="text-gray-500 text-xs">(leave blank to keep current password)</span>
-                    </label>
-                    <input type="password" 
-                           name="password" 
-                           id="password"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('password') border-red-500 @enderror"
-                           placeholder="Enter new password">
-                    @error('password')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">
+                            New Password
+                        </label>
+                        <input type="password" name="password" id="password" 
+                            class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('password') border-red-500 @enderror"
+                            placeholder="Leave blank to keep current password">
+                        @error('password')
+                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                <!-- Confirm Password -->
-                <div>
-                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                    <input type="password" 
-                           name="password_confirmation" 
-                           id="password_confirmation"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                           placeholder="Confirm new password">
-                </div>
-
-                <!-- Profile Photo -->
-                <div>
-                    <label for="profile_photo" class="block text-sm font-medium text-gray-700">Profile Photo</label>
-                    @if($user->profile_photo_path)
-                        <div class="mt-2 mb-4">
-                            <img src="{{ $user->profile_photo_url }}" 
-                                 alt="{{ $user->name }}" 
-                                 class="h-20 w-20 rounded-full object-cover">
-                        </div>
-                    @endif
-                    <input type="file" 
-                           name="profile_photo" 
-                           id="profile_photo"
-                           class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                           accept="image/*">
-                    @error('profile_photo')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
+                    <div>
+                        <label for="password_confirmation" class="block text-sm font-medium text-gray-700">
+                            Confirm New Password
+                        </label>
+                        <input type="password" name="password_confirmation" id="password_confirmation" 
+                            class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Confirm new password">
+                    </div>
                 </div>
 
                 <!-- Roles -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Roles</label>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-md">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Assigned Roles
+                    </label>
+                    <div class="bg-gray-50 p-4 rounded-md grid grid-cols-2 gap-4">
                         @foreach($roles as $role)
                             <div class="flex items-center">
                                 <input type="checkbox" 
-                                       name="roles[]" 
-                                       id="role_{{ $role->id }}"
-                                       value="{{ $role->id }}"
-                                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                       {{ in_array($role->id, old('roles', $user->roles->pluck('id')->toArray())) ? 'checked' : '' }}>
+                                    name="roles[]" 
+                                    value="{{ $role->name }}"
+                                    id="role_{{ $role->id }}"
+                                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    {{ in_array($role->name, old('roles', $userRoles)) ? 'checked' : '' }}>
                                 <label for="role_{{ $role->id }}" 
-                                       class="ml-2 text-sm text-gray-700">
-                                    {{ $role->name }}
+                                    class="ml-2 block text-sm text-gray-900">
+                                    {{ ucfirst($role->name) }}
                                 </label>
                             </div>
                         @endforeach
@@ -112,44 +96,61 @@
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
+            </div>
 
-                <!-- Submit Button -->
-                <div class="flex justify-end space-x-3">
-                    <a href="{{ route('users.index') }}" 
-                       class="px-6 py-2 border border-gray-300 rounded text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
-                        Cancel
-                    </a>
-                    <button type="submit" 
-                            class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                        Update User
-                    </button>
-                </div>
+            <!-- Form Actions -->
+            <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end space-x-3">
+                <a href="{{ route('users.index') }}" 
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Update User
+                </button>
             </div>
         </form>
     </div>
 
-    <!-- Delete User Card -->
-    @if(auth()->id() != $user->id)
-    <div class="bg-white rounded-lg shadow-md p-6 mt-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <h3 class="text-lg font-medium text-gray-900">Delete User</h3>
-                <p class="mt-1 text-sm text-gray-500">
-                    Once you delete a user, all of their resources and data will be permanently deleted.
-                    This action cannot be undone.
-                </p>
+    <!-- Danger Zone -->
+    <div class="mt-8 bg-white shadow rounded-lg">
+        <div class="p-6">
+            <h3 class="text-lg font-medium text-red-600">
+                Danger Zone
+            </h3>
+            <div class="mt-3 text-sm text-gray-500">
+                <p>Once you delete a user, there is no going back. Please be certain.</p>
             </div>
-            <form action="{{ route('users.destroy', $user) }}" method="POST" 
-                  onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
-                @csrf
-                @method('DELETE')
-                <button type="submit" 
-                        class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-                    Delete User
-                </button>
-            </form>
+            <div class="mt-4">
+                <form action="{{ route('users.destroy', $user) }}" method="POST" 
+                    onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                        class="inline-flex items-center justify-center px-4 py-2 border border-transparent font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
+                        Delete User
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
-    @endif
 </div>
+
+@if(session('success'))
+    <div class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg" 
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => show = false, 3000)">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg"
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => show = false, 3000)">
+        {{ session('error') }}
+    </div>
+@endif
 @endsection

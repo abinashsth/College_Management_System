@@ -2,51 +2,87 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Classes;
+use App\Models\AcademicSession;
+use App\Models\FeeComponent;
+use App\Models\StudentFee;
+use App\Models\User;
 
 class FeeStructure extends Model
 {
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'student_id',
-        'class_id', 
-        'academic_year',
-        'tuition_fee',
-        'admission_fee',
-        'exam_fee',
-        'status'
+        'class_id',
+        'academic_session_id',
+        'name',
+        'description',
+        'is_active',
+        'created_by',
+        'updated_by',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
-        'tuition_fee' => 'float',
-        'admission_fee' => 'float', 
-        'exam_fee' => 'float',
-        
+        'is_active' => 'boolean',
     ];
 
+    /**
+     * Get the class that this fee structure belongs to.
+     */
     public function class()
     {
-        return $this->belongsTo(Classes::class);
+        return $this->belongsTo(Classes::class, 'class_id');
     }
 
-    public function academicYear() 
+    /**
+     * Get the academic session that this fee structure belongs to.
+     */
+    public function academicSession()
     {
-        return $this->belongsTo(AcademicYear::class);
+        return $this->belongsTo(AcademicSession::class, 'academic_session_id');
     }
 
-    public function student()
+    /**
+     * Get the fee components for this fee structure.
+     */
+    public function feeComponents()
     {
-        return $this->belongsTo(Student::class);
+        return $this->hasMany(FeeComponent::class);
     }
 
-    public function getTotalFeeAttribute()
+    /**
+     * Get the student fees associated with this fee structure.
+     */
+    public function studentFees()
     {
-        return $this->tuition_fee + 
-               $this->admission_fee + 
-               $this->exam_fee + 
-               $this->lab_fee +
-               $this->library_fee +
-               $this->sports_fee + 
-               $this->transport_fee +
-               $this->hostel_fee;
+        return $this->hasMany(StudentFee::class);
+    }
+
+    /**
+     * Get the user who created this fee structure.
+     */
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the user who last updated this fee structure.
+     */
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

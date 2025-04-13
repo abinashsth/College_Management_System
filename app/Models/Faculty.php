@@ -4,35 +4,94 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Faculty extends Model
 {
     use HasFactory;
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'faculties';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'name',
-        'description'
+        'slug',
+        'code',
+        'description',
+        'logo',
+        'contact_email',
+        'contact_phone',
+        'website',
+        'address',
+        'established_date',
+        'status',
     ];
 
     /**
-     * Get the classes for the faculty.
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
      */
-    public function classes(): HasMany
+    protected $casts = [
+        'established_date' => 'date',
+        'status' => 'boolean',
+    ];
+
+    /**
+     * Create a new Eloquent model instance with faculty type
+     *
+     * @param  array  $attributes
+     * @return void
+     */
+    public function __construct(array $attributes = [])
     {
-        return $this->hasMany(Classes::class);
+        parent::__construct($attributes);
+        // Set the default type for faculty
+        $this->attributes['type'] = 'faculty';
     }
 
     /**
-     * Get the subjects for the faculty.
+     * Get all departments in this faculty.
      */
-    public function subjects(): HasMany
+    public function departments()
     {
-        return $this->hasMany(Subject::class);
+        return $this->hasMany(Department::class, 'faculty_id');
     }
 
-    public function courses()
+    /**
+     * Get all events for this faculty.
+     */
+    public function events()
     {
-        return $this->hasMany(Course::class);
+        return $this->hasMany(FacultyEvent::class);
+    }
+
+    /**
+     * Get all staff assigned to this faculty.
+     */
+    public function staff()
+    {
+        return $this->belongsToMany(User::class, 'faculty_staff', 'faculty_id', 'user_id')
+            ->withPivot('position', 'start_date', 'end_date', 'is_active')
+            ->withTimestamps();
+    }
+
+    /**
+     * Scope query to include only faculties.
+     * This is a temporary fix until the database schema is updated.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        // No global scopes that would filter faculties
     }
 } 

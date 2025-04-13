@@ -4,16 +4,11 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class PermissionSeeder extends Seeder
 {
     public function run()
     {
-
-        Permission::create(['name' => 'view results', 'guard_name' => 'web']);
-
-        
         $permissions = [
             // Dashboard
             'view dashboard',
@@ -54,19 +49,13 @@ class PermissionSeeder extends Seeder
             'edit exams',
             'delete exams',
             'grade exams',
-            
-            // Exam Session Management
-            'manage exam sessions',
-            'view exam sessions',
-            'create exam sessions',
-            'edit exam sessions',
-            'delete exam sessions',
-            
-            // Mark Management
-            'enter marks',
-            'edit marks',
-            'delete marks',
-            'view marks',
+            'manage exams',
+            'manage exam schedules',
+            'manage exam supervisors',
+            'manage exam rules',
+            'manage exam materials',
+            'view own exam grades',
+            'publish exam results',
             
             // Account Management
             'view accounts',
@@ -74,6 +63,13 @@ class PermissionSeeder extends Seeder
             'edit accounts',
             'delete accounts',
             'manage accounts',
+            
+            // Settings Management
+            'manage settings',
+            
+            // Activity Logs
+            'view activity logs',
+            'clear activity logs',
             
             // Profile
             'view profile',
@@ -83,32 +79,5 @@ class PermissionSeeder extends Seeder
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
-
-        // Exam Management Permissions
-        $examPermissions = [
-            'view exams',
-            'create exams',
-            'edit exams',
-            'delete exams',
-            'manage exams',
-            'grade exams',
-            'view marks',
-            'edit marks',
-            'delete marks',
-            'enter marks',
-            'manage exam sessions',
-            'view exam sessions',
-            'create exam sessions',
-            'edit exam sessions',
-            'delete exam sessions',
-        ];
-
-        foreach ($examPermissions as $permission) {
-            Permission::findOrCreate($permission, 'web');
-        }
-
-        // Assign permissions to super-admin role
-        $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
-        $superAdminRole->givePermissionTo(Permission::all());
     }
 } 

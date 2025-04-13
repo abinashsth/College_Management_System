@@ -22,6 +22,7 @@ class RolePermissionSeeder extends Seeder
             'view classes', 'create classes', 'edit classes',
             'view exams', 'create exams', 'edit exams',
             'view accounts', 'create accounts', 'edit accounts',
+            'manage settings',
             'view profile', 'edit profile'
         ]);
 
