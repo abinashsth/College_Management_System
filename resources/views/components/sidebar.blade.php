@@ -128,6 +128,22 @@
             </div>
         @endif
 
+
+
+        <!-- Employee Management  -->
+
+        @if($user->hasRole('super-admin') || $user->checkPermission('manage employees'))
+            <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('employeeManagement')">
+                <i class="fas fa-user-tie sidebar-icon"></i>
+                Employee Management
+                <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+            </div>
+            <div id="employeeManagement" class="hidden pl-8">
+                <a href="{{ route('employee.index') }}" class="sidebar-item">All Employees</a>
+                <a href="{{ route('employee.create') }}" class="sidebar-item">Add New Employee</a>
+            </div>
+        @endif 
+
         <!-- Reports -->
         @if($user->hasRole('super-admin') || $user->checkPermission('view reports'))
             <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('reportManagement')">

@@ -10,6 +10,7 @@ use App\Http\Controllers\SectionController;
 use App\Http\Controllers\ClassroomAllocationController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CollegeSettingsController;
 use App\Http\Controllers\AcademicStructureController;
 use App\Http\Controllers\AcademicYearController;
@@ -171,6 +172,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['permission:view accounts'])->group(function () {
         Route::resource('accounts', AccountController::class);
     });
+
+
+    // Employee Management
+    Route::middleware(['permission:view employees'])->group(function () {
+            
+        Route::resource('employee', EmployeeController::class); 
+        
+    } );
+
 
     // User Management
     Route::middleware(['permission:view users'])->group(function () {
