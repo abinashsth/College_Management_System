@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
+
 class User extends Authenticatable
 {
     use HasRoles, Notifiable, LogsActivity;
@@ -38,7 +39,9 @@ class User extends Authenticatable
         if ($this->hasRole('super-admin')) {
             return true;
         }
-
-        return $this->hasPermissionTo($permission);
+        
+      
+      
+            return $this->hasPermissionTo($permission);
     }
 }

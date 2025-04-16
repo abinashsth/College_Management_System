@@ -73,8 +73,22 @@ class PermissionSeeder extends Seeder
             
             // Profile
             'view profile',
-            'edit profile'
+            'edit profile',
+
+            //Manage Departments
+            'manage departments',
+
+           //Manage Faculty
+           'manage faculty',
+
+           //manage program
+           'manage programs',
+
+           
         ];
+
+      
+        Permission::create(['name' => 'view reports', 'guard_name' => 'web']);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
