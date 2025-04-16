@@ -84,8 +84,9 @@ class PermissionSeeder extends Seeder
            //manage program
            'manage programs',
 
-           //view reports
-          'view reports',
+        //    //view reports
+        //   'view reports',
+        
            //manage reports
           'manage reports',
 
