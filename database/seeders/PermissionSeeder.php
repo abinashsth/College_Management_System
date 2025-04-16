@@ -93,13 +93,17 @@ class PermissionSeeder extends Seeder
          'view subjects',
           //manage subjects
          'manage subjects',
+
+         //manage students
+        'manage students',
+         
         
 
            
         ];
 
       
-        Permission::create(['name' => 'manage subjects', 'guard_name' => 'web']);
+        Permission::create(['name' => 'manage students', 'guard_name' => 'web']);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
