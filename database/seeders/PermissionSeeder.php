@@ -91,8 +91,8 @@ class PermissionSeeder extends Seeder
 
           //view subjects
          'view subjects',
-          //manage subjects
-         'manage subjects',
+        //   //manage subjects
+        //  'manage subjects',
 
          //manage students
         'manage students',
