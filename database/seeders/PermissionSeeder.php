@@ -84,9 +84,8 @@ class PermissionSeeder extends Seeder
            //manage program
            'manage programs',
 
-        //    //view reports
-        //   'view reports',
-        
+           //view reports
+          'view reports',
            //manage reports
           'manage reports',
 
@@ -100,6 +99,7 @@ class PermissionSeeder extends Seeder
         ];
 
       
+        Permission::create(['name' => 'manage subjects', 'guard_name' => 'web']);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
