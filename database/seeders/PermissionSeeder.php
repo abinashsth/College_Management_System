@@ -100,13 +100,25 @@ class PermissionSeeder extends Seeder
          //manage employees
          'manage employees',
          
-        
+
+        //  manage salary
+        'manage salary',
+        'view salaries',
+        'create salaries',
+        'edit salaries',
+        'delete salaries',
+        'manage salary components',
+        'process payroll',
+        'view salary reports',
+        'approve salaries',
+        'manage allowances',
+        'manage deductions',
 
            
         ];
 
       
-        Permission::create(['name' => 'manage employees', 'guard_name' => 'web']);
+        // Permission::create(['name' => 'manage employees', 'guard_name' => 'web']);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);

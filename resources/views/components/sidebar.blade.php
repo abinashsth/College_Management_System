@@ -144,6 +144,21 @@
             </div>
         @endif 
 
+
+        <!-- Salary Management -->
+        @if($user->hasRole('super-admin') || $user->checkPermission('view salary'))
+            <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('salaryManagement')">
+                <i class="fas fa-money-bill sidebar-icon"></i>
+                Salary Management
+                <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+            </div>
+            <div id="salaryManagement" class="hidden pl-8">
+                <a href="{{ route('salary.index') }}" class="sidebar-item">All Salaries</a>
+                <a href="{{ route('salary.create') }}" class="sidebar-item">Add New Salary</a>
+            </div>
+        @endif
+
+
         <!-- Reports -->
         @if($user->hasRole('super-admin') || $user->checkPermission('view reports'))
             <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('reportManagement')">

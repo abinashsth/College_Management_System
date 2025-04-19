@@ -11,6 +11,7 @@ use App\Http\Controllers\ClassroomAllocationController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\CollegeSettingsController;
 use App\Http\Controllers\AcademicStructureController;
 use App\Http\Controllers\AcademicYearController;
@@ -180,6 +181,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('employee', EmployeeController::class); 
         
     } );
+
+        //Salary Management
+     Route::middleware(['permission:view salary'])->group(function () {
+            
+        Route::resource('salary', SalaryController::class);
+        
+    } );
+
+
+
 
 
     // User Management
