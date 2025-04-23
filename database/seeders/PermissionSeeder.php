@@ -103,7 +103,7 @@ class PermissionSeeder extends Seeder
 
         //  manage salary
         'manage salary',
-        'view salaries',
+        'view salary',
         'create salaries',
         'edit salaries',
         'delete salaries',
