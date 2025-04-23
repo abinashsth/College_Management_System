@@ -28,6 +28,9 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Explicit model binding for SubjectMask
+        Route::model('mask', \App\Models\SubjectMask::class);
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

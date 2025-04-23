@@ -111,38 +111,38 @@ class ExamRuleController extends Controller
     /**
      * Display the specified exam rule.
      *
-     * @param  \App\Models\ExamRule  $rule
+     * @param  \App\Models\ExamRule  $exam_rule
      * @return \Illuminate\Http\Response
      */
-    public function show(ExamRule $rule)
+    public function show(ExamRule $exam_rule)
     {
-        $rule->load(['exam', 'creator']);
+        $exam_rule->load(['exam', 'creator']);
         
-        return view('exam_rules.show', compact('rule'));
+        return view('exam_rules.show', compact('exam_rule'));
     }
 
     /**
      * Show the form for editing the specified exam rule.
      *
-     * @param  \App\Models\ExamRule  $rule
+     * @param  \App\Models\ExamRule  $exam_rule
      * @return \Illuminate\Http\Response
      */
-    public function edit(ExamRule $rule)
+    public function edit(ExamRule $exam_rule)
     {
         $exams = Exam::where('is_active', true)->get();
         $categories = ExamRule::getCategories();
         
-        return view('exam_rules.edit', compact('rule', 'exams', 'categories'));
+        return view('exam_rules.edit', compact('exam_rule', 'exams', 'categories'));
     }
 
     /**
      * Update the specified exam rule in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\ExamRule  $rule
+     * @param  \App\Models\ExamRule  $exam_rule
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, ExamRule $rule)
+    public function update(Request $request, ExamRule $exam_rule)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -161,22 +161,22 @@ class ExamRuleController extends Controller
             $validated['exam_id'] = null;
         }
         
-        $rule->update($validated);
+        $exam_rule->update($validated);
         
         return redirect()
-            ->route('exam-rules.show', $rule)
+            ->route('exam-rules.show', $exam_rule)
             ->with('success', 'Exam rule updated successfully');
     }
 
     /**
      * Remove the specified exam rule from storage.
      *
-     * @param  \App\Models\ExamRule  $rule
+     * @param  \App\Models\ExamRule  $exam_rule
      * @return \Illuminate\Http\Response
      */
-    public function destroy(ExamRule $rule)
+    public function destroy(ExamRule $exam_rule)
     {
-        $rule->delete();
+        $exam_rule->delete();
         
         return redirect()
             ->route('exam-rules.index')
@@ -209,15 +209,15 @@ class ExamRuleController extends Controller
     /**
      * Toggle the active status of a rule.
      *
-     * @param  \App\Models\ExamRule  $rule
+     * @param  \App\Models\ExamRule  $exam_rule
      * @return \Illuminate\Http\Response
      */
-    public function toggleStatus(ExamRule $rule)
+    public function toggleStatus(ExamRule $exam_rule)
     {
-        $rule->is_active = !$rule->is_active;
-        $rule->save();
+        $exam_rule->is_active = !$exam_rule->is_active;
+        $exam_rule->save();
         
-        $status = $rule->is_active ? 'activated' : 'deactivated';
+        $status = $exam_rule->is_active ? 'activated' : 'deactivated';
         
         return redirect()
             ->back()

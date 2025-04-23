@@ -23,6 +23,16 @@ class Classes extends Model
         'status' => 'string',
     ];
 
+    /**
+     * Get the name attribute.
+     *
+     * @return string
+     */
+    public function getNameAttribute()
+    {
+        return $this->class_name;
+    }
+
     public function students()
     {
         return $this->hasMany(Student::class, 'class_id');
@@ -52,6 +62,16 @@ class Classes extends Model
     {
         return $this->belongsToMany(Course::class, 'class_courses', 'class_id', 'course_id')
             ->withPivot('semester', 'year', 'is_active', 'notes')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the subjects for this class.
+     */
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'class_subjects', 'class_id', 'subject_id')
+            ->withPivot('semester', 'year', 'is_active', 'is_core', 'notes')
             ->withTimestamps();
     }
 } 

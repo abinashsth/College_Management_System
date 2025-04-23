@@ -125,7 +125,7 @@
                     @forelse ($class->students as $student)
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $student->id }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $student->full_name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $student->first_name }} {{ $student->last_name }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $student->registration_number }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $student->section->name ?? 'Not Assigned' }}
@@ -148,7 +148,7 @@
     </div>
 
     <!-- Classroom Allocation -->
-    <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
+    <!-- <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
         <div class="border-b border-gray-200 bg-gray-50 px-4 py-3 flex justify-between items-center">
             <h2 class="text-lg font-semibold text-gray-800">Classroom Allocations</h2>
             <a href="{{ route('classroom-allocations.create', ['class_id' => $class->id]) }}" class="bg-teal-600 text-white px-3 py-1 rounded text-sm hover:bg-teal-700">
@@ -194,10 +194,10 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </div> -->
 
     <!-- Courses Tab -->
-    <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
+    <!-- <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
         <div class="border-b border-gray-200 bg-gray-50 px-4 py-3 flex justify-between items-center">
             <h2 class="text-lg font-semibold text-gray-800">Courses</h2>
             <a href="{{ route('classes.courses', $class->id) }}" class="bg-teal-600 text-white px-3 py-1 rounded text-sm hover:bg-teal-700">
@@ -235,6 +235,50 @@
                     @empty
                     <tr>
                         <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">No courses assigned to this class. Click "Manage Courses" to add courses.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div> -->
+
+    <!-- Subjects Tab -->
+    <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 px-4 py-3 flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-gray-800">Subjects</h2>
+            <a href="{{ route('subjects.create', ['class_id' => $class->id]) }}" class="bg-teal-600 text-white px-3 py-1 rounded text-sm hover:bg-teal-700">
+                Add Subject
+            </a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Credit Hours</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Semester</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse ($class->subjects as $subject)
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $subject->code }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $subject->name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $subject->credit_hours }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $subject->pivot->semester ?? 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <a href="{{ route('subjects.show', $subject->id) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">No subjects assigned to this class.</td>
                     </tr>
                     @endforelse
                 </tbody>

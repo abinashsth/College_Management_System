@@ -248,9 +248,13 @@ class StudentController extends Controller
 
             // Send welcome email to student and guardian
             try {
-                Mail::to($validated['email'])->send(new WelcomeStudent($student));
-                if (!empty($validated['guardian_email'])) {
-                    Mail::to($validated['guardian_email'])->send(new StudentRegistrationConfirmation($student));
+                if (config('mail.default') && config('mail.mailers.' . config('mail.default') . '.transport')) {
+                    Mail::to($validated['email'])->send(new WelcomeStudent($student));
+                    if (!empty($validated['guardian_email'])) {
+                        Mail::to($validated['guardian_email'])->send(new StudentRegistrationConfirmation($student));
+                    }
+                } else {
+                    \Log::warning('Mail configuration is incomplete. Emails not sent.');
                 }
             } catch (\Exception $e) {
                 // Just log email errors but don't fail the request
@@ -445,10 +449,10 @@ class StudentController extends Controller
                 'dob' => $request->dob,
                 'student_address' => $request->student_address,
                 'phone_number' => $request->phone_number,
-                'city' => $request->city,
-                'state' => $request->state,
-                'father_name' => $request->father_name,
-                'mother_name' => $request->mother_name,
+                'city' => $request->input('city'),
+                'state' => $request->input('state'),
+                'father_name' => $request->input('father_name'),
+                'mother_name' => $request->input('mother_name'),
                 'program_id' => $request->program_id,
                 'department_id' => $request->department_id,
                 'batch_year' => $request->batch_year,
@@ -456,7 +460,7 @@ class StudentController extends Controller
                 'academic_session_id' => $request->academic_session_id,
                 'profile_photo' => $profilePhotoPath,
                 'enrollment_status' => $request->enrollment_status,
-                'current_semester' => $request->current_semester,
+                'current_semester' => $request->input('current_semester'),
                 'emergency_contact_name' => $request->emergency_contact_name,
                 'emergency_contact_number' => $request->emergency_contact_number,
                 'emergency_contact_relationship' => $request->emergency_contact_relationship,
@@ -531,6 +535,53 @@ class StudentController extends Controller
             DB::rollBack();
             Log::error('Error deleting student: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to delete student: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Assign a student ID to a student.
+     */
+    public function assignStudentId(Student $student)
+    {
+        try {
+            DB::beginTransaction();
+            
+            if (!empty($student->student_id)) {
+                return redirect()->route('students.show', $student)->with('info', 'Student already has an ID assigned.');
+            }
+            
+            // Make sure student has program
+            if (!$student->program_id) {
+                return redirect()->route('students.edit', $student)->with('error', 'Student must be assigned to a program before generating ID.');
+            }
+            
+            // Get program code for ID
+            $program = Program::findOrFail($student->program_id);
+            $programCode = $program->code ?? strtoupper(substr($program->name, 0, 3)); // Use code or first 3 letters of program name
+            
+            // Get batch year
+            $batchYear = $student->batch_year ?? date('Y');
+            
+            // Get student count for the program in this batch year to generate sequential number
+            $studentCount = Student::where('program_id', $program->id)
+                                  ->where('batch_year', $batchYear)
+                                  ->whereNotNull('student_id')
+                                  ->count();
+            
+            // Generate unique student ID
+            $studentId = Student::generateStudentId($programCode, $batchYear, $studentCount);
+            
+            // Update student record
+            $student->update([
+                'student_id' => $studentId
+            ]);
+            
+            DB::commit();
+            return redirect()->route('students.show', $student)->with('success', 'Student ID assigned successfully: ' . $studentId);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error assigning student ID: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to assign student ID: ' . $e->getMessage());
         }
     }
 }

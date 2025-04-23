@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class Mark extends Model
 {
@@ -12,47 +14,46 @@ class Mark extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array
      */
     protected $fillable = [
-        'exam_id',
         'student_id',
+        'exam_id',
         'subject_id',
         'marks_obtained',
         'total_marks',
         'grade',
+        'is_absent',
         'remarks',
         'status',
-        'is_absent',
         'created_by',
         'updated_by',
         'verified_by',
-        'verified_at',
-        'submitted_at',
-        'published_at',
+        'published_by',
+        'verification_date',
+        'publication_date',
+        'verification_remarks',
     ];
 
     /**
      * The attributes that should be cast.
      *
-     * @var array<string, string>
+     * @var array
      */
     protected $casts = [
-        'marks_obtained' => 'decimal:2',
-        'total_marks' => 'decimal:2',
         'is_absent' => 'boolean',
-        'verified_at' => 'datetime',
-        'submitted_at' => 'datetime',
-        'published_at' => 'datetime',
+        'verification_date' => 'datetime',
+        'publication_date' => 'datetime',
     ];
 
     /**
-     * Get the exam that owns the mark.
+     * Status values for marks
      */
-    public function exam()
-    {
-        return $this->belongsTo(Exam::class);
-    }
+    const STATUS_DRAFT = 'draft';
+    const STATUS_SUBMITTED = 'submitted';
+    const STATUS_VERIFIED = 'verified';
+    const STATUS_PUBLISHED = 'published';
+    const STATUS_REJECTED = 'rejected';
 
     /**
      * Get the student that owns the mark.
@@ -60,6 +61,14 @@ class Mark extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    /**
+     * Get the exam that owns the mark.
+     */
+    public function exam()
+    {
+        return $this->belongsTo(Exam::class);
     }
 
     /**
@@ -79,7 +88,7 @@ class Mark extends Model
     }
 
     /**
-     * Get the user who updated the mark.
+     * Get the user who last updated the mark.
      */
     public function updater()
     {
@@ -95,7 +104,15 @@ class Mark extends Model
     }
 
     /**
-     * Get the components for the mark.
+     * Get the user who published the mark.
+     */
+    public function publisher()
+    {
+        return $this->belongsTo(User::class, 'published_by');
+    }
+
+    /**
+     * Get the components for this mark.
      */
     public function components()
     {
@@ -103,77 +120,129 @@ class Mark extends Model
     }
 
     /**
-     * Calculate the percentage of marks obtained.
-     *
-     * @return float
-     */
-    public function getPercentageAttribute()
-    {
-        if ($this->total_marks > 0) {
-            return ($this->marks_obtained / $this->total_marks) * 100;
-        }
-        
-        return 0;
-    }
-
-    /**
-     * Check if the mark is a pass.
+     * Check if mark is passing.
      *
      * @return bool
      */
-    public function getIsPassAttribute()
+    public function isPassing()
     {
-        return $this->exam && $this->marks_obtained >= $this->exam->passing_marks;
+        if ($this->is_absent) {
+            return false;
+        }
+
+        if ($this->marks_obtained === null) {
+            return false;
+        }
+
+        $exam = $this->exam;
+        return $this->marks_obtained >= $exam->passing_marks;
     }
 
     /**
-     * Get mark status label.
+     * Get mark percentage.
      *
-     * @return string
+     * @return float|null
      */
-    public function getStatusLabelAttribute()
+    public function getPercentage()
     {
-        return ucfirst($this->status);
+        if ($this->is_absent || $this->marks_obtained === null) {
+            return null;
+        }
+
+        $total = $this->total_marks ?? $this->exam->total_marks;
+        return ($this->marks_obtained / $total) * 100;
     }
 
     /**
-     * Calculate marks based on components.
+     * Calculate Grade based on marks.
      *
-     * @return void
+     * @return string|null
+     */
+    public function calculateGrade()
+    {
+        if ($this->is_absent) {
+            return 'AB';
+        }
+
+        if ($this->marks_obtained === null) {
+            return null;
+        }
+
+        $percentage = $this->getPercentage();
+        if ($percentage === null) {
+            return null;
+        }
+
+        // Find grade in grade system
+        $gradeSystem = GradeSystem::getDefault();
+        if (!$gradeSystem) {
+            return null;
+        }
+
+        return $gradeSystem->findGradeForPercentage($percentage);
+    }
+
+    /**
+     * Recalculate the marks based on components.
+     *
+     * @return bool
      */
     public function calculateMarks()
     {
-        if ($this->components->isEmpty()) {
-            return;
+        if ($this->is_absent) {
+            $this->marks_obtained = null;
+            $this->grade = 'AB';
+            return $this->save();
         }
 
-        $totalObtained = 0;
+        $components = $this->components;
+        if ($components->isEmpty()) {
+            return false;
+        }
+
         $totalMarks = 0;
+        $weightSum = 0;
 
-        foreach ($this->components as $component) {
-            $weightedMarks = $component->marks_obtained * ($component->weight_percentage / 100);
-            $weightedTotal = $component->total_marks * ($component->weight_percentage / 100);
-            
-            $totalObtained += $weightedMarks;
-            $totalMarks += $weightedTotal;
+        foreach ($components as $component) {
+            if ($component->marks_obtained !== null) {
+                $weight = $component->weight_percentage / 100;
+                $weightedMarks = ($component->marks_obtained / $component->total_marks) * $weight;
+                $totalMarks += $weightedMarks;
+                $weightSum += $weight;
+            }
         }
 
-        $this->marks_obtained = $totalObtained;
-        $this->total_marks = $totalMarks;
-        $this->save();
+        if ($weightSum > 0) {
+            // Normalize to 100% in case weights don't sum to 100
+            $totalMarks = ($totalMarks / $weightSum) * 100;
+            
+            // Scale to exam total marks
+            $examTotalMarks = $this->exam->total_marks;
+            $this->marks_obtained = round($totalMarks * $examTotalMarks / 100, 2);
+            
+            // Calculate grade
+            $this->grade = $this->calculateGrade();
+            
+            return $this->save();
+        }
+
+        return false;
     }
 
     /**
-     * Submit the mark.
+     * Submit mark for verification.
      *
      * @param int $userId
      * @return bool
      */
-    public function submit(int $userId): bool
+    public function submit($userId = null)
     {
-        $this->status = 'submitted';
-        $this->updated_by = $userId;
-        $this->submitted_at = now();
+        if ($this->status !== self::STATUS_DRAFT && $this->status !== self::STATUS_REJECTED) {
+            return false;
+        }
+
+        $this->status = self::STATUS_SUBMITTED;
+        $this->updated_by = $userId ?? Auth::id();
         
         return $this->save();
     }
@@ -184,15 +253,35 @@ class Mark extends Model
      * @param int $userId
      * @return bool
      */
-    public function verify(int $userId): bool
+    public function verify($userId = null)
     {
-        if ($this->status !== 'submitted') {
+        if ($this->status !== self::STATUS_SUBMITTED) {
             return false;
         }
+
+        $this->status = self::STATUS_VERIFIED;
+        $this->verified_by = $userId ?? Auth::id();
+        $this->verification_date = now();
         
-        $this->status = 'verified';
-        $this->verified_by = $userId;
-        $this->verified_at = now();
+        return $this->save();
+    }
+
+    /**
+     * Reject the mark verification.
+     *
+     * @param int $userId
+     * @param string|null $remarks
+     * @return bool
+     */
+    public function reject($userId = null, $remarks = null)
+    {
+        if ($this->status !== self::STATUS_SUBMITTED) {
+            return false;
+        }
+
+        $this->status = self::STATUS_REJECTED;
+        $this->updated_by = $userId ?? Auth::id();
+        $this->verification_remarks = $remarks;
         
         return $this->save();
     }
@@ -203,82 +292,90 @@ class Mark extends Model
      * @param int $userId
      * @return bool
      */
-    public function publish(int $userId): bool
+    public function publish($userId = null)
     {
-        if ($this->status !== 'verified') {
+        if ($this->status !== self::STATUS_VERIFIED) {
             return false;
         }
-        
-        $this->status = 'published';
-        $this->updated_by = $userId;
-        $this->published_at = now();
+
+        $this->status = self::STATUS_PUBLISHED;
+        $this->published_by = $userId ?? Auth::id();
+        $this->publication_date = now();
         
         return $this->save();
     }
 
     /**
-     * Revert to draft status.
+     * Determine if mark can be edited.
      *
-     * @param int $userId
      * @return bool
      */
-    public function revertToDraft(int $userId): bool
+    public function canEdit()
     {
-        if ($this->status === 'published') {
-            return false;
+        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_REJECTED]);
+    }
+
+    /**
+     * Determine if mark can be submitted.
+     *
+     * @return bool
+     */
+    public function canSubmit()
+    {
+        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_REJECTED]);
+    }
+
+    /**
+     * Determine if mark can be verified.
+     *
+     * @return bool
+     */
+    public function canVerify()
+    {
+        return $this->status === self::STATUS_SUBMITTED;
+    }
+
+    /**
+     * Determine if mark can be published.
+     *
+     * @return bool
+     */
+    public function canPublish()
+    {
+        return $this->status === self::STATUS_VERIFIED;
+    }
+
+    /**
+     * Get formatted status label with appropriate color class
+     * 
+     * @return array
+     */
+    public function getStatusInfo()
+    {
+        $label = ucfirst($this->status);
+        $colorClass = 'gray';
+        
+        switch ($this->status) {
+            case self::STATUS_DRAFT:
+                $colorClass = 'blue';
+                break;
+            case self::STATUS_SUBMITTED:
+                $colorClass = 'yellow';
+                break;
+            case self::STATUS_VERIFIED:
+                $colorClass = 'green';
+                break;
+            case self::STATUS_PUBLISHED:
+                $colorClass = 'indigo';
+                break;
+            case self::STATUS_REJECTED:
+                $colorClass = 'red';
+                break;
         }
         
-        $this->status = 'draft';
-        $this->updated_by = $userId;
-        
-        return $this->save();
-    }
-
-    /**
-     * Scope a query to only include marks for a specific exam.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param int $examId
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeForExam($query, $examId)
-    {
-        return $query->where('exam_id', $examId);
-    }
-
-    /**
-     * Scope a query to only include marks for a specific student.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param int $studentId
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeForStudent($query, $studentId)
-    {
-        return $query->where('student_id', $studentId);
-    }
-
-    /**
-     * Scope a query to only include marks for a specific subject.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param int $subjectId
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeForSubject($query, $subjectId)
-    {
-        return $query->where('subject_id', $subjectId);
-    }
-
-    /**
-     * Scope a query to only include marks with a specific status.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $status
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeWithStatus($query, $status)
-    {
-        return $query->where('status', $status);
+        return [
+            'label' => $label,
+            'color' => $colorClass
+        ];
     }
 } 

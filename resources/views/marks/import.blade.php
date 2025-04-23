@@ -43,7 +43,7 @@
                         @if (!isset($exam) || !isset($subject))
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
-                                    <x-label for="exam_id" :value="__('Select Exam')" />
+                                    <label for="exam_id">Select Exam</label>
                                     <select id="exam_id" name="exam_id" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                         <option value="">-- Select Exam --</option>
                                         @foreach ($exams as $exam)
@@ -58,7 +58,7 @@
                                 </div>
 
                                 <div>
-                                    <x-label for="subject_id" :value="__('Select Subject')" />
+                                    <label for="subject_id">Select Subject</label>
                                     <select id="subject_id" name="subject_id" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                         <option value="">-- Select Subject --</option>
                                         @foreach ($subjects as $subject)
@@ -85,7 +85,7 @@
                         @endif
 
                         <div class="mt-4">
-                            <x-label for="import_file" :value="__('Upload Marks File')" />
+                            <label for="import_file">Upload Marks File</label>
                             <input 
                                 type="file" 
                                 name="import_file" 

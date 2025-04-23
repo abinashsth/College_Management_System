@@ -44,13 +44,13 @@ class ExamMaterialController extends Controller
             $query->where('is_active', $request->is_active === 'yes');
         }
         
-        $materials = $query->orderBy('created_at', 'desc')->paginate(15);
+        $examMaterials = $query->orderBy('created_at', 'desc')->paginate(15);
         
         // Get data for filters
         $exams = Exam::where('is_active', true)->get();
         $types = ExamMaterial::getTypes();
         
-        return view('exam_materials.index', compact('materials', 'exams', 'types'));
+        return view('exam_materials.index', compact('examMaterials', 'exams', 'types'));
     }
 
     /**
@@ -276,13 +276,13 @@ class ExamMaterialController extends Controller
             }
         }
         
-        $materials = $query->with(['creator', 'approver'])
+        $examMaterials = $query->with(['creator', 'approver'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
             
         $types = ExamMaterial::getTypes();
         
-        return view('exam_materials.exam_materials', compact('exam', 'materials', 'types'));
+        return view('exam_materials.index', compact('exam', 'examMaterials', 'types'));
     }
     
     /**

@@ -15,6 +15,25 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    @can('view exams')
+                    <x-nav-link :href="route('exams.index')" :active="request()->routeIs('exams.*')">
+                        {{ __('Exams') }}
+                    </x-nav-link>
+                    @endcan
+                    
+                    @can('view marks')
+                    <x-nav-link :href="route('marks.dashboard')" :active="request()->routeIs('marks.*')">
+                        {{ __('Marks') }}
+                    </x-nav-link>
+                    
+                    <x-nav-link :href="route('masks.index')" :active="request()->routeIs('masks.*')">
+                        {{ __('Subject Masks') }}
+                    </x-nav-link>
+                    
+                    <x-nav-link :href="route('masks.direct.index')" :active="request()->routeIs('masks.direct.*')">
+                        {{ __('Direct Masks') }}
+                    </x-nav-link>
+                    @endcan
                 </div>
             </div>
 
@@ -70,6 +89,25 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @can('view exams')
+            <x-responsive-nav-link :href="route('exams.index')" :active="request()->routeIs('exams.*')">
+                {{ __('Exams') }}
+            </x-responsive-nav-link>
+            @endcan
+            
+            @can('view marks')
+            <x-responsive-nav-link :href="route('marks.dashboard')" :active="request()->routeIs('marks.*')">
+                {{ __('Marks') }}
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('masks.index')" :active="request()->routeIs('masks.*')">
+                {{ __('Subject Masks') }}
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('masks.direct.index')" :active="request()->routeIs('masks.direct.*')">
+                {{ __('Direct Masks') }}
+            </x-responsive-nav-link>
+            @endcan
         </div>
 
         <!-- Responsive Settings Options -->

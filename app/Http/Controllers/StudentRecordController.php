@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\StudentRecordsExport;
 use App\Notifications\StudentRecordCreated;
 use App\Notifications\StudentRecordUpdated;
@@ -84,7 +85,7 @@ class StudentRecordController extends Controller
         $records = $query->latest()->paginate(15);
         
         // Get data for filters
-        $students = Student::orderBy('name')->get(['id', 'name', 'admission_no']);
+        $students = Student::orderByName()->get(['id', 'first_name', 'last_name', 'admission_number']);
         $recordTypes = StudentRecord::$recordTypes;
         $staff = User::whereHas('roles')->get(['id', 'name']);
 
@@ -99,32 +100,35 @@ class StudentRecordController extends Controller
     /**
      * Show the form for creating a new student record.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Student  $student
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request)
+    public function create(Student $student)
     {
         $this->authorize('create', StudentRecord::class);
 
-        $students = Student::orderBy('name')->get(['id', 'name', 'admission_no']);
         $recordTypes = StudentRecord::$recordTypes;
-        $defaultStudentId = $request->student_id;
+        
+        // Load related data if needed
+        $programs = Program::all();
+        $departments = Department::all();
+        $academicSessions = AcademicSession::all();
 
-        return view('student-records.create', compact('students', 'recordTypes', 'defaultStudentId'));
+        return view('student-records.create', compact('student', 'recordTypes', 'programs', 'departments', 'academicSessions'));
     }
 
     /**
      * Store a newly created student record in storage.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Student  $student
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, Student $student)
     {
         $this->authorize('create', StudentRecord::class);
 
         $validated = $request->validate([
-            'student_id' => 'required|exists:students,id',
             'record_type' => 'required|string|in:' . implode(',', array_keys(StudentRecord::$recordTypes)),
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -143,7 +147,7 @@ class StudentRecordController extends Controller
         }
 
         $record = StudentRecord::create([
-            'student_id' => $validated['student_id'],
+            'student_id' => $student->id,
             'record_type' => $validated['record_type'],
             'title' => $validated['title'],
             'description' => $validated['description'],
@@ -155,15 +159,51 @@ class StudentRecordController extends Controller
         ]);
 
         // Notify relevant staff based on record type
-        $student = Student::find($validated['student_id']);
         $notifiableUsers = $this->getNotifiableUsers($record);
         
         foreach ($notifiableUsers as $user) {
             $user->notify(new StudentRecordCreated($record, $student));
         }
 
-        return redirect()->route('student-records.show', $record)
+        return redirect()->route('student-records.show-record', $record)
             ->with('success', 'Student record created successfully.');
+    }
+
+    /**
+     * Display the student's records.
+     *
+     * @param  \App\Models\Student  $student
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Student $student)
+    {
+        $this->authorize('viewAny', StudentRecord::class);
+
+        // Get records for this student with optional filters
+        $query = StudentRecord::where('student_id', $student->id);
+        
+        // Filter by record type if requested
+        if (request()->filled('record_type')) {
+            $query->where('record_type', request('record_type'));
+        }
+        
+        // Search in title and description
+        if (request()->filled('search')) {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        
+        // Handle access control for medical records
+        if (!Auth::user()->hasRole(['admin', 'principal', 'counselor', 'medical_staff'])) {
+            $query->where('record_type', '!=', 'medical');
+        }
+        
+        $records = $query->latest()->paginate(10);
+        
+        return view('student-records.show', compact('student', 'records'));
     }
 
     /**
@@ -172,13 +212,13 @@ class StudentRecordController extends Controller
      * @param  \App\Models\StudentRecord  $studentRecord
      * @return \Illuminate\Http\Response
      */
-    public function show(StudentRecord $studentRecord)
+    public function showRecord(StudentRecord $studentRecord)
     {
         $this->authorize('view', $studentRecord);
 
         $studentRecord->load(['student', 'createdBy', 'updatedBy']);
 
-        return view('student-records.show', [
+        return view('student-records.show-record', [
             'record' => $studentRecord,
         ]);
     }
@@ -339,6 +379,66 @@ class StudentRecordController extends Controller
         return Excel::download(
             new StudentRecordsExport($records),
             'student_records_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Export a student's records to PDF.
+     *
+     * @param  \App\Models\Student  $student
+     * @return \Illuminate\Http\Response
+     */
+    public function exportPDF(Student $student)
+    {
+        $this->authorize('export', StudentRecord::class);
+
+        // Get records for this student
+        $records = StudentRecord::where('student_id', $student->id)
+            ->with(['createdBy', 'updatedBy'])
+            ->latest()
+            ->get();
+        
+        // Handle access control for medical records
+        if (!Auth::user()->hasRole(['admin', 'principal', 'counselor', 'medical_staff'])) {
+            $records = $records->filter(function($record) {
+                return $record->record_type !== 'medical';
+            });
+        }
+        
+        $pdf = Pdf::loadView('student-records.pdf', [
+            'student' => $student,
+            'records' => $records
+        ]);
+        
+        return $pdf->download('student_records_' . $student->student_id . '_' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Export a student's records to Excel.
+     *
+     * @param  \App\Models\Student  $student
+     * @return \Illuminate\Http\Response
+     */
+    public function exportExcel(Student $student)
+    {
+        $this->authorize('export', StudentRecord::class);
+
+        // Get records for this student
+        $records = StudentRecord::where('student_id', $student->id)
+            ->with(['createdBy', 'updatedBy'])
+            ->latest()
+            ->get();
+        
+        // Handle access control for medical records
+        if (!Auth::user()->hasRole(['admin', 'principal', 'counselor', 'medical_staff'])) {
+            $records = $records->filter(function($record) {
+                return $record->record_type !== 'medical';
+            });
+        }
+
+        return Excel::download(
+            new StudentRecordsExport($records),
+            'student_records_' . $student->student_id . '_' . now()->format('Y-m-d') . '.xlsx'
         );
     }
 

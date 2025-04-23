@@ -81,6 +81,16 @@ class Subject extends Model
     }
 
     /**
+     * Get the classes that this subject is taught in.
+     */
+    public function classes()
+    {
+        return $this->belongsToMany(Classes::class, 'class_subjects', 'subject_id', 'class_id')
+            ->withPivot('semester', 'year', 'is_active', 'is_core', 'notes')
+            ->withTimestamps();
+    }
+
+    /**
      * Get the teachers assigned to this subject.
      */
     public function teachers()
@@ -188,5 +198,15 @@ class Subject extends Model
     public function scopeBySemester($query, $semester)
     {
         return $query->where('semester_offered', 'like', "%$semester%");
+    }
+
+    /**
+     * Get the exams related to this subject.
+     */
+    public function exams()
+    {
+        return $this->belongsToMany(Exam::class, 'exam_subject')
+            ->withPivot('total_marks', 'passing_marks', 'notes')
+            ->withTimestamps();
     }
 }

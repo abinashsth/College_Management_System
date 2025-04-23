@@ -12,44 +12,83 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('exams', function (Blueprint $table) {
-            // Replace subject string with foreign key to subjects table
+            // Remove subject column if it exists (since we already have subject_id)
             if (Schema::hasColumn('exams', 'subject')) {
                 $table->dropColumn('subject');
             }
-            $table->foreignId('subject_id')->nullable()->after('class_id')->constrained('subjects')->nullOnDelete();
             
-            // Add academic session reference
-            $table->foreignId('academic_session_id')->nullable()->after('subject_id')->constrained('academic_sessions')->nullOnDelete();
+            // Skip adding subject_id as it already exists in the original migration
             
-            // Add exam type and semester
-            $table->enum('exam_type', ['midterm', 'final', 'quiz', 'assignment', 'project', 'other'])->default('midterm')->after('academic_session_id');
-            $table->string('semester')->nullable()->after('exam_type');
+            // Add academic session reference if it doesn't exist
+            if (!Schema::hasColumn('exams', 'academic_session_id')) {
+                $table->foreignId('academic_session_id')->nullable()->constrained('academic_sessions')->nullOnDelete();
+            }
             
-            // Add duration and additional date/time fields
-            $table->integer('duration_minutes')->default(60)->after('exam_date');
-            $table->time('start_time')->nullable()->after('duration_minutes');
-            $table->time('end_time')->nullable()->after('start_time');
+            // Add exam type and semester if they don't exist
+            if (!Schema::hasColumn('exams', 'exam_type')) {
+                $table->enum('exam_type', ['midterm', 'final', 'quiz', 'assignment', 'project', 'other'])->default('midterm');
+            }
             
-            // Add location details
-            $table->string('location')->nullable()->after('end_time');
-            $table->string('room_number')->nullable()->after('location');
+            if (!Schema::hasColumn('exams', 'semester')) {
+                $table->string('semester')->nullable();
+            }
             
-            // Add preparation and result related fields
-            $table->date('registration_deadline')->nullable()->after('room_number');
-            $table->date('result_date')->nullable()->after('registration_deadline');
-            $table->boolean('is_published')->default(false)->after('result_date');
+            // Add duration and additional date/time fields if they don't exist
+            if (!Schema::hasColumn('exams', 'duration_minutes')) {
+                $table->integer('duration_minutes')->default(60)->after('exam_date');
+            }
             
-            // Add weighting and grading fields
-            $table->decimal('weight_percentage', 5, 2)->default(100.00)->after('is_published');
-            $table->string('grading_scale')->nullable()->after('weight_percentage');
+            if (!Schema::hasColumn('exams', 'start_time')) {
+                $table->time('start_time')->nullable()->after('duration_minutes');
+            }
             
-            // Add administrative fields
-            $table->foreignId('created_by')->nullable()->after('status')->constrained('users')->nullOnDelete();
-            $table->foreignId('updated_by')->nullable()->after('created_by')->constrained('users')->nullOnDelete();
+            if (!Schema::hasColumn('exams', 'end_time')) {
+                $table->time('end_time')->nullable()->after('start_time');
+            }
             
-            // Rename status field to be more descriptive
-            if (Schema::hasColumn('exams', 'status')) {
-                $table->boolean('is_active')->default(true)->after('weight_percentage');
+            // Add location details if they don't exist
+            if (!Schema::hasColumn('exams', 'location')) {
+                $table->string('location')->nullable();
+            }
+            
+            if (!Schema::hasColumn('exams', 'room_number')) {
+                $table->string('room_number')->nullable();
+            }
+            
+            // Add preparation and result related fields if they don't exist
+            if (!Schema::hasColumn('exams', 'registration_deadline')) {
+                $table->date('registration_deadline')->nullable();
+            }
+            
+            if (!Schema::hasColumn('exams', 'result_date')) {
+                $table->date('result_date')->nullable();
+            }
+            
+            if (!Schema::hasColumn('exams', 'is_published')) {
+                $table->boolean('is_published')->default(false);
+            }
+            
+            // Add weighting and grading fields if they don't exist
+            if (!Schema::hasColumn('exams', 'weight_percentage')) {
+                $table->decimal('weight_percentage', 5, 2)->default(100.00);
+            }
+            
+            if (!Schema::hasColumn('exams', 'grading_scale')) {
+                $table->string('grading_scale')->nullable();
+            }
+            
+            // Add administrative fields if they don't exist
+            if (!Schema::hasColumn('exams', 'created_by')) {
+                $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            }
+            
+            if (!Schema::hasColumn('exams', 'updated_by')) {
+                $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            }
+            
+            // Rename status field to be more descriptive if it exists
+            if (Schema::hasColumn('exams', 'status') && !Schema::hasColumn('exams', 'is_active')) {
+                $table->boolean('is_active')->default(true);
                 $table->dropColumn('status');
             }
         });
@@ -61,15 +100,26 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('exams', function (Blueprint $table) {
-            // Remove new fields
-            $table->dropForeign(['subject_id']);
-            $table->dropForeign(['academic_session_id']);
-            $table->dropForeign(['created_by']);
-            $table->dropForeign(['updated_by']);
+            // No need to drop subject_id as we didn't add it
             
-            $table->dropColumn([
-                'subject_id',
-                'academic_session_id',
+            // Remove other fields we added
+            if (Schema::hasColumn('exams', 'academic_session_id')) {
+                $table->dropForeign(['academic_session_id']);
+                $table->dropColumn('academic_session_id');
+            }
+            
+            if (Schema::hasColumn('exams', 'created_by')) {
+                $table->dropForeign(['created_by']);
+                $table->dropColumn('created_by');
+            }
+            
+            if (Schema::hasColumn('exams', 'updated_by')) {
+                $table->dropForeign(['updated_by']);
+                $table->dropColumn('updated_by');
+            }
+            
+            // Drop columns we added
+            $table->dropIfExists([
                 'exam_type',
                 'semester',
                 'duration_minutes',
@@ -82,14 +132,17 @@ return new class extends Migration
                 'is_published',
                 'weight_percentage',
                 'grading_scale',
-                'is_active',
-                'created_by',
-                'updated_by'
+                'is_active'
             ]);
             
-            // Restore original columns
-            $table->string('subject')->nullable();
-            $table->boolean('status')->default(true);
+            // Restore original columns if needed
+            if (!Schema::hasColumn('exams', 'subject')) {
+                $table->string('subject')->nullable();
+            }
+            
+            if (!Schema::hasColumn('exams', 'status') && Schema::hasColumn('exams', 'is_active')) {
+                $table->boolean('status')->default(true);
+            }
         });
     }
 };

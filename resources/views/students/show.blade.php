@@ -5,6 +5,14 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Student Profile</h1>
         <div class="space-x-2">
+            @if(!$student->student_id)
+            <form action="{{ route('students.assign-id', $student->id) }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition">
+                    Assign ID
+                </button>
+            </form>
+            @endif
             <a href="{{ route('students.edit', $student->id) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md transition">
                 Edit Profile
             </a>

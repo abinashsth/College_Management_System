@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\FeeStructure;
 
 class PaymentController extends Controller
 {
@@ -46,7 +47,7 @@ class PaymentController extends Controller
         $payments = $query->orderBy('payment_date', 'desc')->paginate(15);
         
         // Get filter options
-        $students = Student::orderBy('name')->get();
+        $students = Student::orderByName()->get();
         $invoices = Invoice::orderBy('invoice_number')->get();
         $paymentMethods = [
             'cash' => 'Cash',
@@ -73,7 +74,7 @@ class PaymentController extends Controller
             $student = $invoice->student;
             $invoices = [$invoice];
         } else {
-            $students = Student::orderBy('name')->get();
+            $students = Student::orderByName()->get();
             $invoices = Invoice::whereIn('status', ['pending', 'partial', 'overdue'])
                               ->orderBy('invoice_number')
                               ->get();

@@ -12,7 +12,7 @@ class MarkComponent extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array
      */
     protected $fillable = [
         'mark_id',
@@ -25,7 +25,7 @@ class MarkComponent extends Model
     /**
      * The attributes that should be cast.
      *
-     * @var array<string, string>
+     * @var array
      */
     protected $casts = [
         'marks_obtained' => 'decimal:2',
@@ -42,6 +42,21 @@ class MarkComponent extends Model
     }
 
     /**
+     * Calculate the weighted marks for this component.
+     *
+     * @return float|null
+     */
+    public function getWeightedMarks()
+    {
+        if ($this->marks_obtained === null || $this->total_marks <= 0) {
+            return null;
+        }
+
+        $percentage = ($this->marks_obtained / $this->total_marks) * 100;
+        return ($percentage * $this->weight_percentage) / 100;
+    }
+
+    /**
      * Calculate the percentage of marks obtained.
      *
      * @return float
@@ -53,16 +68,6 @@ class MarkComponent extends Model
         }
         
         return 0;
-    }
-
-    /**
-     * Calculate the weighted marks.
-     *
-     * @return float
-     */
-    public function getWeightedMarksAttribute()
-    {
-        return $this->marks_obtained * ($this->weight_percentage / 100);
     }
 
     /**

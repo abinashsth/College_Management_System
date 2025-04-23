@@ -58,11 +58,21 @@ class Exam extends Model
     }
 
     /**
-     * Get the subject that this exam belongs to.
+     * Get the subject that this exam belongs to (legacy support).
      */
     public function subject()
     {
         return $this->belongsTo(Subject::class);
+    }
+
+    /**
+     * Get the subjects for this exam (many-to-many).
+     */
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'exam_subject')
+            ->withPivot('total_marks', 'passing_marks', 'notes')
+            ->withTimestamps();
     }
 
     /**

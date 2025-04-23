@@ -48,7 +48,7 @@ class InvoiceController extends Controller
         $invoices = $query->orderBy('created_at', 'desc')->paginate(15);
         
         // Get filter options
-        $students = Student::orderBy('name')->get();
+        $students = Student::orderByName()->get();
         $academicYears = AcademicYear::orderBy('year', 'desc')->get();
         $statuses = [
             'pending' => 'Pending',
@@ -68,7 +68,7 @@ class InvoiceController extends Controller
      */
     public function create()
     {
-        $students = Student::orderBy('name')->get();
+        $students = Student::orderByName()->get();
         $academicYears = AcademicYear::orderBy('year', 'desc')->get();
         $feeTypes = FeeType::where('is_active', true)->orderBy('name')->get();
         
@@ -171,7 +171,7 @@ class InvoiceController extends Controller
         
         $invoice->load(['student', 'academicYear', 'invoiceItems.feeType']);
         
-        $students = Student::orderBy('name')->get();
+        $students = Student::orderByName()->get();
         $academicYears = AcademicYear::orderBy('year', 'desc')->get();
         $feeTypes = FeeType::where('is_active', true)->orderBy('name')->get();
         

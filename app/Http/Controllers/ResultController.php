@@ -20,7 +20,6 @@ use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Services\GpaCalculationService;
 use Illuminate\Support\Facades\Gate;
-use PDF;
 
 class ResultController extends Controller
 {
@@ -34,40 +33,81 @@ class ResultController extends Controller
     public function __construct(GpaCalculationService $gpaService)
     {
         $this->middleware('auth');
-        $this->middleware('permission:view results')->only(['index', 'show', 'showStudentResult', 'analysis']);
-        $this->middleware('permission:process results')->only(['process', 'processSection', 'verify', 'publish']);
-        $this->middleware('permission:export results')->only(['exportPdf', 'exportExcel']);
         $this->gpaService = $gpaService;
+        $this->middleware('permission:view results')->only(['index', 'show', 'showStudentResult', 'analysis', 'analysisDetailed']);
+        $this->middleware('permission:process results')->only(['process', 'processSection']);
+        $this->middleware('permission:verify results')->only(['verify', 'verifyResults']);
+        $this->middleware('permission:publish results')->only(['publish']);
+        $this->middleware('permission:export results')->only(['exportPdf', 'exportExcel']);
     }
 
     /**
      * Display a listing of the results.
      *
+     * @param Request $request
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $exams = Exam::with('subject')->orderBy('exam_date', 'desc')->get();
-        $sections = Section::with('class')->get();
+        if (!Gate::allows('view-results')) {
+            abort(403, 'Unauthorized');
+        }
         
-        $results = Result::with(['student', 'exam', 'verifiedBy'])
-            ->when(request('exam_id'), function($query) {
-                return $query->where('exam_id', request('exam_id'));
-            })
-            ->when(request('status'), function($query) {
-                if (request('status') == 'published') {
-                    return $query->whereNotNull('published_at');
-                } elseif (request('status') == 'verified') {
-                    return $query->whereNotNull('verified_by')
-                        ->whereNull('published_at');
-                } elseif (request('status') == 'pending') {
-                    return $query->whereNull('verified_by');
+        $classes = SchoolClass::all();
+        $exams = Exam::where('status', 'published')->get();
+        
+        $selectedClassId = $request->input('class_id');
+        $selectedExamId = $request->input('exam_id');
+        $selectedSectionId = $request->input('section_id');
+        
+        $sections = collect();
+        if ($selectedClassId) {
+            $sections = Section::where('class_id', $selectedClassId)->get();
+        }
+        
+        $results = [];
+        
+        if ($selectedClassId && $selectedExamId) {
+            $studentsQuery = Student::whereHas('enrollments', function ($query) use ($selectedClassId, $selectedSectionId) {
+                $query->where('class_id', $selectedClassId);
+                if ($selectedSectionId) {
+                    $query->where('section_id', $selectedSectionId);
                 }
-            })
-            ->latest()
-            ->paginate(15);
+            });
+            
+            $students = $studentsQuery->get();
+            
+            foreach ($students as $student) {
+                $marks = Mark::where('student_id', $student->id)
+                    ->where('exam_id', $selectedExamId)
+                    ->whereHas('exam', function ($query) {
+                        $query->where('status', 'published');
+                    })
+                    ->with(['subject'])
+                    ->get();
+                
+                if ($marks->count() > 0) {
+                    $gpaResult = $this->gpaService->calculateGpa($marks);
+                    
+                    $results[] = [
+                        'student' => $student,
+                        'gpa' => $gpaResult['gpa'],
+                        'passed' => $gpaResult['passed'],
+                        'marks_count' => $marks->count(),
+                    ];
+                }
+            }
+        }
         
-        return view('results.index', compact('results', 'exams', 'sections'));
+        return view('results.index', compact(
+            'classes', 
+            'exams', 
+            'sections', 
+            'results', 
+            'selectedClassId', 
+            'selectedExamId', 
+            'selectedSectionId'
+        ));
     }
 
     /**
@@ -331,229 +371,6 @@ class ResultController extends Controller
      */
     public function exportExcel(Request $request)
     {
-        $request->validate([
-            'exam_id' => 'required|exists:exams,id',
-            'section_id' => 'nullable|exists:sections,id'
-        ]);
-        
-        $exam = Exam::findOrFail($request->exam_id);
-        $section = $request->section_id ? Section::findOrFail($request->section_id) : null;
-        
-        $fileName = 'results-' . $exam->name;
-        if ($section) {
-            $fileName .= '-' . $section->section_name;
-        }
-        $fileName .= '.xlsx';
-        
-        return Excel::download(new ResultsExport($request->exam_id, $request->section_id), $fileName);
-    }
-
-    /**
-     * Display a listing of results by class
-     * 
-     * @param Request $request
-     * @return \Illuminate\View\View
-     */
-    public function index(Request $request)
-    {
-        if (!Gate::allows('view-results')) {
-            abort(403, 'Unauthorized');
-        }
-        
-        $classes = SchoolClass::all();
-        $exams = Exam::where('status', 'published')->get();
-        
-        $selectedClassId = $request->input('class_id');
-        $selectedExamId = $request->input('exam_id');
-        $selectedSectionId = $request->input('section_id');
-        
-        $sections = collect();
-        if ($selectedClassId) {
-            $sections = Section::where('class_id', $selectedClassId)->get();
-        }
-        
-        $results = [];
-        
-        if ($selectedClassId && $selectedExamId) {
-            $studentsQuery = Student::whereHas('enrollments', function ($query) use ($selectedClassId, $selectedSectionId) {
-                $query->where('class_id', $selectedClassId);
-                if ($selectedSectionId) {
-                    $query->where('section_id', $selectedSectionId);
-                }
-            });
-            
-            $students = $studentsQuery->get();
-            
-            foreach ($students as $student) {
-                $marks = Mark::where('student_id', $student->id)
-                    ->where('exam_id', $selectedExamId)
-                    ->whereHas('exam', function ($query) {
-                        $query->where('status', 'published');
-                    })
-                    ->with(['subject'])
-                    ->get();
-                
-                if ($marks->count() > 0) {
-                    $gpaResult = $this->gpaService->calculateGpa($marks);
-                    
-                    $results[] = [
-                        'student' => $student,
-                        'gpa' => $gpaResult['gpa'],
-                        'passed' => $gpaResult['passed'],
-                        'marks_count' => $marks->count(),
-                    ];
-                }
-            }
-        }
-        
-        return view('results.index', compact(
-            'classes', 
-            'exams', 
-            'sections', 
-            'results', 
-            'selectedClassId', 
-            'selectedExamId', 
-            'selectedSectionId'
-        ));
-    }
-    
-    /**
-     * Display a student's result details
-     * 
-     * @param Request $request
-     * @param int $studentId
-     * @param int $examId
-     * @return \Illuminate\View\View
-     */
-    public function showStudentResult(Request $request, $studentId, $examId)
-    {
-        if (!Gate::allows('view-results')) {
-            abort(403, 'Unauthorized');
-        }
-        
-        $student = Student::findOrFail($studentId);
-        $exam = Exam::where('id', $examId)
-            ->where('status', 'published')
-            ->firstOrFail();
-        
-        $marks = Mark::where('student_id', $studentId)
-            ->where('exam_id', $examId)
-            ->with(['subject'])
-            ->get();
-            
-        $results = [];
-        $totalPercentage = 0;
-        $totalObtained = 0;
-        $totalPossible = 0;
-        
-        foreach ($marks as $mark) {
-            $gradeInfo = $this->gpaService->gradeMarkEntry($mark);
-            
-            $results[] = [
-                'subject' => $mark->subject,
-                'marks_obtained' => $mark->marks_obtained,
-                'total_marks' => $exam->total_marks,
-                'percentage' => $gradeInfo['percentage'],
-                'grade' => $gradeInfo['grade'],
-                'gpa' => $gradeInfo['gpa'],
-                'passed' => $gradeInfo['passed'],
-                'is_absent' => $mark->is_absent,
-            ];
-            
-            if (!$mark->is_absent) {
-                $totalObtained += $mark->marks_obtained;
-                $totalPossible += $exam->total_marks;
-            }
-        }
-        
-        $totalPercentage = $totalPossible > 0 ? ($totalObtained / $totalPossible) * 100 : 0;
-        $gpaResult = $this->gpaService->calculateGpa($marks);
-        
-        return view('results.student_result', compact(
-            'student',
-            'exam',
-            'results',
-            'totalPercentage',
-            'totalObtained',
-            'totalPossible',
-            'gpaResult'
-        ));
-    }
-    
-    /**
-     * Download a student's result as PDF
-     * 
-     * @param Request $request
-     * @param int $studentId
-     * @param int $examId
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
-     */
-    public function downloadPdf(Request $request, $studentId, $examId)
-    {
-        if (!Gate::allows('download-results')) {
-            abort(403, 'Unauthorized');
-        }
-        
-        $student = Student::findOrFail($studentId);
-        $exam = Exam::where('id', $examId)
-            ->where('status', 'published')
-            ->firstOrFail();
-        
-        $marks = Mark::where('student_id', $studentId)
-            ->where('exam_id', $examId)
-            ->with(['subject'])
-            ->get();
-            
-        $results = [];
-        $totalPercentage = 0;
-        $totalObtained = 0;
-        $totalPossible = 0;
-        
-        foreach ($marks as $mark) {
-            $gradeInfo = $this->gpaService->gradeMarkEntry($mark);
-            
-            $results[] = [
-                'subject' => $mark->subject,
-                'marks_obtained' => $mark->marks_obtained,
-                'total_marks' => $exam->total_marks,
-                'percentage' => $gradeInfo['percentage'],
-                'grade' => $gradeInfo['grade'],
-                'gpa' => $gradeInfo['gpa'],
-                'passed' => $gradeInfo['passed'],
-                'is_absent' => $mark->is_absent,
-            ];
-            
-            if (!$mark->is_absent) {
-                $totalObtained += $mark->marks_obtained;
-                $totalPossible += $exam->total_marks;
-            }
-        }
-        
-        $totalPercentage = $totalPossible > 0 ? ($totalObtained / $totalPossible) * 100 : 0;
-        $gpaResult = $this->gpaService->calculateGpa($marks);
-        
-        $data = [
-            'student' => $student,
-            'exam' => $exam,
-            'results' => $results,
-            'totalPercentage' => $totalPercentage,
-            'totalObtained' => $totalObtained,
-            'totalPossible' => $totalPossible,
-            'gpaResult' => $gpaResult
-        ];
-        
-        $pdf = PDF::loadView('results.pdf_template', $data);
-        return $pdf->download($student->name . '_' . $exam->name . '_Result.pdf');
-    }
-    
-    /**
-     * Export results to Excel
-     * 
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
-     */
-    public function exportExcel(Request $request)
-    {
         if (!Gate::allows('download-results')) {
             abort(403, 'Unauthorized');
         }
@@ -577,14 +394,14 @@ class ResultController extends Controller
             $fileName
         );
     }
-    
+
     /**
-     * Display class-wise result analysis
+     * Show detailed analysis for a given exam
      * 
      * @param Request $request
      * @return \Illuminate\View\View
      */
-    public function analysis(Request $request)
+    public function analysisDetailed(Request $request)
     {
         if (!Gate::allows('view-result-analysis')) {
             abort(403, 'Unauthorized');

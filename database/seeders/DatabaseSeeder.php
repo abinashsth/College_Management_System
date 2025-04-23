@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
             // ExamTablesSeeder::class,     // Temporarily commented out due to dependency issues
             GradeSystemSeeder::class,    // Then create grade system
             FinancePermissionsSeeder::class, // Add finance permissions
+            SubjectPermissionsSeeder::class, // Add subject management permissions
+            AssignmentPermissionsSeeder::class, // Add assignment permissions
+            RolePermissionUpdate::class,  // Add/update role permissions for academic dean, examiner, accountant
             
             // Analytics and reporting seeders (Temporarily commented out)
             // ReportTemplateSeeder::class,    // Create report templates

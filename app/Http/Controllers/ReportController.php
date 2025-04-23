@@ -18,6 +18,12 @@ class ReportController extends Controller
     {
         $this->reportingService = $reportingService;
         $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('super-admin') || auth()->user()->hasPermissionTo('view reports')) {
+                return $next($request);
+            }
+            abort(403, 'Unauthorized action.');
+        });
     }
 
     /**

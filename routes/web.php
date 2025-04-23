@@ -32,6 +32,8 @@ use App\Http\Controllers\GradeSystemController;
 use App\Http\Controllers\StudentRecordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\StudentAssignmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -43,6 +45,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+
+    // Direct Mask Routes for Testing
+    Route::get('/masks-direct', [App\Http\Controllers\SubjectMaskController::class, 'index'])->name('masks.direct.index');
+    Route::get('/masks-direct/create', [App\Http\Controllers\SubjectMaskController::class, 'create'])->name('masks.direct.create');
 
     // Analytics Dashboards
     Route::middleware(['auth'])->group(function () {
@@ -135,12 +141,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Student Records Management
         Route::get('/student-records', [StudentRecordController::class, 'index'])->name('student-records.index');
         Route::get('/student-records/{student}', [StudentRecordController::class, 'show'])->name('student-records.show');
+        Route::get('/student-records/record/{studentRecord}', [StudentRecordController::class, 'showRecord'])->name('student-records.show-record');
         Route::get('/student-records/{student}/create', [StudentRecordController::class, 'create'])->name('student-records.create');
         Route::post('/student-records/{student}', [StudentRecordController::class, 'store'])->name('student-records.store');
         Route::get('/student-records/{student}/export-pdf', [StudentRecordController::class, 'exportPDF'])->name('student-records.export-pdf');
         Route::get('/student-records/{student}/export-excel', [StudentRecordController::class, 'exportExcel'])->name('student-records.export-excel');
+        Route::get('/student-records-export', [StudentRecordController::class, 'export'])->name('student-records.export');
         Route::get('/student-records-import', [StudentRecordController::class, 'importForm'])->name('student-records.import-form');
-        Route::post('/student-records-import', [StudentRecordController::class, 'import'])->name('student-records.import');
+        
+        // Assign Student ID
+        Route::post('/students/{student}/assign-id', [StudentController::class, 'assignStudentId'])->name('students.assign-id');
+    });
+
+    // Assignment Management
+    Route::middleware(['auth'])->group(function () {
+        // Assignments
+        Route::resource('assignments', AssignmentController::class);
+        Route::get('/assignments/{assignment}/assign-students', [AssignmentController::class, 'assignStudentsForm'])->name('assignments.assign-students-form');
+        Route::post('/assignments/{assignment}/assign-students', [AssignmentController::class, 'assignStudents'])->name('assignments.assign-students');
+        Route::get('/assignments/{assignment}/download-attachment', [AssignmentController::class, 'downloadAttachment'])->name('assignments.download-attachment');
+        Route::put('/assignments/{assignment}/update-status', [AssignmentController::class, 'updateStatus'])->name('assignments.update-status');
+        Route::get('/subjects/{subject}/assignments', [AssignmentController::class, 'bySubject'])->name('assignments.by-subject');
+        Route::get('/classes/{class}/assignments', [AssignmentController::class, 'byClass'])->name('assignments.by-class');
+        
+        // Student Assignments
+        Route::resource('student-assignments', StudentAssignmentController::class);
+        Route::get('/student-assignments/{studentAssignment}/grade', [StudentAssignmentController::class, 'gradeForm'])->name('student-assignments.grade-form');
+        Route::post('/student-assignments/{studentAssignment}/grade', [StudentAssignmentController::class, 'grade'])->name('student-assignments.grade');
+        Route::get('/student-assignments/{studentAssignment}/download', [StudentAssignmentController::class, 'downloadSubmission'])->name('student-assignments.download-submission');
+        Route::post('/student-assignments/{studentAssignment}/return', [StudentAssignmentController::class, 'returnForRevision'])->name('student-assignments.return-for-revision');
+        Route::get('/students/{student}/assignments', [StudentAssignmentController::class, 'studentAssignments'])->name('students.assignments');
+        Route::get('/assignments/{assignment}/submissions', [StudentAssignmentController::class, 'assignmentSubmissions'])->name('assignments.submissions');
+        Route::get('/assignments/{assignment}/bulk-grade', [StudentAssignmentController::class, 'bulkGradeForm'])->name('assignments.bulk-grade-form');
+        Route::post('/assignments/{assignment}/bulk-grade', [StudentAssignmentController::class, 'bulkGrade'])->name('assignments.bulk-grade');
     });
 
     // Class Management
@@ -168,7 +201,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Account Management
-    Route::middleware(['permission:view accounts'])->group(function () {
+    Route::middleware(['permission:view accounts|role:admin'])->group(function () {
         Route::resource('accounts', AccountController::class);
     });
 
@@ -310,6 +343,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/subjects/{subject}/teachers', [SubjectController::class, 'updateTeachers'])->name('subjects.teachers.update');
         Route::get('/subjects/{subject}/courses', [SubjectController::class, 'manageCourses'])->name('subjects.courses');
         Route::post('/subjects/{subject}/courses', [SubjectController::class, 'updateCourses'])->name('subjects.courses.update');
+        Route::get('/subjects/{subject}/classes', [SubjectController::class, 'manageClasses'])->name('subjects.classes');
+        Route::post('/subjects/{subject}/classes', [SubjectController::class, 'updateClasses'])->name('subjects.classes.update');
         Route::get('/subjects/{subject}/syllabus', [SubjectController::class, 'manageSyllabus'])->name('subjects.syllabus');
         Route::post('/subjects/{subject}/syllabus', [SubjectController::class, 'updateSyllabus'])->name('subjects.syllabus.update');
         Route::get('/subjects/import', [SubjectController::class, 'importForm'])->name('subjects.import');
@@ -344,6 +379,23 @@ Route::get('/exam-test', [App\Http\Controllers\ExamTestController::class, 'index
 Route::get('/exam-test/relationships', [App\Http\Controllers\ExamTestController::class, 'testRelationships']);
 Route::get('/exam-test/controller', [App\Http\Controllers\ExamTestController::class, 'testController']);
 
+// Debug route for permissions
+Route::get('/debug-permissions', function() {
+    // Run the role permission update
+    $seeder = new \Database\Seeders\RolePermissionUpdate();
+    $seeder->run();
+    
+    // Get all permissions
+    $permissions = \Spatie\Permission\Models\Permission::all()->pluck('name')->toArray();
+    
+    return [
+        'message' => 'Permissions updated successfully',
+        'permissions' => $permissions,
+        'has_manage_faculty' => in_array('manage faculty', $permissions),
+        'admin_permissions' => \Spatie\Permission\Models\Role::findByName('admin')->permissions->pluck('name')->toArray()
+    ];
+});
+
 /*
  * Exam Management Routes
  */
@@ -356,7 +408,14 @@ Route::middleware(['auth'])->group(function () {
     
     // Exam Schedule Routes
     Route::resource('exam-schedules', ExamScheduleController::class);
-    Route::get('exams/{exam}/schedules', [ExamScheduleController::class, 'examSchedules'])->name('exam.schedules');
+    Route::get('exams/{exam}/schedules', [ExamController::class, 'schedules'])->name('exam.schedules');
+    Route::get('exams/{exam}/schedules/create', [ExamController::class, 'createSchedule'])->name('exams.create-schedule');
+    Route::post('exams/{exam}/schedules', [ExamController::class, 'storeSchedule'])->name('exams.store-schedule');
+    Route::get('exams/{exam}/schedules/{schedule}/edit', [ExamController::class, 'editSchedule'])->name('exams.edit-schedule');
+    Route::put('exams/{exam}/schedules/{schedule}', [ExamController::class, 'updateSchedule'])->name('exams.update-schedule');
+    Route::delete('exams/{exam}/schedules/{schedule}', [ExamController::class, 'destroySchedule'])->name('exams.destroy-schedule');
+    Route::get('exams/{exam}/schedules/{schedule}/assign-supervisor', [ExamController::class, 'assignSupervisor'])->name('exams.assign-supervisor');
+    Route::post('exams/{exam}/schedules/{schedule}/supervisors', [ExamController::class, 'storeSupervisor'])->name('exams.store-supervisor');
     Route::put('exam-schedules/{examSchedule}/update-status', [ExamScheduleController::class, 'updateStatus'])->name('exam-schedules.update-status');
     
     // Exam Supervisor Routes
@@ -368,7 +427,7 @@ Route::middleware(['auth'])->group(function () {
     // Exam Rule Routes
     Route::resource('exam-rules', ExamRuleController::class);
     Route::get('exams/{exam}/rules', [ExamRuleController::class, 'examRules'])->name('exam.rules');
-    Route::put('exam-rules/{rule}/toggle-status', [ExamRuleController::class, 'toggleStatus'])->name('exam-rules.toggle-status');
+    Route::put('exam-rules/{exam_rule}/toggle-status', [ExamRuleController::class, 'toggleStatus'])->name('exam-rules.toggle-status');
     Route::post('exam-rules/update-order', [ExamRuleController::class, 'updateOrder'])->name('exam-rules.update-order');
     
     // Exam Material Routes
@@ -388,7 +447,7 @@ Route::middleware(['auth'])->prefix('results')->name('results.')->group(function
     Route::post('/publish', [App\Http\Controllers\ResultController::class, 'publish'])->name('publish');
     Route::get('/{result}', [App\Http\Controllers\ResultController::class, 'show'])->name('show');
     Route::get('/student/{student}/{exam}', [App\Http\Controllers\ResultController::class, 'showStudentResult'])->name('student');
-    Route::get('/analysis/{exam}', [App\Http\Controllers\ResultController::class, 'analysis'])->name('analysis');
+    Route::get('/analysis/{exam}', [App\Http\Controllers\ResultController::class, 'analysisDetailed'])->name('analysis');
     Route::get('/export/pdf/{result}', [App\Http\Controllers\ResultController::class, 'exportPdf'])->name('export.pdf');
     Route::get('/export/excel', [App\Http\Controllers\ResultController::class, 'exportExcel'])->name('export.excel');
 });
@@ -463,3 +522,4 @@ Route::middleware(['auth', 'permission:manage students'])->prefix('admissions')-
 
 require __DIR__.'/auth.php';
 require __DIR__.'/marks.php';
+require __DIR__.'/masks.php';

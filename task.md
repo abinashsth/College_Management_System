@@ -117,6 +117,15 @@
 - [x] Implement draft saving and final submission
 - [x] Develop mark verification workflow
 - [x] Create access control for mark entry
+[x] Implement mask management for marks entry
+
+[x] Create mask input interface for specific subjects
+[x] Implement mask validation (0-100 range, numeric)
+[x] Build mask update functionality
+[x] Integrate mask entry with existing student-subject records
+[x] Add mask history/logging system
+[x] Implement access control for mask entry/edit
+[x] Create mask reporting view
 
 -- Week 13: Result Processing
 - [x] Create result database schema
@@ -271,3 +280,55 @@
   - [x] Implement consistent error styling and messaging
   - [x] Add loading indicators for asynchronous operations
   - [x] Standardize button styling and placement
+- [x] Fix department creation functionality - Completed 17/09/2024
+  - Resolved conflicting migrations for `departments` table.
+  - Fixed migration order issues for `grade_scales`, `staff`, `programs`, `faculties`, `students`.
+  - Corrected long index name in `grade_scales` migration.
+  - Resolved `SoftDeletes` mismatch in `GradeSystem` model/migration.
+  - Fixed column name mismatches (`name`/`description`, `is_failing`/`is_fail`, `color_code`) in `GradeSystemSeeder`.
+  - NOTE: Temporarily commented out `ExamTablesSeeder`, `ReportTemplateSeeder`, `DashboardWidgetSeeder`, `DefaultDashboardSeeder` due to missing dependencies/migrations. Needs further investigation.
+
+## Class Management Implementation Status - Added 15/04/2024
+- [x] Basic class model and controller implementation
+  - [x] Created database schema with necessary fields
+  - [x] Implemented CRUD operations in controller
+  - [x] Added proper relationships to Academic Year, Department, and Program
+  - [x] Created index and form views with Tailwind CSS styling
+  - [x] Added sidebar navigation for Class Management
+- [x] Complete Class Management implementation - Completed 16/04/2024
+  - [x] Added show.blade.php view with class details, sections, students, classroom allocations and attendance data
+  - [x] Updated create/edit forms with all required fields (academic_year_id, department_id, program_id, capacity, status)
+  - [x] Implemented section management interface within class view
+  - [x] Added classroom allocation integration
+  - [x] Integrated attendance tracking with classes
+  - [x] Improved student-to-class assignment interface
+
+## Assignment Management Implementation Status - Added 13/04/2025
+- [x] Database Schema Implementation
+  - [x] Created assignment migration with comprehensive fields (title, description, due date, max score, etc.)
+  - [x] Created student_assignment migration for tracking submissions and grades
+  - [x] Added relationships between assignments, students, subjects, and classes
+  - [x] Implemented proper foreign key constraints and database indexes
+- [x] Model Implementation
+  - [x] Created Assignment model with proper relationships and helper methods
+  - [x] Created StudentAssignment model for managing student submissions
+  - [x] Added relationships to existing Student model
+  - [x] Implemented query scopes for filtering assignments by various criteria
+- [x] Controller Implementation
+  - [x] Implemented AssignmentController with full CRUD functionality
+  - [x] Implemented StudentAssignmentController for submission management
+  - [x] Added methods for downloading attachments, assigning students, and other operations
+  - [x] Implemented proper authorization using Laravel permissions
+- [x] View Implementation
+  - [x] Created assignment index view with filtering and sorting capabilities
+  - [x] Created student assignment views for both teacher and student perspectives
+  - [x] Implemented Tailwind CSS styling consistent with the application design
+  - [x] Added proper error handling and validation feedback
+- [x] Permission Management
+  - [x] Created AssignmentPermissionsSeeder for role-based access control
+  - [x] Added specific permissions for viewing, creating, editing, and grading assignments
+  - [x] Assigned appropriate permissions to Admin, Teacher, and Student roles
+- [x] Integration with Existing System
+  - [x] Added routes for the assignment feature
+  - [x] Implemented file upload and storage for assignments and submissions
+  - [x] Added proper relationship with subjects, classes, and students

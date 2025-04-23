@@ -43,7 +43,7 @@
         @endif
 
         <!-- Course Management -->
-        @if($user->hasRole('super-admin') || $user->checkPermission('manage programs'))
+        <!-- @if($user->hasRole('super-admin') || $user->checkPermission('manage programs'))
             <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('courseManagement')">
                 <i class="fas fa-book-open sidebar-icon"></i>
                 Course Management
@@ -53,15 +53,20 @@
                 <a href="{{ route('courses.index') }}" class="sidebar-item">All Courses</a>
                 <a href="{{ route('courses.create') }}" class="sidebar-item">Add New Course</a>
             </div>
-        @endif
+        @endif -->
 
         <!-- Subject Management -->
-        <!-- @if($user->hasRole('super-admin') || $user->checkPermission('view subjects'))
-            <a href="{{ route('subjects.index') }}" class="sidebar-item">
+        @if($user->hasRole('super-admin') || $user->checkPermission('view subjects'))
+            <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('subjectManagement')">
                 <i class="fas fa-book sidebar-icon"></i>
-                Subjects
-            </a>
-        @endif -->
+                Subject Management
+                <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+            </div>
+            <div id="subjectManagement" class="hidden pl-8">
+                <a href="{{ route('subjects.index') }}" class="sidebar-item">All Subjects</a>
+                <a href="{{ route('subjects.create') }}" class="sidebar-item">Add New Subject</a>
+            </div>
+        @endif
 
         <!-- Student Management -->
         @if($user->hasRole('super-admin') || $user->checkPermission('view students'))
@@ -111,13 +116,44 @@
                 <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
             </div>
             <div id="examManagement" class="hidden pl-8">
-                <a href="{{ route('exams.index') }}" class="sidebar-item">Exams</a>
-                <a href="{{ route('student.grades') }}" class="sidebar-item">Grades</a>
+                <a href="{{ route('exams.index') }}" class="sidebar-item">All Exams</a>
+                <a href="{{ route('exams.create') }}" class="sidebar-item">Create New Exam</a>
+                <a href="{{ route('exam-schedules.index') }}" class="sidebar-item">Exam Schedules</a>
+                <a href="{{ route('exam-materials.index') }}" class="sidebar-item">Exam Materials</a>
+                <a href="{{ route('exam-rules.index') }}" class="sidebar-item">Exam Rules</a>
+                <a href="{{ route('student.grades') }}" class="sidebar-item">Student Grades</a>
+                <a href="{{ route('results.index') }}" class="sidebar-item">Results & Analysis</a>
+            </div>
+        @endif
+
+        <!-- Marks Management -->
+        @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->checkPermission('view marks'))
+            <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('marksManagement')">
+                <i class="fas fa-chart-line sidebar-icon"></i>
+                Marks Management
+                <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
+            </div>
+            <div id="marksManagement" class="hidden pl-8">
+                <a href="{{ route('marks.dashboard') }}" class="sidebar-item">Dashboard</a>
+                <a href="{{ route('marks.index') }}" class="sidebar-item">View Marks</a>
+                
+                @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->hasPermissionTo('create marks'))
+                    <a href="{{ route('marks.select') }}?action=create" class="sidebar-item">Enter Marks</a>
+                    <a href="{{ route('marks.import') }}" class="sidebar-item">Import Marks</a>
+                @endif
+                
+                @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->hasPermissionTo('verify marks'))
+                    <a href="{{ route('marks.verifyInterface') }}" class="sidebar-item">Verify Marks</a>
+                @endif
+                
+                <a href="{{ route('marks.analysis') }}" class="sidebar-item">Mark Analysis</a>
+                <a href="{{ route('marks.reports') }}" class="sidebar-item">Generate Reports</a>
+                <a href="{{ route('masks.index') }}" class="sidebar-item">Subject Masks</a>
             </div>
         @endif
 
         <!-- Finance Management -->
-        @if($user->hasRole('super-admin') || $user->checkPermission('view accounts'))
+        @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->checkPermission('view accounts'))
             <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('accountManagement')">
                 <i class="fas fa-coins sidebar-icon"></i>
                 Finance Management
@@ -129,7 +165,7 @@
         @endif
 
         <!-- Reports -->
-        @if($user->hasRole('super-admin') || $user->checkPermission('view reports'))
+        @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->checkPermission('view reports'))
             <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('reportManagement')">
                 <i class="fas fa-chart-bar sidebar-icon"></i>
                 Reports

@@ -163,7 +163,7 @@ class ScholarshipController extends Controller
      */
     public function assignForm(Scholarship $scholarship)
     {
-        $students = Student::orderBy('name')->get();
+        $students = Student::orderByName()->get();
         $academicYears = AcademicYear::orderBy('year', 'desc')->get();
         
         return view('finance.scholarships.assign', compact('scholarship', 'students', 'academicYears'));

@@ -129,7 +129,7 @@
                     </div>
                     
                     <div class="d-grid gap-2 mt-3">
-                        <a href="{{ route('student-records.create', ['student_id' => $student->id]) }}" class="btn btn-success btn-sm">
+                        <a href="{{ route('student-records.create', $student) }}" class="btn btn-success btn-sm">
                             <i class="fas fa-plus me-1"></i> Add New Record
                         </a>
                         <div class="btn-group mt-2" role="group">

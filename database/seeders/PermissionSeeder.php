@@ -36,12 +36,14 @@ class PermissionSeeder extends Seeder
             'create students',
             'edit students',
             'delete students',
+            'manage students',
             
             // Class Management
             'view classes',
             'create classes',
             'edit classes',
             'delete classes',
+            'manage classes',
             
             // Exam Management
             'view exams',
@@ -57,6 +59,14 @@ class PermissionSeeder extends Seeder
             'view own exam grades',
             'publish exam results',
             
+            // Mark Management
+            'view marks',
+            'create marks',
+            'edit marks',
+            'verify marks',
+            'publish marks',
+            'delete marks',
+            
             // Account Management
             'view accounts',
             'create accounts',
@@ -70,6 +80,29 @@ class PermissionSeeder extends Seeder
             // Activity Logs
             'view activity logs',
             'clear activity logs',
+            
+            // Subject Management
+            'view subjects',
+            'create subjects',
+            'edit subjects',
+            'delete subjects',
+            'manage subjects',
+            'assign teachers to subjects',
+            
+            // Faculty Management
+            'manage faculty',
+            
+            // Department Management
+            'manage departments',
+            
+            // Section Management
+            'view sections',
+            'manage sections',
+            
+            // Report Management
+            'view reports',
+            'generate reports',
+            'export reports',
             
             // Profile
             'view profile',

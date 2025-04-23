@@ -7,9 +7,9 @@
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="mt-4">Student Records</h1>
         @can('create', App\Models\StudentRecord::class)
-        <a href="{{ route('student-records.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Add Record
-        </a>
+        <div>
+            <span class="text-muted me-2">To add a record, first select a student from the records list</span>
+        </div>
         @endcan
     </div>
     <ol class="breadcrumb mb-4">
@@ -32,10 +32,11 @@
                             <option value="">All Students</option>
                             @foreach($students as $student)
                                 <option value="{{ $student->id }}" {{ request('student_id') == $student->id ? 'selected' : '' }}>
-                                    {{ $student->student_id }} - {{ $student->first_name }} {{ $student->last_name }}
+                                    {{ $student->student_id ?? $student->admission_number }} - {{ $student->first_name }} {{ $student->last_name }}
                                 </option>
                             @endforeach
                         </select>
+                        <small class="text-muted">Click on a student name in the results to view and add records</small>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label for="record_type" class="form-label">Record Type</label>
@@ -54,7 +55,7 @@
                         <label for="created_by" class="form-label">Created By</label>
                         <select class="form-select" id="created_by" name="created_by">
                             <option value="">All Users</option>
-                            @foreach($users as $user)
+                            @foreach($staff as $user)
                                 <option value="{{ $user->id }}" {{ request('created_by') == $user->id ? 'selected' : '' }}>
                                     {{ $user->name }}
                                 </option>
@@ -146,23 +147,31 @@
                         @forelse($records as $record)
                             <tr>
                                 <td>
-                                    <a href="{{ route('student-records.show', $record->student) }}">
-                                        {{ $record->student->student_id }} - {{ $record->student->first_name }} {{ $record->student->last_name }}
-                                    </a>
+                                    <div class="record-student">
+                                        <small class="text-muted">Student:</small>
+                                        <a href="{{ route('student-records.show', $record->student) }}">
+                                            {{ $record->student->first_name }} {{ $record->student->last_name }}
+                                        </a>
+                                    </div>
                                 </td>
                                 <td>
                                     <span class="badge bg-{{ $record->record_type_color }}">
                                         {{ $record->record_type_label }}
                                     </span>
                                 </td>
-                                <td>{{ $record->title }}</td>
+                                <td>
+                                    <div class="record-title fw-bold">
+                                        <a href="{{ route('student-records.show-record', $record) }}">
+                                            {{ $record->title }}
+                                        </a>
+                                    </div>
+                                </td>
                                 <td>{{ $record->created_at->format('M d, Y g:i A') }}</td>
                                 <td>{{ $record->createdBy->name }}</td>
                                 <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('student-records.show', [$record->student, 'highlight' => $record->id]) }}" 
-                                           class="btn btn-sm btn-info" title="View">
-                                            <i class="fas fa-eye"></i>
+                                    <div class="record-actions">
+                                        <a href="{{ route('student-records.show-record', $record) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> View
                                         </a>
                                         
                                         @can('update', $record)
@@ -192,9 +201,7 @@
                                         <h5 class="text-muted">No records found</h5>
                                         <p class="text-muted">Try adjusting your search or filter criteria</p>
                                         @can('create', App\Models\StudentRecord::class)
-                                        <a href="{{ route('student-records.create') }}" class="btn btn-primary mt-2">
-                                            <i class="fas fa-plus me-1"></i> Add Record
-                                        </a>
+                                        <p class="text-muted">Select a student from the dropdown to add records</p>
                                         @endcan
                                     </div>
                                 </td>

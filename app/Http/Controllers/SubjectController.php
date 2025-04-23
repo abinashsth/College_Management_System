@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Program;
 use App\Models\User;
 use App\Models\AcademicSession;
+use App\Models\Classes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -166,7 +167,7 @@ class SubjectController extends Controller
     public function show(Subject $subject)
     {
         try {
-            $subject->load(['department', 'courses', 'prerequisites', 'prerequisiteFor', 'teachers']);
+            $subject->load(['department', 'courses', 'prerequisites', 'prerequisiteFor', 'teachers', 'classes.department', 'classes.program']);
             return view('subjects.show', compact('subject'));
         } catch (\Exception $e) {
             Log::error('Error showing subject: ' . $e->getMessage());
@@ -221,7 +222,9 @@ class SubjectController extends Controller
             'tutorial_hours' => 'nullable|integer|min:0',
             'level' => 'nullable|string',
             'department_id' => 'required|exists:academic_structures,id',
-            'semester_offered' => 'nullable|string',
+            'duration_type' => 'required|string|in:semester,year',
+            'semester_offered' => 'nullable|string|required_if:duration_type,semester',
+            'year' => 'nullable|string|required_if:duration_type,year',
             'learning_objectives' => 'nullable|string',
             'grading_policy' => 'nullable|string',
             'syllabus' => 'nullable|string',
@@ -243,7 +246,17 @@ class SubjectController extends Controller
             $subject->tutorial_hours = $request->tutorial_hours;
             $subject->level = $request->level;
             $subject->department_id = $request->department_id;
-            $subject->semester_offered = $request->semester_offered;
+            $subject->duration_type = $request->duration_type;
+            
+            // Set semester or year based on duration_type
+            if ($request->duration_type === 'semester') {
+                $subject->semester_offered = $request->semester_offered;
+                $subject->year = null;
+            } else {
+                $subject->semester_offered = null;
+                $subject->year = $request->year;
+            }
+            
             $subject->learning_objectives = $request->learning_objectives;
             $subject->grading_policy = $request->grading_policy;
             $subject->syllabus = $request->syllabus;
@@ -627,6 +640,92 @@ class SubjectController extends Controller
         } catch (\Exception $e) {
             Log::error('Error exporting subjects: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to export subjects: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show the form for managing class assignments.
+     *
+     * @param  \App\Models\Subject  $subject
+     * @return \Illuminate\Http\Response
+     */
+    public function manageClasses(Subject $subject)
+    {
+        try {
+            $subject->load('classes');
+            $availableClasses = Classes::with('department', 'program')->get();
+            
+            return view('subjects.classes', compact('subject', 'availableClasses'));
+        } catch (\Exception $e) {
+            Log::error('Error loading classes form: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to load class assignment form: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update the class assignments for a subject.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Subject  $subject
+     * @return \Illuminate\Http\Response
+     */
+    public function updateClasses(Request $request, Subject $subject)
+    {
+        $request->validate([
+            'classes' => 'nullable|array',
+            'classes.*' => 'exists:classes,id',
+            'semester.*' => 'required|integer|min:1',
+            'year.*' => 'required|integer|min:1',
+            'is_core' => 'nullable|array',
+            'notes.*' => 'nullable|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Log the incoming data for debugging
+            Log::info('Subject ID: ' . $subject->id);
+            Log::info('Classes Data: ' . json_encode($request->classes));
+            Log::info('Semester Data: ' . json_encode($request->semester));
+            Log::info('Year Data: ' . json_encode($request->year));
+            Log::info('Is Core Data: ' . json_encode($request->is_core));
+
+            // Detach all existing classes
+            Log::info('Detaching existing classes');
+            $subject->classes()->detach();
+
+            // Attach new classes
+            if ($request->has('classes') && is_array($request->classes)) {
+                foreach ($request->classes as $index => $classId) {
+                    Log::info('Attaching class ID: ' . $classId . ' at index: ' . $index);
+                    
+                    // Check if is_core value exists for this index
+                    $isCore = isset($request->is_core[$index]) && $request->is_core[$index] == 1;
+                    
+                    $attachData = [
+                        'semester' => $request->semester[$index],
+                        'year' => $request->year[$index],
+                        'is_core' => $isCore,
+                        'is_active' => true,
+                        'notes' => $request->notes[$index] ?? null,
+                    ];
+                    
+                    Log::info('Attach data: ' . json_encode($attachData));
+                    
+                    $subject->classes()->attach($classId, $attachData);
+                }
+            } else {
+                Log::info('No classes selected or classes not an array');
+            }
+
+            DB::commit();
+            Log::info('Subject class assignments updated successfully');
+            return redirect()->route('subjects.show', $subject)->with('success', 'Subject class assignments updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating class assignments: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'Failed to update class assignments: ' . $e->getMessage());
         }
     }
 }

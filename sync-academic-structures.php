@@ -5,12 +5,38 @@
  * It can be run directly from the command line: php sync-academic-structures.php
  */
 
-// Bootstrap Laravel
-require __DIR__ . '/vendor/autoload.php';
-$app = require_once __DIR__ . '/bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-$kernel->bootstrap();
+// Define the __DIR__ constant if it's not already defined (to support inclusion from controller)
+if (!defined('__DIR__')) {
+    define('__DIR__', dirname(__FILE__));
+}
 
+// Initialize a variable to track if we're running in standalone mode
+$isStandalone = false;
+if (!defined('LARAVEL_START')) {
+    $isStandalone = true;
+    
+    // Bootstrap Laravel when running as standalone
+    require __DIR__ . '/vendor/autoload.php';
+    
+    try {
+        // Use include instead of require_once for better error handling
+        $bootstrap = include __DIR__ . '/bootstrap/app.php';
+        
+        // If bootstrap.php returns false, something went wrong
+        if (!$bootstrap || !is_object($bootstrap)) {
+            echo "Error: Failed to initialize Laravel application\n";
+            exit(1);
+        }
+        
+        $kernel = $bootstrap->make(Illuminate\Contracts\Console\Kernel::class);
+        $kernel->bootstrap();
+    } catch (\Exception $e) {
+        echo "Error bootstrapping Laravel: " . $e->getMessage() . "\n";
+        exit(1);
+    }
+}
+
+// Now use the Laravel application
 use App\Models\AcademicStructure;
 use App\Models\Faculty;
 use App\Models\Department;
@@ -19,10 +45,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
-echo "Starting synchronization of academic structures...\n";
+// Output message only in standalone mode to avoid messing up controller output
+if ($isStandalone) {
+    echo "Starting synchronization of academic structures...\n";
+}
 
-// Perform database operations in a transaction
-DB::beginTransaction();
+// Check if we're being called from within an existing transaction
+$inExistingTransaction = DB::transactionLevel() > 0;
+
+// Only start a transaction if we're not already in one
+if (!$inExistingTransaction) {
+    DB::beginTransaction();
+}
 
 try {
     // First, check if traditional tables have the required columns
@@ -548,13 +582,26 @@ try {
     
     echo "Synchronized $programCount programs.\n";
     
-    // Commit the transaction
-    DB::commit();
-    echo "Synchronization completed successfully.\n";
+    // Commit the transaction only if we started it
+    if (!$inExistingTransaction) {
+        DB::commit();
+    }
+    
+    if ($isStandalone) {
+        echo "Synchronization completed successfully.\n";
+    }
     
 } catch (\Exception $e) {
-    // Rollback the transaction if something goes wrong
-    DB::rollBack();
-    echo "Error during synchronization: " . $e->getMessage() . "\n";
-    exit(1);
+    // Rollback the transaction only if we started it
+    if (!$inExistingTransaction) {
+        DB::rollBack();
+    }
+    
+    if ($isStandalone) {
+        echo "Error during synchronization: " . $e->getMessage() . "\n";
+        exit(1);
+    } else {
+        // When called from controller, re-throw the exception to be handled by the controller
+        throw $e;
+    }
 } 

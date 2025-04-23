@@ -9,6 +9,38 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
+                    
+                    <!-- Check for mask information -->
+                    @php
+                        $mask = \App\Models\SubjectMask::where('exam_id', $exam->id)
+                            ->where('subject_id', $subject->id)
+                            ->where('is_active', true)
+                            ->first();
+                    @endphp
+                    
+                    @if($mask)
+                        <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <svg class="h-5 w-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h3 class="text-md font-semibold text-blue-800">Mask Available for this Subject</h3>
+                            </div>
+                            <p class="text-sm text-blue-700 mb-2">
+                                A mask with value <span class="font-bold">{{ $mask->mask_value }}%</span> is applied to this subject.
+                            </p>
+                            <p class="text-sm text-blue-700">
+                                {{ $mask->description ?? 'No description provided.' }}
+                            </p>
+                            <div class="mt-3">
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" id="apply_mask" name="apply_mask" class="form-checkbox h-5 w-5 text-blue-600">
+                                    <span class="ml-2 text-sm text-blue-800">Apply mask to all entered marks</span>
+                                </label>
+                            </div>
+                        </div>
+                    @endif
+                    
                     <div class="flex justify-between items-center mb-6">
                         <div>
                             <h3 class="text-lg font-semibold">Enter Marks for {{ $exam->title }}</h3>

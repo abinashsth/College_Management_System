@@ -55,7 +55,7 @@ class ExamSchedule extends Model
      */
     public function class()
     {
-        return $this->section ? $this->section->class() : null;
+        return $this->section ? $this->section->class : null;
     }
 
     /**

@@ -27,26 +27,32 @@ class MarkPolicy
      * Determine whether the user can view specific exam-subject marks.
      *
      * @param  \App\Models\User  $user
+     * @param  mixed  $markClass
      * @param  \App\Models\Exam  $exam
      * @param  \App\Models\Subject  $subject
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function viewMarks(User $user, Exam $exam, Subject $subject)
+    public function viewMarks(User $user, $markClass, Exam $exam, Subject $subject)
     {
+        // Super-admin can view all marks
+        if ($user->hasRole('super-admin')) {
+            return true;
+        }
+        
         // Any user with view marks permission can view marks
         if ($user->hasPermissionTo('view marks')) {
             return true;
         }
         
         // Teachers can view marks for subjects they teach
-        if ($user->hasRole('Teacher') && $subject->teachers->contains($user->id)) {
+        if ($user->hasRole('Teacher') && isset($subject->teachers) && $subject->teachers->contains($user->id)) {
             return true;
         }
         
         // Students can only view their own published marks
         if ($user->hasRole('Student')) {
             $student = $user->student;
-            if ($student && $exam->is_published) {
+            if ($student && isset($exam->is_published) && $exam->is_published) {
                 return true;
             }
         }

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-100">
     <div class="min-h-screen flex items-center justify-center p-4">
@@ -46,14 +47,13 @@
                 <!-- Password Input -->
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input 
-                        id="password" 
-                        type="password" 
-                        name="password" 
-                        class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors @error('password') border-red-500 @enderror"
-                        required 
-                        autocomplete="current-password" 
+                    <x-password-input
+                        id="password"
+                        name="password"
+                        required="true"
                         placeholder="Enter your password"
+                        autocomplete="current-password"
+                        class="bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors @error('password') border-red-500 @enderror"
                     />
                     @error('password')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -78,5 +78,8 @@
             </form>
         </div>
     </div>
+
+    <!-- Load app.js to get the masking functionality -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </body>
 </html>

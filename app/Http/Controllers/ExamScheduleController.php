@@ -348,13 +348,13 @@ class ExamScheduleController extends Controller
     {
         try {
             $schedules = $exam->schedules()
-                ->with(['section', 'section.class', 'supervisors.user'])
+                ->with(['section.class', 'supervisors.user'])
                 ->orderBy('exam_date', 'asc')
                 ->paginate(15);
                 
             $sections = Section::where('class_id', $exam->class_id)->get();
             
-            return view('exam_schedules.exam_schedules', compact('exam', 'schedules', 'sections'));
+            return view('exams.schedules.index', compact('exam', 'schedules', 'sections'));
         } catch (\Exception $e) {
             Log::error('Error retrieving exam schedules: ' . $e->getMessage());
             return redirect()->back()

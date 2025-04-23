@@ -149,7 +149,7 @@
     </div>
 
     <!-- Courses -->
-    <div class="bg-white shadow-md rounded-lg mb-6 overflow-hidden">
+    <!-- <div class="bg-white shadow-md rounded-lg mb-6 overflow-hidden">
         <div class="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
             <h6 class="font-bold text-blue-600">Courses</h6>
             <a href="{{ route('programs.courses', $program) }}" class="text-blue-600 hover:text-blue-800 text-sm">
@@ -212,7 +212,7 @@
                 </div>
             @endif
         </div>
-    </div>
+    </div> -->
 
     <!-- Students -->
     <div class="bg-white shadow-md rounded-lg mb-6 overflow-hidden">

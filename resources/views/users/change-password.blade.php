@@ -36,16 +36,15 @@
                             <label for="current_password" class="block text-sm font-medium text-gray-700">
                                 {{ __('Current Password') }}
                             </label>
-                            <div class="mt-1 relative rounded-md shadow-sm">
-                                <input type="password" 
-                                       name="current_password" 
-                                       id="current_password"
-                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 @error('current_password') border-red-300 @enderror"
-                                       required>
-                                @error('current_password')
-                                    <div class="mt-1 text-sm text-red-600">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            <x-password-input
+                                id="current_password"
+                                name="current_password"
+                                required="true"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 @error('current_password') border-red-300 @enderror"
+                            />
+                            @error('current_password')
+                                <div class="mt-1 text-sm text-red-600">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <!-- New Password -->
@@ -53,16 +52,15 @@
                             <label for="password" class="block text-sm font-medium text-gray-700">
                                 {{ __('New Password') }}
                             </label>
-                            <div class="mt-1 relative rounded-md shadow-sm">
-                                <input type="password" 
-                                       name="password" 
-                                       id="password"
-                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 @error('password') border-red-300 @enderror"
-                                       required>
-                                @error('password')
-                                    <div class="mt-1 text-sm text-red-600">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            <x-password-input
+                                id="password"
+                                name="password"
+                                required="true"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 @error('password') border-red-300 @enderror"
+                            />
+                            @error('password')
+                                <div class="mt-1 text-sm text-red-600">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <!-- Confirm New Password -->
@@ -70,13 +68,12 @@
                             <label for="password_confirmation" class="block text-sm font-medium text-gray-700">
                                 {{ __('Confirm New Password') }}
                             </label>
-                            <div class="mt-1 relative rounded-md shadow-sm">
-                                <input type="password" 
-                                       name="password_confirmation" 
-                                       id="password_confirmation"
-                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50"
-                                       required>
-                            </div>
+                            <x-password-input
+                                id="password_confirmation"
+                                name="password_confirmation"
+                                required="true"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50"
+                            />
                         </div>
 
                         <!-- Password Requirements -->

@@ -22,7 +22,7 @@ class StudentRecord extends Model
         'record_data',
         'previous_data',
         'changed_by',
-        'reason',
+        'change_reason',
         'notes',
         'title',
         'description',
@@ -188,7 +188,7 @@ class StudentRecord extends Model
     public function scopeConfidentialMedical($query)
     {
         return $query->where('record_type', 'medical')
-                     ->whereRaw("record_data->>'$.confidential' = true");
+                     ->whereRaw("JSON_EXTRACT(record_data, '$.confidential') = true");
     }
 
     /**
@@ -201,8 +201,8 @@ class StudentRecord extends Model
     {
         return $query->where(function($query) {
             $query->where('record_type', '!=', 'medical')
-                  ->orWhereNull('record_data->confidential')
-                  ->orWhereRaw("record_data->>'$.confidential' != true");
+                  ->orWhereRaw("(JSON_EXTRACT(record_data, '$.confidential') IS NULL OR JSON_TYPE(JSON_EXTRACT(record_data, '$.confidential')) = 'NULL')")
+                  ->orWhereRaw("JSON_EXTRACT(record_data, '$.confidential') != true");
         });
     }
 } 

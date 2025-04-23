@@ -9,6 +9,7 @@ use App\Models\Program;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 
 class AcademicStructureController extends Controller
 {
@@ -476,11 +477,139 @@ class AcademicStructureController extends Controller
     public function synchronizeAll()
     {
         try {
+            // Check if database tables exist before proceeding
+            $requiredTables = ['faculties', 'departments', 'programs'];
+            foreach ($requiredTables as $table) {
+                if (!Schema::hasTable($table)) {
+                    return back()->with('error', "Required table '{$table}' does not exist. Please run migrations first.");
+                }
+            }
+            
+            // First, check if we need to fix parent-child relationships
+            $orphanDepartments = AcademicStructure::where('type', 'department')
+                ->whereNull('parent_id')
+                ->get();
+                
+            if ($orphanDepartments->count() > 0) {
+                // Look for a default faculty to attach orphaned departments to
+                $defaultFaculty = AcademicStructure::where('type', 'faculty')->first();
+                
+                if (!$defaultFaculty) {
+                    // Create a default faculty if none exists
+                    $defaultFaculty = AcademicStructure::create([
+                        'name' => 'Default Faculty',
+                        'code' => 'DEFAULT-FAC',
+                        'type' => 'faculty',
+                        'description' => 'Default faculty for orphaned departments',
+                        'is_active' => true,
+                    ]);
+                    
+                    // We need to create it in the traditional system too
+                    Faculty::create([
+                        'name' => $defaultFaculty->name,
+                        'slug' => Str::slug($defaultFaculty->name),
+                        'code' => $defaultFaculty->code,
+                        'description' => $defaultFaculty->description,
+                        'status' => true,
+                        'academic_structure_id' => $defaultFaculty->id,
+                    ]);
+                }
+                
+                // Attach orphaned departments to the default faculty
+                foreach ($orphanDepartments as $orphan) {
+                    $orphan->parent_id = $defaultFaculty->id;
+                    $orphan->save();
+                    
+                    \Log::info("Fixed orphaned department: {$orphan->name} by attaching to {$defaultFaculty->name}");
+                }
+            }
+            
+            // Check for orphaned programs
+            $orphanPrograms = AcademicStructure::where('type', 'program')
+                ->whereNull('parent_id')
+                ->get();
+                
+            if ($orphanPrograms->count() > 0) {
+                // Look for a default department to attach orphaned programs to
+                $defaultDepartment = AcademicStructure::where('type', 'department')->first();
+                
+                if (!$defaultDepartment) {
+                    // If no department exists at all, we need to first ensure we have a faculty
+                    $defaultFaculty = AcademicStructure::where('type', 'faculty')->first();
+                    
+                    if (!$defaultFaculty) {
+                        // Create a default faculty if none exists
+                        $defaultFaculty = AcademicStructure::create([
+                            'name' => 'Default Faculty',
+                            'code' => 'DEFAULT-FAC',
+                            'type' => 'faculty',
+                            'description' => 'Default faculty for orphaned departments',
+                            'is_active' => true,
+                        ]);
+                        
+                        // We need to create it in the traditional system too
+                        Faculty::create([
+                            'name' => $defaultFaculty->name,
+                            'slug' => Str::slug($defaultFaculty->name),
+                            'code' => $defaultFaculty->code,
+                            'description' => $defaultFaculty->description,
+                            'status' => true,
+                            'academic_structure_id' => $defaultFaculty->id,
+                        ]);
+                    }
+                    
+                    // Create a default department
+                    $defaultDepartment = AcademicStructure::create([
+                        'name' => 'Default Department',
+                        'code' => 'DEFAULT-DEP',
+                        'type' => 'department',
+                        'description' => 'Default department for orphaned programs',
+                        'parent_id' => $defaultFaculty->id,
+                        'is_active' => true,
+                    ]);
+                    
+                    // Create in traditional system too
+                    $faculty = Faculty::where('code', $defaultFaculty->code)->first();
+                    
+                    Department::create([
+                        'name' => $defaultDepartment->name,
+                        'slug' => Str::slug($defaultDepartment->name),
+                        'code' => $defaultDepartment->code,
+                        'description' => $defaultDepartment->description,
+                        'faculty_id' => $faculty->id,
+                        'status' => true,
+                        'academic_structure_id' => $defaultDepartment->id,
+                    ]);
+                }
+                
+                // Attach orphaned programs to the default department
+                foreach ($orphanPrograms as $orphan) {
+                    $orphan->parent_id = $defaultDepartment->id;
+                    $orphan->save();
+                    
+                    \Log::info("Fixed orphaned program: {$orphan->name} by attaching to {$defaultDepartment->name}");
+                }
+            }
+            
             // Load our standalone script
-            require_once base_path('sync-academic-structures.php');
+            $syncScript = base_path('sync-academic-structures.php');
+            if (!file_exists($syncScript)) {
+                return back()->with('error', 'Sync script not found. Please check if sync-academic-structures.php exists in the project root.');
+            }
+            
+            // Define LARAVEL_START to signal we're in Laravel context (not standalone)
+            if (!defined('LARAVEL_START')) {
+                define('LARAVEL_START', microtime(true));
+            }
+            
+            // Include the script directly (which will use the existing Laravel app)
+            include_once $syncScript;
+            
             return redirect()->route('settings.academic-structure.index')
                 ->with('success', 'All academic structures synchronized successfully with traditional tables');
         } catch (\Exception $e) {
+            // Log the detailed error for debugging
+            \Log::error('Academic structure sync error: ' . $e->getMessage());
             return back()->with('error', 'Failed to synchronize academic structures: ' . $e->getMessage());
         }
     }

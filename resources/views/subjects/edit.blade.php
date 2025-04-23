@@ -75,7 +75,7 @@
                             id="department_id" name="department_id" required>
                             <option value="">Select Department</option>
                             @foreach($academicStructureDepartments as $department)
-                                <option value="{{ $department->id }}" {{ (old('department_id', $subject->department_id) == $department->id) ? 'selected' : '' }}>
+                                <option value="{{ $department->id }}" {{ (old('department_id') == $department->id || ($subject->department_id == $department->id && old('department_id') === null)) ? 'selected' : '' }}>
                                     {{ $department->name }}
                                 </option>
                             @endforeach
@@ -132,8 +132,8 @@
                         <label for="duration_type" class="block text-sm font-medium text-gray-700 mb-1">Duration Type <span class="text-red-600">*</span></label>
                         <select class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('duration_type') border-red-500 @enderror" 
                             id="duration_type" name="duration_type" required>
-                            <option value="semester" {{ old('duration_type', 'semester') == 'semester' ? 'selected' : '' }}>Semester Based</option>
-                            <option value="year" {{ old('duration_type') == 'year' ? 'selected' : '' }}>Year Based</option>
+                            <option value="semester" {{ old('duration_type', isset($subject->duration_type) ? $subject->duration_type : 'semester') == 'semester' ? 'selected' : '' }}>Semester Based</option>
+                            <option value="year" {{ old('duration_type', isset($subject->duration_type) ? $subject->duration_type : '') == 'year' ? 'selected' : '' }}>Year Based</option>
                         </select>
                         @error('duration_type')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -156,7 +156,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Semester -->
-                    <div class="mb-4" id="semester-container" {{ old('duration_type') == 'year' ? 'style=display:none' : '' }}>
+                    <div class="mb-4" id="semester-container" {{ old('duration_type', isset($subject->duration_type) ? $subject->duration_type : 'semester') == 'year' ? 'style=display:none' : '' }}>
                         <label for="semester_offered" class="block text-sm font-medium text-gray-700 mb-1">Semester <span class="text-red-600">*</span></label>
                         <select class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('semester_offered') border-red-500 @enderror" 
                             id="semester_offered" name="semester_offered">
@@ -177,15 +177,15 @@
                     </div>
 
                     <!-- Year -->
-                    <div class="mb-4" id="year-container" {{ old('duration_type') != 'year' ? 'style=display:none' : '' }}>
+                    <div class="mb-4" id="year-container" {{ old('duration_type', isset($subject->duration_type) ? $subject->duration_type : 'semester') != 'year' ? 'style=display:none' : '' }}>
                         <label for="year" class="block text-sm font-medium text-gray-700 mb-1">Year <span class="text-red-600">*</span></label>
                         <select class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('year') border-red-500 @enderror" 
                             id="year" name="year">
                             <option value="">Select Year</option>
-                            <option value="1" {{ old('year') == '1' ? 'selected' : '' }}>Year 1</option>
-                            <option value="2" {{ old('year') == '2' ? 'selected' : '' }}>Year 2</option>
-                            <option value="3" {{ old('year') == '3' ? 'selected' : '' }}>Year 3</option>
-                            <option value="4" {{ old('year') == '4' ? 'selected' : '' }}>Year 4</option>
+                            <option value="1" {{ old('year', isset($subject->year) ? $subject->year : '') == '1' ? 'selected' : '' }}>Year 1</option>
+                            <option value="2" {{ old('year', isset($subject->year) ? $subject->year : '') == '2' ? 'selected' : '' }}>Year 2</option>
+                            <option value="3" {{ old('year', isset($subject->year) ? $subject->year : '') == '3' ? 'selected' : '' }}>Year 3</option>
+                            <option value="4" {{ old('year', isset($subject->year) ? $subject->year : '') == '4' ? 'selected' : '' }}>Year 4</option>
                         </select>
                         @error('year')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -299,16 +299,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const durationType = document.getElementById('duration_type');
     const semesterContainer = document.getElementById('semester-container');
     const yearContainer = document.getElementById('year-container');
+    const semesterOffered = document.getElementById('semester_offered');
+    const yearField = document.getElementById('year');
     
+    // Initialize display based on current selection
+    function toggleDurationFields() {
+        if (durationType.value === 'year') {
+            semesterContainer.style.display = 'none';
+            yearContainer.style.display = 'block';
+            // Don't clear semester value if it already has data
+        } else {
+            semesterContainer.style.display = 'block';
+            yearContainer.style.display = 'none';
+            // Don't clear year value if it already has data
+        }
+    }
+    
+    // Run once on page load to initialize correctly
+    toggleDurationFields();
+    
+    // Also handle changes
     durationType.addEventListener('change', function() {
         if (this.value === 'year') {
             semesterContainer.style.display = 'none';
             yearContainer.style.display = 'block';
-            document.getElementById('semester_offered').value = '';
+            // Only clear semester value on user-initiated change
+            if (semesterOffered) semesterOffered.value = '';
         } else {
             semesterContainer.style.display = 'block';
             yearContainer.style.display = 'none';
-            document.getElementById('year').value = '';
+            // Only clear year value on user-initiated change
+            if (yearField) yearField.value = '';
         }
     });
     

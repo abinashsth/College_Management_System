@@ -216,6 +216,14 @@ class Student extends Model
     }
 
     /**
+     * Scope a query to order students by their full name.
+     */
+    public function scopeOrderByName($query, $direction = 'asc')
+    {
+        return $query->orderByRaw("CONCAT(first_name, ' ', last_name) {$direction}");
+    }
+
+    /**
      * Get the records for the student.
      */
     public function records()
@@ -241,8 +249,27 @@ class Student extends Model
             'record_data' => $data,
             'previous_data' => $previousData,
             'changed_by' => $changedBy ?? auth()->id(),
-            'reason' => $reason,
+            'change_reason' => $reason,
             'notes' => $notes,
         ]);
+    }
+
+    /**
+     * Get the assignments assigned to this student.
+     */
+    public function assignments()
+    {
+        return $this->belongsToMany(Assignment::class, 'student_assignments')
+            ->withPivot(['submitted_at', 'submission_file_path', 'submission_text', 'score', 'feedback', 
+                        'graded_by', 'graded_at', 'status', 'is_late'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the assignment submissions for this student.
+     */
+    public function assignmentSubmissions()
+    {
+        return $this->hasMany(StudentAssignment::class);
     }
 }

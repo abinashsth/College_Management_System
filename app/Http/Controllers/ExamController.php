@@ -30,6 +30,8 @@ class ExamController extends Controller
         $this->middleware(['auth', 'permission:manage exam supervisors'])->only(['supervisors', 'assignSupervisor', 'storeSupervisor', 'editSupervisor', 'updateSupervisor', 'removeSupervisor']);
         $this->middleware(['auth', 'permission:manage exam rules'])->only(['rules', 'createRule', 'storeRule', 'editRule', 'updateRule', 'destroyRule']);
         $this->middleware(['auth', 'permission:manage exam materials'])->only(['materials', 'createMaterial', 'storeMaterial', 'editMaterial', 'updateMaterial', 'destroyMaterial', 'downloadMaterial', 'approveMaterial']);
+        $this->middleware(['auth', 'permission:grade exams'])->only(['grade', 'updateGrades']);
+        $this->middleware(['auth'])->only(['studentGrades', 'publishResults', 'unpublishResults', 'enrollStudents', 'toggleStatus', 'togglePublished']);
     }
 
     /**
@@ -93,9 +95,9 @@ class ExamController extends Controller
      */
     public function create()
     {
-        $classes = Classes::all();
-        $subjects = Subject::all();
-        $academicSessions = AcademicSession::all();
+        $classes = Classes::with('subjects')->get();
+        $subjects = Subject::orderBy('name')->get();
+        $academicSessions = AcademicSession::orderBy('name')->get();
         $examTypes = [
             'midterm' => 'Midterm',
             'final' => 'Final',
@@ -105,12 +107,55 @@ class ExamController extends Controller
             'other' => 'Other'
         ];
         
+        // Default values for new exams
+        $defaults = [
+            'total_marks' => 100,
+            'passing_marks' => 40,
+            'duration_minutes' => 60,
+            'exam_date' => now()->format('Y-m-d'),
+            'start_time' => '09:00',
+            'end_time' => '10:00'
+        ];
+        
         return view('exams.create', compact(
             'classes',
             'subjects',
             'academicSessions',
-            'examTypes'
+            'examTypes',
+            'defaults'
         ));
+    }
+
+    /**
+     * Validate subject-specific data for the exam
+     */
+    private function validateSubjectData($subjects, $subjectTotalMarks, $subjectPassingMarks, $totalMarks, $passingMarks)
+    {
+        $subjectData = [];
+        foreach ($subjects as $subjectId) {
+            // Use the provided subject-specific marks or fall back to the global exam marks
+            $subjectTotal = isset($subjectTotalMarks[$subjectId]) ? intval($subjectTotalMarks[$subjectId]) : intval($totalMarks);
+            $subjectPassing = isset($subjectPassingMarks[$subjectId]) ? intval($subjectPassingMarks[$subjectId]) : intval($passingMarks);
+            
+            // Ensure subject passing marks aren't greater than subject total marks
+            if ($subjectPassing > $subjectTotal) {
+                return [
+                    'success' => false,
+                    'message' => "Invalid marks for subject ID $subjectId: Passing marks ($subjectPassing) cannot be greater than total marks ($subjectTotal)."
+                ];
+            }
+            
+            $subjectData[$subjectId] = [
+                'total_marks' => $subjectTotal,
+                'passing_marks' => $subjectPassing,
+                'notes' => $subjectPassingMarks[$subjectId] ?? null
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'data' => $subjectData
+        ];
     }
 
     /**
@@ -124,7 +169,9 @@ class ExamController extends Controller
                 'description' => 'nullable|string',
                 'exam_date' => 'required|date',
                 'class_id' => 'required|exists:classes,id',
-                'subject_id' => 'required|exists:subjects,id',
+                'subject_id' => 'nullable|exists:subjects,id',
+                'subjects' => 'required|array',
+                'subjects.*' => 'exists:subjects,id',
                 'academic_session_id' => 'required|exists:academic_sessions,id',
                 'exam_type' => ['required', Rule::in(['midterm', 'final', 'quiz', 'assignment', 'project', 'other'])],
                 'semester' => 'nullable|string|max:50',
@@ -136,33 +183,75 @@ class ExamController extends Controller
                 'total_marks' => 'required|integer|min:1',
                 'passing_marks' => 'required|integer|min:1|lte:total_marks',
                 'registration_deadline' => 'nullable|date',
-                'result_date' => 'nullable|date|after:exam_date',
+                'result_date' => 'nullable|date|after_or_equal:exam_date',
                 'weight_percentage' => 'nullable|numeric|min:0|max:100',
                 'grading_scale' => 'nullable|string|max:50',
+                'subject_total_marks' => 'nullable|array',
+                'subject_total_marks.*' => 'nullable|integer|min:1',
+                'subject_passing_marks' => 'nullable|array',
+                'subject_passing_marks.*' => 'nullable|integer|min:1',
+                'subject_notes' => 'nullable|array',
+                'subject_notes.*' => 'nullable|string',
             ]);
             
             // Add created_by
             $validated['created_by'] = Auth::id();
             $validated['is_active'] = true;
             
-            // Use a transaction to ensure data integrity
-            $exam = DB::transaction(function () use ($validated) {
-                return Exam::create($validated);
-            });
+            // Extract subjects and subject-specific data
+            $subjects = $validated['subjects'] ?? [];
+            $subjectTotalMarks = $request->input('subject_total_marks', []);
+            $subjectPassingMarks = $request->input('subject_passing_marks', []);
+            $subjectNotes = $request->input('subject_notes', []);
             
-            return redirect()
-                ->route('exams.show', $exam)
-                ->with('success', 'Exam created successfully');
+            unset($validated['subjects']);
+            unset($validated['subject_total_marks']);
+            unset($validated['subject_passing_marks']);
+            unset($validated['subject_notes']);
+            
+            // Validate subject-specific data
+            $validation = $this->validateSubjectData(
+                $subjects, 
+                $subjectTotalMarks, 
+                $subjectPassingMarks, 
+                $validated['total_marks'], 
+                $validated['passing_marks']
+            );
+            
+            if (!$validation['success']) {
+                return redirect()->back()->withInput()
+                    ->with('error', $validation['message']);
+            }
+            
+            $subjectData = $validation['data'];
+            
+            // Use a transaction to ensure data integrity
+            DB::beginTransaction();
+            try {
+                $exam = Exam::create($validated);
+                
+                // Attach all selected subjects with their specific marks and notes
+                if (!empty($subjects)) {
+                    $exam->subjects()->attach($subjectData);
+                }
+                
+                DB::commit();
+                return redirect()
+                    ->route('exams.show', $exam)
+                    ->with('success', 'Exam created successfully');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                \Log::error('Error creating exam: ' . $e->getMessage());
+                return redirect()->back()->withInput()
+                    ->with('error', 'Failed to create exam: ' . $e->getMessage());
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
-            DB::rollBack();
-            
-            // Log the error
             \Log::error('Error creating exam: ' . $e->getMessage());
             
             return redirect()->back()->withInput()
-                ->with('error', 'An error occurred while creating the exam. Please try again.');
+                ->with('error', 'An unexpected error occurred: ' . $e->getMessage());
         }
     }
 
@@ -171,36 +260,69 @@ class ExamController extends Controller
      */
     public function show(Exam $exam)
     {
+        // Load related data
         $exam->load([
             'class', 
-            'subject', 
+            'subjects', 
             'academicSession', 
-            'schedules',
-            'rules',
-            'materials',
             'creator',
-            'updater'
+            'rules',
+            'schedules',
+            'materials',
+            'students'
         ]);
         
-        // Get students for this exam's class
-        $students = Student::where('class_id', $exam->class_id)
-            ->where('enrollment_status', 'active')
-            ->get();
-            
-        // Get enrolled students
+        // Get available sections for this class
+        $sections = Section::where('class_id', $exam->class_id)->get();
+        
+        // Count of registered students vs. total class students
+        $registeredStudentsCount = $exam->students()->count();
+        $totalClassStudentsCount = Student::where('class_id', $exam->class_id)
+                                          ->where('academic_session_id', $exam->academic_session_id)
+                                          ->count();
+        
+        // Get the enrolled students collection
         $enrolledStudents = $exam->students;
         
-        return view('exams.show', compact('exam', 'students', 'enrolledStudents'));
+        // Get all students for this class/academic session for enrollment
+        $students = Student::where('class_id', $exam->class_id)
+                           ->where('academic_session_id', $exam->academic_session_id)
+                           ->get();
+        
+        // Other counts that might be useful for the dashboard
+        $materialsCount = $exam->materials()->count();
+        $rulesCount = $exam->rules()->count();
+        $schedulesCount = $exam->schedules()->count();
+        
+        // Get exam materials
+        $examMaterials = $exam->materials;
+        
+        return view('exams.show', compact(
+            'exam',
+            'sections',
+            'registeredStudentsCount',
+            'totalClassStudentsCount',
+            'materialsCount',
+            'rulesCount',
+            'schedulesCount',
+            'enrolledStudents',
+            'students',
+            'examMaterials'
+        ));
     }
 
     /**
-     * Show the form for editing the specified exam.
+     * Show form for editing the specified exam.
      */
     public function edit(Exam $exam)
     {
-        $classes = Classes::all();
-        $subjects = Subject::all();
-        $academicSessions = AcademicSession::all();
+        // Load the exam with subjects
+        $exam->load(['subjects', 'class', 'academicSession']);
+        
+        // Get necessary data for the form
+        $classes = Classes::with('subjects')->get();
+        $subjects = Subject::orderBy('name')->get();
+        $academicSessions = AcademicSession::orderBy('name')->get();
         $examTypes = [
             'midterm' => 'Midterm',
             'final' => 'Final',
@@ -210,12 +332,38 @@ class ExamController extends Controller
             'other' => 'Other'
         ];
         
+        // Default values for new exams (will be overridden by exam data)
+        $defaults = [
+            'total_marks' => $exam->total_marks,
+            'passing_marks' => $exam->passing_marks,
+            'duration_minutes' => $exam->duration_minutes,
+            'exam_date' => $exam->exam_date ? $exam->exam_date->format('Y-m-d') : now()->format('Y-m-d'),
+            'start_time' => $exam->start_time ? date('H:i', strtotime($exam->start_time)) : '09:00',
+            'end_time' => $exam->end_time ? date('H:i', strtotime($exam->end_time)) : '10:00'
+        ];
+        
+        // Extract subject IDs for the selected class
+        $classSubjects = $exam->class->subjects->pluck('id')->toArray();
+        
+        // Extract subject-specific data
+        $subjectData = [];
+        foreach ($exam->subjects as $subject) {
+            $subjectData[$subject->id] = [
+                'total_marks' => $subject->pivot->total_marks,
+                'passing_marks' => $subject->pivot->passing_marks,
+                'notes' => $subject->pivot->notes
+            ];
+        }
+        
         return view('exams.edit', compact(
             'exam',
             'classes',
             'subjects',
             'academicSessions',
-            'examTypes'
+            'examTypes',
+            'defaults',
+            'classSubjects',
+            'subjectData'
         ));
     }
 
@@ -230,7 +378,9 @@ class ExamController extends Controller
                 'description' => 'nullable|string',
                 'exam_date' => 'required|date',
                 'class_id' => 'required|exists:classes,id',
-                'subject_id' => 'required|exists:subjects,id',
+                'subject_id' => 'nullable|exists:subjects,id',
+                'subjects' => 'required|array',
+                'subjects.*' => 'exists:subjects,id',
                 'academic_session_id' => 'required|exists:academic_sessions,id',
                 'exam_type' => ['required', Rule::in(['midterm', 'final', 'quiz', 'assignment', 'project', 'other'])],
                 'semester' => 'nullable|string|max:50',
@@ -242,34 +392,73 @@ class ExamController extends Controller
                 'total_marks' => 'required|integer|min:1',
                 'passing_marks' => 'required|integer|min:1|lte:total_marks',
                 'registration_deadline' => 'nullable|date',
-                'result_date' => 'nullable|date|after:exam_date',
+                'result_date' => 'nullable|date|after_or_equal:exam_date',
                 'weight_percentage' => 'nullable|numeric|min:0|max:100',
                 'grading_scale' => 'nullable|string|max:50',
-                'is_active' => 'boolean',
-                'is_published' => 'boolean',
+                'subject_total_marks' => 'nullable|array',
+                'subject_total_marks.*' => 'nullable|integer|min:1',
+                'subject_passing_marks' => 'nullable|array',
+                'subject_passing_marks.*' => 'nullable|integer|min:1',
+                'subject_notes' => 'nullable|array',
+                'subject_notes.*' => 'nullable|string',
             ]);
             
             // Add updated_by
             $validated['updated_by'] = Auth::id();
             
-            // Use a transaction to ensure data integrity
-            DB::transaction(function () use ($exam, $validated) {
-                $exam->update($validated);
-            });
+            // Extract subjects and subject-specific data
+            $subjects = $validated['subjects'] ?? [];
+            $subjectTotalMarks = $request->input('subject_total_marks', []);
+            $subjectPassingMarks = $request->input('subject_passing_marks', []);
+            $subjectNotes = $request->input('subject_notes', []);
             
-            return redirect()
-                ->route('exams.show', $exam)
-                ->with('success', 'Exam updated successfully');
+            unset($validated['subjects']);
+            unset($validated['subject_total_marks']);
+            unset($validated['subject_passing_marks']);
+            unset($validated['subject_notes']);
+            
+            // Validate subject-specific data
+            $validation = $this->validateSubjectData(
+                $subjects, 
+                $subjectTotalMarks, 
+                $subjectPassingMarks, 
+                $validated['total_marks'], 
+                $validated['passing_marks']
+            );
+            
+            if (!$validation['success']) {
+                return redirect()->back()->withInput()
+                    ->with('error', $validation['message']);
+            }
+            
+            $subjectData = $validation['data'];
+            
+            // Use a transaction to ensure data integrity
+            DB::beginTransaction();
+            try {
+                // Update exam
+                $exam->update($validated);
+                
+                // Sync subjects with their specific marks and notes
+                $exam->subjects()->sync($subjectData);
+                
+                DB::commit();
+                return redirect()
+                    ->route('exams.show', $exam)
+                    ->with('success', 'Exam updated successfully');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                \Log::error('Error updating exam: ' . $e->getMessage());
+                return redirect()->back()->withInput()
+                    ->with('error', 'Failed to update exam: ' . $e->getMessage());
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
-            DB::rollBack();
-            
-            // Log the error
             \Log::error('Error updating exam: ' . $e->getMessage());
             
             return redirect()->back()->withInput()
-                ->with('error', 'An error occurred while updating the exam. Please try again.');
+                ->with('error', 'An unexpected error occurred: ' . $e->getMessage());
         }
     }
 
@@ -316,9 +505,15 @@ class ExamController extends Controller
      */
     public function schedules(Exam $exam)
     {
-        $exam->load(['schedules.section.class', 'schedules.supervisors.user']);
-        
-        return view('exams.schedules.index', compact('exam'));
+        try {
+            $exam->load(['schedules.section.class', 'schedules.supervisors.user']);
+            
+            return view('exams.schedules.index', compact('exam'));
+        } catch (\Exception $e) {
+            \Log::error('Error retrieving exam schedules: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'An error occurred while retrieving exam schedules. Please try again.');
+        }
     }
 
     /**
@@ -613,7 +808,11 @@ class ExamController extends Controller
             ->orderBy('version', 'desc')
             ->get();
             
-        return view('exams.materials.index', compact('exam', 'materials'));
+        // Get all exams for the filter dropdown
+        $exams = Exam::where('is_active', true)->get();
+        $types = ExamMaterial::getTypes();
+            
+        return view('exam_materials.index', compact('exam', 'materials', 'exams', 'types'));
     }
 
     /**
@@ -623,7 +822,7 @@ class ExamController extends Controller
     {
         $materialTypes = ExamMaterial::getTypes();
         
-        return view('exams.materials.create', compact('exam', 'materialTypes'));
+        return view('exam_materials.create', compact('exam', 'materialTypes'));
     }
 
     /**
@@ -687,7 +886,7 @@ class ExamController extends Controller
     {
         $materialTypes = ExamMaterial::getTypes();
         
-        return view('exams.materials.edit', compact('exam', 'material', 'materialTypes'));
+        return view('exam_materials.edit', compact('exam', 'material', 'materialTypes'));
     }
 
     /**
@@ -838,36 +1037,45 @@ class ExamController extends Controller
      */
     public function studentGrades()
     {
-        // Only for students to view their own grades
-        if (!Auth::user()->hasRole('Student')) {
+        // Allow superadmin or students to view grades
+        if (!Auth::user()->hasRole('Student') && 
+            !Auth::user()->hasRole('Super Admin') && 
+            !Auth::user()->hasRole('super-admin')) {
             return redirect()->back()->with('error', 'Unauthorized access');
         }
         
-        $student = Student::where('user_id', Auth::id())->first();
-        
-        if (!$student) {
-            return redirect()->back()->with('error', 'Student profile not found');
+        // For students, show only their own grades
+        if (Auth::user()->hasRole('Student')) {
+            $student = Student::where('user_id', Auth::id())->first();
+            
+            if (!$student) {
+                return redirect()->back()->with('error', 'Student profile not found');
+            }
+            
+            $exams = Exam::whereHas('students', function($query) use ($student) {
+                $query->where('student_id', $student->id);
+            })->with([
+                'class', 
+                'subject', 
+                'academicSession'
+            ])->get();
+            
+            $grades = [];
+            foreach ($exams as $exam) {
+                $pivot = $exam->students()->where('student_id', $student->id)->first()->pivot;
+                $grades[$exam->id] = [
+                    'grade' => $pivot->grade,
+                    'remarks' => $pivot->remarks,
+                    'passed' => $pivot->grade >= $exam->passing_marks
+                ];
+            }
+            
+            return view('exams.student-grades', compact('student', 'exams', 'grades'));
         }
         
-        $exams = Exam::whereHas('students', function($query) use ($student) {
-            $query->where('student_id', $student->id);
-        })->with([
-            'class', 
-            'subject', 
-            'academicSession'
-        ])->get();
-        
-        $grades = [];
-        foreach ($exams as $exam) {
-            $pivot = $exam->students()->where('student_id', $student->id)->first()->pivot;
-            $grades[$exam->id] = [
-                'grade' => $pivot->grade,
-                'remarks' => $pivot->remarks,
-                'passed' => $pivot->grade >= $exam->passing_marks
-            ];
-        }
-        
-        return view('exams.student-grades', compact('student', 'exams', 'grades'));
+        // For superadmin, show all student grades
+        $students = Student::all();
+        return view('exams.admin-student-grades', compact('students'));
     }
 
     /**
