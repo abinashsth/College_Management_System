@@ -12,7 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('students', function (Blueprint $table) {
-            $table->date('dob')->nullable()->after('gender')->comment('Date of Birth');
+            $table->date('dob')
+                ->nullable()
+                ->after('gender')
+                ->comment('Date of Birth')
+                ->index(); // Added index for better query performance
         });
     }
 
@@ -22,6 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('students', function (Blueprint $table) {
+            $table->dropIndex(['dob']); // Drop the index first
             $table->dropColumn('dob');
         });
     }

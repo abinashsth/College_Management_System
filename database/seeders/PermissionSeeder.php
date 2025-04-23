@@ -114,6 +114,11 @@ class PermissionSeeder extends Seeder
         'manage allowances',
         'manage deductions',
 
+
+        // 'manage students',
+    'manage students',
+    'add grades',
+    'view timetable',
            
         ];
 
