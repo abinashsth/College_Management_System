@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Imports;
 
 use App\Models\Mark;
@@ -7,6 +9,7 @@ use App\Models\Exam;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\ExamGradeScale;
+use App\Services\GradeCalculationService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -25,6 +28,12 @@ class MarksImport implements ToCollection, WithHeadingRow, WithValidation, WithC
     protected $students;
     protected $rollNumberMap;
     protected $admissionNumberMap;
+    protected int $examId;
+    protected int $subjectId;
+    protected float $maxMarks;
+    protected int $processedRows = 0;
+    protected array $failedRows = [];
+    protected GradeCalculationService $gradeService;
     
     /**
      * Create a new import instance.
@@ -34,7 +43,7 @@ class MarksImport implements ToCollection, WithHeadingRow, WithValidation, WithC
      * @param int $enteredBy
      * @return void
      */
-    public function __construct(Exam $exam, Subject $subject, $enteredBy)
+    public function __construct(Exam $exam, Subject $subject, $enteredBy, int $examId, int $subjectId, float $maxMarks)
     {
         $this->exam = $exam;
         $this->subject = $subject;
@@ -48,6 +57,11 @@ class MarksImport implements ToCollection, WithHeadingRow, WithValidation, WithC
         // Create lookup maps
         $this->rollNumberMap = $this->students->keyBy('roll_number')->toArray();
         $this->admissionNumberMap = $this->students->keyBy('admission_number')->toArray();
+        
+        $this->examId = $examId;
+        $this->subjectId = $subjectId;
+        $this->maxMarks = $maxMarks;
+        $this->gradeService = new GradeCalculationService();
     }
     
     /**
@@ -78,67 +92,76 @@ class MarksImport implements ToCollection, WithHeadingRow, WithValidation, WithC
         
         try {
             foreach ($rows as $row) {
-                // Skip rows with empty identifiers
-                if (empty($row['roll_number']) && empty($row['admission_number'])) {
-                    continue;
-                }
-                
-                // Find student by roll number or admission number
-                $student = null;
-                
-                if (!empty($row['roll_number']) && isset($this->rollNumberMap[$row['roll_number']])) {
-                    $student = $this->rollNumberMap[$row['roll_number']];
-                } elseif (!empty($row['admission_number']) && isset($this->admissionNumberMap[$row['admission_number']])) {
-                    $student = $this->admissionNumberMap[$row['admission_number']];
-                }
-                
-                if (!$student) {
-                    continue; // Skip if student not found
-                }
-                
-                // Determine if absent
-                $isAbsent = strtolower($row['marks_obtained'] ?? '') === 'ab' || 
-                            strtolower($row['absent'] ?? '') === 'yes' || 
-                            strtolower($row['is_absent'] ?? '') === 'yes';
-                
-                // Get marks value
-                $marksObtained = null;
-                if (!$isAbsent && isset($row['marks_obtained']) && is_numeric($row['marks_obtained'])) {
-                    $marksObtained = (float)$row['marks_obtained'];
-                }
-                
-                // Calculate grade
-                $grade = null;
-                if ($isAbsent) {
-                    $grade = 'AB';
-                } elseif ($marksObtained !== null) {
-                    $percentage = ($marksObtained / $this->exam->total_marks) * 100;
-                    
-                    $gradeScale = ExamGradeScale::where('min_percentage', '<=', $percentage)
-                        ->where('max_percentage', '>=', $percentage)
-                        ->where('school_id', $this->exam->school_id)
-                        ->first();
-                        
-                    if ($gradeScale) {
-                        $grade = $gradeScale->grade;
+                try {
+                    // Skip rows with empty identifiers
+                    if (empty($row['roll_number']) && empty($row['admission_number'])) {
+                        continue;
                     }
+                    
+                    // Find student by roll number or admission number
+                    $student = null;
+                    
+                    if (!empty($row['roll_number']) && isset($this->rollNumberMap[$row['roll_number']])) {
+                        $student = $this->rollNumberMap[$row['roll_number']];
+                    } elseif (!empty($row['admission_number']) && isset($this->admissionNumberMap[$row['admission_number']])) {
+                        $student = $this->admissionNumberMap[$row['admission_number']];
+                    }
+                    
+                    if (!$student) {
+                        continue; // Skip if student not found
+                    }
+                    
+                    // Determine if absent
+                    $isAbsent = strtolower($row['marks_obtained'] ?? '') === 'ab' || 
+                                strtolower($row['absent'] ?? '') === 'yes' || 
+                                strtolower($row['is_absent'] ?? '') === 'yes';
+                    
+                    // Get marks value
+                    $marksObtained = null;
+                    if (!$isAbsent && isset($row['marks_obtained']) && is_numeric($row['marks_obtained'])) {
+                        $marksObtained = (float)$row['marks_obtained'];
+                    }
+                    
+                    // Calculate grade
+                    $grade = null;
+                    if ($isAbsent) {
+                        $grade = 'AB';
+                    } elseif ($marksObtained !== null) {
+                        $percentage = ($marksObtained / $this->exam->total_marks) * 100;
+                        
+                        $gradeScale = ExamGradeScale::where('min_percentage', '<=', $percentage)
+                            ->where('max_percentage', '>=', $percentage)
+                            ->where('school_id', $this->exam->school_id)
+                            ->first();
+                            
+                        if ($gradeScale) {
+                            $grade = $gradeScale->grade;
+                        }
+                    }
+                    
+                    // Update or create the mark
+                    Mark::updateOrCreate(
+                        [
+                            'exam_id' => $this->exam->id,
+                            'subject_id' => $this->subject->id,
+                            'student_id' => $student['id'],
+                        ],
+                        [
+                            'marks_obtained' => $marksObtained,
+                            'is_absent' => $isAbsent,
+                            'remarks' => $row['remarks'] ?? null,
+                            'grade' => $grade,
+                            'entered_by' => $this->enteredBy,
+                        ]
+                    );
+                    
+                    $this->processedRows++;
+                } catch (\Exception $e) {
+                    $this->failedRows[] = [
+                        'roll_number' => $row['roll_number'] ?? 'Unknown',
+                        'error' => $e->getMessage()
+                    ];
                 }
-                
-                // Update or create the mark
-                Mark::updateOrCreate(
-                    [
-                        'exam_id' => $this->exam->id,
-                        'subject_id' => $this->subject->id,
-                        'student_id' => $student['id'],
-                    ],
-                    [
-                        'marks_obtained' => $marksObtained,
-                        'is_absent' => $isAbsent,
-                        'remarks' => $row['remarks'] ?? null,
-                        'grade' => $grade,
-                        'entered_by' => $this->enteredBy,
-                    ]
-                );
             }
             
             DB::commit();
@@ -175,5 +198,15 @@ class MarksImport implements ToCollection, WithHeadingRow, WithValidation, WithC
         return [
             '*.marks_obtained.numeric' => 'Marks must be a number or "AB" for absent.',
         ];
+    }
+
+    public function getProcessedRows(): int
+    {
+        return $this->processedRows;
+    }
+
+    public function getFailedRows(): array
+    {
+        return $this->failedRows;
     }
 } 

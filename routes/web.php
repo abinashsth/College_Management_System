@@ -34,6 +34,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\StudentAssignmentController;
+use App\Http\Controllers\MarkEntryDashboardController;
+use App\Http\Controllers\MarkEntryController;
+use App\Http\Controllers\MarkController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -358,6 +361,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Mark Entry Dashboard Routes
+    Route::prefix('marks')->group(function () {
+        Route::get('/entry-dashboard', [MarkEntryDashboardController::class, 'index'])->name('marks.entry-dashboard');
+        Route::get('/get-faculties', [MarkEntryDashboardController::class, 'getFaculties']);
+        Route::get('/get-departments', [MarkEntryDashboardController::class, 'getDepartments']);
+        Route::get('/get-classes', [MarkEntryDashboardController::class, 'getClasses']);
+        Route::get('/get-subjects', [MarkEntryDashboardController::class, 'getSubjects']);
+        Route::get('/get-exam-terms', [MarkEntryDashboardController::class, 'getExamTerms']);
+        Route::post('/get-students', [MarkEntryDashboardController::class, 'getStudents']);
+        Route::post('/store', [MarkEntryDashboardController::class, 'store']);
+    });
+
+    // Marks Management
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/marks', [MarkController::class, 'index'])->name('marks.index');
+        Route::get('/marks/create', [MarkController::class, 'create'])->name('marks.create');
+        Route::post('/marks', [MarkController::class, 'store'])->name('marks.store');
+        Route::get('/marks/{mark}/edit', [MarkController::class, 'edit'])->name('marks.edit');
+        Route::put('/marks/{mark}', [MarkController::class, 'update'])->name('marks.update');
+        Route::delete('/marks/{mark}', [MarkController::class, 'destroy'])->name('marks.destroy');
+        Route::get('/marks-report', [MarkController::class, 'report'])->name('marks.report');
+        Route::get('/marks-dashboard', [MarkController::class, 'dashboard'])->name('marks.dashboard');
+    });
 });
 
 // Admin Routes Group
@@ -520,6 +547,18 @@ Route::middleware(['auth', 'permission:manage students'])->prefix('admissions')-
     Route::post('/{application}/generate-id', [App\Http\Controllers\AdmissionController::class, 'generateId'])->name('generate-id');
     Route::post('/{application}/admit', [App\Http\Controllers\AdmissionController::class, 'admit'])->name('admit');
     Route::post('/{application}/reject', [App\Http\Controllers\AdmissionController::class, 'reject'])->name('reject');
+});
+
+Route::middleware(['auth', 'role:teacher|admin'])->group(function () {
+    Route::prefix('mark-entry')->group(function () {
+        Route::get('/', [MarkEntryController::class, 'index'])->name('mark-entry.index');
+        Route::get('/departments/{faculty}', [MarkEntryController::class, 'getDepartments']);
+        Route::get('/classes/{department}', [MarkEntryController::class, 'getClasses']);
+        Route::get('/subjects/{class}', [MarkEntryController::class, 'getSubjects']);
+        Route::get('/exam-terms/{class}', [MarkEntryController::class, 'getExamTerms']);
+        Route::post('/students', [MarkEntryController::class, 'getStudents']);
+        Route::post('/store', [MarkEntryController::class, 'store']);
+    });
 });
 
 require __DIR__.'/auth.php';

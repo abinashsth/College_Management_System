@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class Mark extends Model
 {
@@ -18,21 +19,28 @@ class Mark extends Model
      */
     protected $fillable = [
         'student_id',
-        'exam_id',
         'subject_id',
-        'marks_obtained',
-        'total_marks',
-        'grade',
-        'is_absent',
+        'marks',
+        'exam_date',
         'remarks',
-        'status',
-        'created_by',
-        'updated_by',
-        'verified_by',
-        'published_by',
-        'verification_date',
-        'publication_date',
-        'verification_remarks',
+    ];
+
+    /**
+     * Validation rules for the mark model.
+     *
+     * @var array
+     */
+    protected static $rules = [
+        'marks_obtained' => 'nullable|numeric|min:0',
+        'total_marks' => 'required|numeric|min:0',
+        'grade' => 'nullable|string|max:5',
+        'status' => 'required|in:draft,submitted,verified,published,rejected',
+        'student_id' => 'required|exists:students,id',
+        'exam_id' => 'required|exists:exams,id',
+        'subject_id' => 'required|exists:subjects,id',
+        'is_absent' => 'boolean',
+        'remarks' => 'nullable|string|max:500',
+        'verification_remarks' => 'nullable|string|max:500'
     ];
 
     /**
@@ -44,6 +52,8 @@ class Mark extends Model
         'is_absent' => 'boolean',
         'verification_date' => 'datetime',
         'publication_date' => 'datetime',
+        'exam_date' => 'date',
+        'marks' => 'float',
     ];
 
     /**
@@ -56,19 +66,53 @@ class Mark extends Model
     const STATUS_REJECTED = 'rejected';
 
     /**
+     * Boot the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($mark) {
+            if (auth()->check()) {
+                $mark->created_by = auth()->id();
+                $mark->updated_by = auth()->id();
+            }
+        });
+
+        static::updating(function ($mark) {
+            if (auth()->check()) {
+                $mark->updated_by = auth()->id();
+            }
+
+            // Log status changes
+            if ($mark->isDirty('status')) {
+                Log::info('Mark status changed', [
+                    'mark_id' => $mark->id,
+                    'student_id' => $mark->student_id,
+                    'exam_id' => $mark->exam_id,
+                    'subject_id' => $mark->subject_id,
+                    'old_status' => $mark->getOriginal('status'),
+                    'new_status' => $mark->status,
+                    'user_id' => auth()->id(),
+                    'timestamp' => now()
+                ]);
+            }
+
+            // Validate status transition if status is changing
+            if ($mark->isDirty('status')) {
+                $mark->validateStatusTransition($mark->status);
+            }
+        });
+    }
+
+    /**
      * Get the student that owns the mark.
      */
     public function student()
     {
         return $this->belongsTo(Student::class);
-    }
-
-    /**
-     * Get the exam that owns the mark.
-     */
-    public function exam()
-    {
-        return $this->belongsTo(Exam::class);
     }
 
     /**
@@ -175,11 +219,30 @@ class Mark extends Model
 
         // Find grade in grade system
         $gradeSystem = GradeSystem::getDefault();
+        
+        // If no grade system is found, use default grading scale
         if (!$gradeSystem) {
-            return null;
+            return $this->getDefaultGrade($percentage);
         }
 
-        return $gradeSystem->findGradeForPercentage($percentage);
+        $grade = $gradeSystem->findGradeForPercentage($percentage);
+        return $grade ?? $this->getDefaultGrade($percentage);
+    }
+
+    /**
+     * Get default grade based on percentage.
+     *
+     * @param float $percentage
+     * @return string
+     */
+    protected function getDefaultGrade($percentage)
+    {
+        if ($percentage >= 90) return 'A+';
+        if ($percentage >= 80) return 'A';
+        if ($percentage >= 70) return 'B';
+        if ($percentage >= 60) return 'C';
+        if ($percentage >= 50) return 'D';
+        return 'F';
     }
 
     /**
@@ -377,5 +440,173 @@ class Mark extends Model
             'label' => $label,
             'color' => $colorClass
         ];
+    }
+
+    /**
+     * Get the validation rules.
+     *
+     * @return array
+     */
+    public static function getValidationRules()
+    {
+        return static::$rules;
+    }
+
+    /**
+     * Check if mark can transition to the given status.
+     *
+     * @param string $newStatus
+     * @return bool
+     */
+    public function canTransitionTo($newStatus)
+    {
+        $allowedTransitions = [
+            self::STATUS_DRAFT => [self::STATUS_SUBMITTED],
+            self::STATUS_SUBMITTED => [self::STATUS_VERIFIED, self::STATUS_REJECTED],
+            self::STATUS_VERIFIED => [self::STATUS_PUBLISHED],
+            self::STATUS_REJECTED => [self::STATUS_SUBMITTED],
+            self::STATUS_PUBLISHED => []
+        ];
+        
+        return in_array($newStatus, $allowedTransitions[$this->status] ?? []);
+    }
+
+    /**
+     * Validate status transition.
+     *
+     * @param string $newStatus
+     * @throws \InvalidArgumentException
+     */
+    protected function validateStatusTransition($newStatus)
+    {
+        if (!$this->canTransitionTo($newStatus)) {
+            throw new \InvalidArgumentException(
+                "Invalid status transition from {$this->status} to {$newStatus}"
+            );
+        }
+    }
+
+    /**
+     * Bulk submit marks for verification.
+     *
+     * @param array $markIds
+     * @return int Number of marks updated
+     */
+    public static function bulkSubmit(array $markIds)
+    {
+        return DB::transaction(function() use ($markIds) {
+            $marks = static::whereIn('id', $markIds)
+                ->where('status', self::STATUS_DRAFT)
+                ->get();
+            
+            $count = 0;
+            foreach ($marks as $mark) {
+                if ($mark->submit()) {
+                    $count++;
+                }
+            }
+            
+            return $count;
+        });
+    }
+
+    /**
+     * Bulk verify marks.
+     *
+     * @param array $markIds
+     * @return int Number of marks verified
+     */
+    public static function bulkVerify(array $markIds)
+    {
+        return DB::transaction(function() use ($markIds) {
+            $marks = static::whereIn('id', $markIds)
+                ->where('status', self::STATUS_SUBMITTED)
+                ->get();
+            
+            $count = 0;
+            foreach ($marks as $mark) {
+                if ($mark->verify()) {
+                    $count++;
+                }
+            }
+            
+            return $count;
+        });
+    }
+
+    /**
+     * Bulk publish marks.
+     *
+     * @param array $markIds
+     * @return int Number of marks published
+     */
+    public static function bulkPublish(array $markIds)
+    {
+        return DB::transaction(function() use ($markIds) {
+            $marks = static::whereIn('id', $markIds)
+                ->where('status', self::STATUS_VERIFIED)
+                ->get();
+            
+            $count = 0;
+            foreach ($marks as $mark) {
+                if ($mark->publish()) {
+                    $count++;
+                }
+            }
+            
+            return $count;
+        });
+    }
+
+    /**
+     * Calculate results for multiple marks.
+     *
+     * @param array $markIds
+     * @return int Number of marks calculated
+     */
+    public static function bulkCalculateResults(array $markIds)
+    {
+        return DB::transaction(function() use ($markIds) {
+            $marks = static::whereIn('id', $markIds)->get();
+            
+            $count = 0;
+            foreach ($marks as $mark) {
+                if ($mark->calculateResult()) {
+                    $count++;
+                }
+            }
+            
+            return $count;
+        });
+    }
+
+    /**
+     * Calculate result for a single mark.
+     *
+     * @return bool
+     */
+    public function calculateResult()
+    {
+        return DB::transaction(function() {
+            // Calculate marks from components if they exist
+            if (!$this->calculateMarks()) {
+                return false;
+            }
+
+            // Calculate grade
+            $this->grade = $this->calculateGrade();
+            
+            // Save changes
+            if (!$this->save()) {
+                return false;
+            }
+
+            // Update student's overall result if this is a published mark
+            if ($this->status === self::STATUS_PUBLISHED) {
+                $this->student->calculateOverallResult();
+            }
+            
+            return true;
+        });
     }
 } 

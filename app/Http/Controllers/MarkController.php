@@ -202,32 +202,60 @@ class MarkController extends Controller
      */
     public function create(Request $request)
     {
-        $request->validate([
-            'exam_id' => 'required|exists:exams,id',
-            'subject_id' => 'required|exists:subjects,id',
-        ]);
-
-        $exam = Exam::findOrFail($request->exam_id);
-        $subject = Subject::findOrFail($request->subject_id);
+        // Get active exams and subjects for initial selection
+        $exams = Exam::where('is_active', true)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+        $subjects = Subject::orderBy('name')->get();
         
-        // Check if user has permission to create marks
-        if (!Auth::user()->can('create marks') && !$this->canCreateMarks($exam, $subject)) {
-            return redirect()->route('marks.select')
-                ->with('error', 'You do not have permission to create marks for this exam/subject');
+        // If no exam or subject selected, show selection form
+        if (!$request->filled(['exam_id', 'subject_id'])) {
+            return view('marks.create', compact('exams', 'subjects'));
         }
         
-        $students = Student::where('class_id', $exam->class_id)
-            ->where('enrollment_status', 'active')
-            ->with('user')
-            ->orderBy('roll_number')
-            ->get();
+        try {
+            $request->validate([
+                'exam_id' => 'required|exists:exams,id',
+                'subject_id' => 'required|exists:subjects,id',
+            ]);
+
+            $exam = Exam::findOrFail($request->exam_id);
+            $subject = Subject::findOrFail($request->subject_id);
             
-        $marks = Mark::where('exam_id', $exam->id)
-            ->where('subject_id', $subject->id)
-            ->get()
-            ->keyBy('student_id');
+            // Check if user has permission to create marks
+            if (!Auth::user()->can('create marks') && !$this->canCreateMarks($exam, $subject)) {
+                return redirect()->route('marks.select')
+                    ->with('error', 'You do not have permission to create marks for this exam/subject');
+            }
             
-        return view('marks.create', compact('exam', 'subject', 'students', 'marks'));
+            // Get students for this exam's class
+            $students = Student::where('class_id', $exam->class_id)
+                ->where('enrollment_status', 'active')
+                ->with('user')
+                ->orderBy('roll_number')
+                ->get();
+            
+            // Get any existing marks
+            $marks = Mark::where('exam_id', $exam->id)
+                ->where('subject_id', $subject->id)
+                ->get()
+                ->keyBy('student_id');
+            
+            // Add debug information
+            session()->flash('debug', [
+                'exam_id' => $exam->id,
+                'subject_id' => $subject->id,
+                'student_count' => $students->count(),
+                'existing_marks' => $marks->count(),
+            ]);
+            
+            return view('marks.create', compact('exam', 'subject', 'students', 'marks', 'exams', 'subjects'));
+            
+        } catch (\Exception $e) {
+            \Log::error('Error in marks creation: ' . $e->getMessage());
+            return redirect()->route('marks.create')
+                ->with('error', 'Error loading mark entry form: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -1086,6 +1114,56 @@ class MarkController extends Controller
     }
 
     /**
+     * Display the view marks interface.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function view(Request $request)
+    {
+        // Get active exams and subjects
+        $exams = Exam::where('is_active', true)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+        $subjects = Subject::orderBy('name')->get();
+        
+        $marks = null;
+        $exam = null;
+        $subject = null;
+        
+        if ($request->filled('exam_id') && $request->filled('subject_id')) {
+            try {
+                $exam = Exam::findOrFail($request->exam_id);
+                $subject = Subject::findOrFail($request->subject_id);
+                
+                // Check if user has permission to view these marks
+                if (!Auth::user()->can('view marks') && !$this->canViewMarks($exam, $subject)) {
+                    return redirect()->route('marks.select')
+                        ->with('error', 'You do not have permission to view these marks');
+                }
+                
+                // Get marks with relationships
+                $marks = Mark::where('exam_id', $request->exam_id)
+                    ->where('subject_id', $request->subject_id)
+                    ->with(['student', 'creator', 'verifier'])
+                    ->get();
+                
+                // Add debug information to session
+                session()->flash('debug', [
+                    'exam_id' => $request->exam_id,
+                    'subject_id' => $request->subject_id,
+                    'marks_count' => $marks->count(),
+                ]);
+            } catch (\Exception $e) {
+                return redirect()->route('marks.view')
+                    ->with('error', 'Error loading marks: ' . $e->getMessage());
+            }
+        }
+        
+        return view('marks.view', compact('exams', 'subjects', 'marks', 'exam', 'subject'));
+    }
+
+    /**
      * Show the import form.
      *
      * @return \Illuminate\Http\Response
@@ -1912,5 +1990,43 @@ class MarkController extends Controller
             return redirect()->back()->withInput()
                 ->with('error', 'An error occurred while saving marks: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Display the publish interface.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function publishInterface(Request $request)
+    {
+        // Check if user has permission to publish marks
+        if (!Auth::user()->can('publish marks')) {
+            return redirect()->route('marks.select')
+                ->with('error', 'You do not have permission to publish marks');
+        }
+        
+        $exams = Exam::where('is_active', true)->get();
+        $subjects = Subject::all();
+        
+        $examId = $request->input('exam_id');
+        $subjectId = $request->input('subject_id');
+        
+        $exam = null;
+        $subject = null;
+        $marks = null;
+        
+        if ($examId && $subjectId) {
+            $exam = Exam::findOrFail($examId);
+            $subject = Subject::findOrFail($subjectId);
+            
+            $marks = Mark::where('exam_id', $examId)
+                ->where('subject_id', $subjectId)
+                ->where('status', Mark::STATUS_VERIFIED)
+                ->with(['student.user', 'verifier'])
+                ->get();
+        }
+        
+        return view('marks.publish_interface', compact('exams', 'subjects', 'exam', 'subject', 'marks'));
     }
 } 

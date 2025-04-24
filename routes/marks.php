@@ -21,6 +21,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/marks/dashboard', [MarkController::class, 'dashboard'])->name('marks.dashboard');
     Route::get('/marks/select', [MarkController::class, 'selectExamSubject'])->name('marks.select');
     Route::get('/marks', [MarkController::class, 'index'])->name('marks.index');
+    Route::get('/marks/view', [MarkController::class, 'view'])->name('marks.view');
     
     // Mark entry routes
     Route::middleware(['permission:create marks|role:admin'])->group(function () {
@@ -52,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
     });
     
     Route::middleware(['permission:publish marks|role:admin'])->group(function () {
+        Route::get('/marks/publish-interface', [MarkController::class, 'publishInterface'])->name('marks.publishInterface');
         Route::post('/marks/{mark}/publish', [MarkController::class, 'publish'])->name('marks.publish');
         Route::post('/marks/publish-all', [MarkController::class, 'publishAll'])->name('marks.publishAll');
     });

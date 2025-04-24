@@ -127,28 +127,18 @@
         @endif
 
         <!-- Marks Management -->
-        @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->checkPermission('view marks'))
+        @if($user->hasRole('super-admin') || $user->checkPermission('view marks'))
             <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('marksManagement')">
-                <i class="fas fa-chart-line sidebar-icon"></i>
+                <i class="fas fa-clipboard-check sidebar-icon"></i>
                 Marks Management
                 <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
             </div>
             <div id="marksManagement" class="hidden pl-8">
-                <a href="{{ route('marks.dashboard') }}" class="sidebar-item">Dashboard</a>
-                <a href="{{ route('marks.index') }}" class="sidebar-item">View Marks</a>
-                
-                @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->hasPermissionTo('create marks'))
-                    <a href="{{ route('marks.select') }}?action=create" class="sidebar-item">Enter Marks</a>
-                    <a href="{{ route('marks.import') }}" class="sidebar-item">Import Marks</a>
-                @endif
-                
-                @if($user->hasRole('super-admin') || $user->hasRole('admin') || $user->hasPermissionTo('verify marks'))
-                    <a href="{{ route('marks.verifyInterface') }}" class="sidebar-item">Verify Marks</a>
-                @endif
-                
-                <a href="{{ route('marks.analysis') }}" class="sidebar-item">Mark Analysis</a>
-                <a href="{{ route('marks.reports') }}" class="sidebar-item">Generate Reports</a>
-                <a href="{{ route('masks.index') }}" class="sidebar-item">Subject Masks</a>
+                <a href="{{ route('marks.index') }}" class="sidebar-item">All Marks</a>
+                <a href="{{ route('marks.create') }}" class="sidebar-item">Enter Marks</a>
+                <a href="{{ route('marks.report') }}" class="sidebar-item">Marks Report</a>
+                <a href="{{ route('student.grades') }}" class="sidebar-item">Student Grades</a>
+                <a href="{{ route('results.index') }}" class="sidebar-item">Results & Analysis</a>
             </div>
         @endif
 
