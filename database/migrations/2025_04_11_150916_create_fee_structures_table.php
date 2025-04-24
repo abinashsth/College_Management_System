@@ -6,28 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('fee_structures', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('class_id')->constrained('classes');
-            $table->foreignId('academic_session_id')->constrained('academic_sessions');
-            $table->string('name');
+            $table->foreignId('program_id')->constrained()->onDelete('cascade');
+            $table->foreignId('academic_session_id')->constrained()->onDelete('cascade');
+            $table->string('fee_type');
+            $table->decimal('amount', 10, 2);
+            $table->integer('due_day');
             $table->text('description')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users');
-            $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('fee_structures');
     }

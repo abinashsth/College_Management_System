@@ -2,87 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Classes;
-use App\Models\AcademicSession;
-use App\Models\FeeComponent;
-use App\Models\StudentFee;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FeeStructure extends Model
 {
-    use HasFactory;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'class_id',
+        'program_id',
         'academic_session_id',
-        'name',
-        'description',
-        'is_active',
-        'created_by',
-        'updated_by',
+        'fee_type',
+        'amount',
+        'due_day',
+        'description'
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
-
-    /**
-     * Get the class that this fee structure belongs to.
-     */
-    public function class()
+    public function program(): BelongsTo
     {
-        return $this->belongsTo(Classes::class, 'class_id');
+        return $this->belongsTo(Program::class);
     }
 
-    /**
-     * Get the academic session that this fee structure belongs to.
-     */
-    public function academicSession()
+    public function academicSession(): BelongsTo
     {
-        return $this->belongsTo(AcademicSession::class, 'academic_session_id');
-    }
-
-    /**
-     * Get the fee components for this fee structure.
-     */
-    public function feeComponents()
-    {
-        return $this->hasMany(FeeComponent::class);
-    }
-
-    /**
-     * Get the student fees associated with this fee structure.
-     */
-    public function studentFees()
-    {
-        return $this->hasMany(StudentFee::class);
-    }
-
-    /**
-     * Get the user who created this fee structure.
-     */
-    public function createdBy()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    /**
-     * Get the user who last updated this fee structure.
-     */
-    public function updatedBy()
-    {
-        return $this->belongsTo(User::class, 'updated_by');
+        return $this->belongsTo(AcademicSession::class);
     }
 }

@@ -12,6 +12,8 @@ use App\Http\Controllers\ExamController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\SalaryController;
+use App\Http\Controllers\FeeStructureController;
+use App\Http\Controllers\FeeController;
 use App\Http\Controllers\CollegeSettingsController;
 use App\Http\Controllers\AcademicStructureController;
 use App\Http\Controllers\AcademicYearController;
@@ -174,6 +176,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('accounts', AccountController::class);
     });
 
+
+    // Fee Management Routes
+Route::middleware(['auth', 'permission:manage fees'])->group(function () {
+    Route::resource('fee-structures', FeeStructureController::class);
+    Route::resource('fees', FeeController::class);
+    Route::get('/fees', [FeeController::class, 'index'])->name('fees.index');
+    Route::get('fees/history', [FeeController::class, 'history'])->name('fees.history');
+    Route::post('fees/{fee}/record-payment', [FeeController::class, 'recordPayment'])->name('fees.record-payment');
+});
 
     // Employee Management
     Route::middleware(['permission:view employees'])->group(function () {

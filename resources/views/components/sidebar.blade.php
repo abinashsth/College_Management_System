@@ -117,14 +117,14 @@
         @endif
 
         <!-- Finance Management -->
-        @if($user->hasRole('super-admin') || $user->checkPermission('view accounts'))
+        @if($user->hasRole('super-admin') || $user->checkPermission('view fees'))
             <div class="sidebar-item cursor-pointer" onclick="toggleDropdown('accountManagement')">
                 <i class="fas fa-coins sidebar-icon"></i>
                 Finance Management
                 <i class="fas fa-chevron-down ml-auto transform transition-transform"></i>
             </div>
             <div id="accountManagement" class="hidden pl-8">
-                <a href="{{ route('accounts.index') }}" class="sidebar-item">Fee Management</a>
+                <a href="{{ route('fees.index') }}" class="sidebar-item">Fee Management</a>
             </div>
         @endif
 
