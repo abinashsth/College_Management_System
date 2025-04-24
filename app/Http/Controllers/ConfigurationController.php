@@ -175,11 +175,24 @@ class ConfigurationController extends Controller
     {
         foreach ($years as $year) {
             $sessions = $year['sessions'] ?? [];
+            
+            // Extract the ID to use for lookups but not for insertion
+            $originalId = $year['id'] ?? null;
             unset($year['id']);
             unset($year['created_at']);
             unset($year['updated_at']);
             unset($year['sessions']);
             
+            // Ensure dates are properly formatted
+            if (isset($year['start_date']) && !$year['start_date'] instanceof \DateTime) {
+                $year['start_date'] = \Carbon\Carbon::parse($year['start_date'])->format('Y-m-d');
+            }
+            
+            if (isset($year['end_date']) && !$year['end_date'] instanceof \DateTime) {
+                $year['end_date'] = \Carbon\Carbon::parse($year['end_date'])->format('Y-m-d');
+            }
+            
+            // Find by name or create a new academic year
             $academicYear = AcademicYear::updateOrCreate(
                 ['name' => $year['name']],
                 $year
@@ -190,6 +203,19 @@ class ConfigurationController extends Controller
                 unset($session['academic_year_id']);
                 unset($session['created_at']);
                 unset($session['updated_at']);
+                
+                // Ensure session dates are properly formatted
+                $datesToFormat = [
+                    'start_date', 'end_date', 'registration_start_date', 
+                    'registration_end_date', 'class_start_date', 'class_end_date',
+                    'exam_start_date', 'exam_end_date', 'result_date'
+                ];
+                
+                foreach ($datesToFormat as $dateField) {
+                    if (isset($session[$dateField]) && !$session[$dateField] instanceof \DateTime) {
+                        $session[$dateField] = \Carbon\Carbon::parse($session[$dateField])->format('Y-m-d');
+                    }
+                }
                 
                 $academicYear->sessions()->updateOrCreate(
                     ['name' => $session['name']],

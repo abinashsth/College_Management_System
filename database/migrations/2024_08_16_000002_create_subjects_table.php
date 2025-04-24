@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if the table already exists
+        if (Schema::hasTable('subjects')) {
+            return;
+        }
+        
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique();
@@ -22,7 +27,10 @@ return new class extends Migration
             $table->integer('practical_hours')->nullable();
             $table->integer('tutorial_hours')->nullable();
             $table->string('level')->nullable(); // beginner, intermediate, advanced
-            $table->foreignId('department_id')->nullable()->constrained('academic_structures')->onDelete('set null');
+            
+            // Use unsignedBigInteger instead of direct foreign key
+            $table->unsignedBigInteger('department_id')->nullable();
+            
             $table->string('semester_offered')->nullable(); // Comma-separated values: fall,spring,summer
             $table->text('learning_objectives')->nullable();
             $table->text('grading_policy')->nullable();
@@ -33,6 +41,16 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
         });
+        
+        // Add foreign key constraint only if the referenced table exists
+        if (Schema::hasTable('subjects') && Schema::hasTable('academic_structures')) {
+            Schema::table('subjects', function (Blueprint $table) {
+                $table->foreign('department_id')
+                    ->references('id')
+                    ->on('academic_structures')
+                    ->onDelete('set null');
+            });
+        }
     }
 
     /**

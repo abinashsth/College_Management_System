@@ -12,12 +12,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('academic_sessions', function (Blueprint $table) {
-            $table->boolean('is_active')->default(false)->after('is_current');
-            
-            // Set is_active to true for records where is_current is true
+        // First check if the table exists
+        if (!Schema::hasTable('academic_sessions')) {
+            return;
+        }
+        
+        // First add the is_active column if it doesn't exist
+        if (!Schema::hasColumn('academic_sessions', 'is_active')) {
+            Schema::table('academic_sessions', function (Blueprint $table) {
+                $table->boolean('is_active')->default(false)->after('is_current');
+            });
+        }
+        
+        // Now safely update the data
+        if (Schema::hasColumn('academic_sessions', 'is_active') && 
+            Schema::hasColumn('academic_sessions', 'is_current')) {
             DB::statement('UPDATE academic_sessions SET is_active = is_current');
-        });
+        }
     }
 
     /**
@@ -25,8 +36,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('academic_sessions', function (Blueprint $table) {
-            $table->dropColumn('is_active');
-        });
+        if (Schema::hasTable('academic_sessions') && 
+            Schema::hasColumn('academic_sessions', 'is_active')) {
+            Schema::table('academic_sessions', function (Blueprint $table) {
+                $table->dropColumn('is_active');
+            });
+        }
     }
 }; 

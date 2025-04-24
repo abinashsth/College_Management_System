@@ -9,6 +9,17 @@
         </h2>
     </x-slot>
 
+    <!-- Debug message - temporary -->
+    <div class="py-2">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+                <p class="font-bold">Debug Info</p>
+                <p>Dashboard view loaded. If you can see this message, the view file is loading properly.</p>
+                <p class="text-sm">Time: {{ now() }}</p>
+            </div>
+        </div>
+    </div>
+
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Statistics Cards -->
@@ -86,6 +97,13 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
                                 <span>Enter New Marks</span>
+                            </a>
+                            
+                            <a href="{{ route('marks.subjectEntry') }}" class="flex items-center p-3 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors">
+                                <svg class="w-6 h-6 text-emerald-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                </svg>
+                                <span>Subject-Based Marks Entry</span>
                             </a>
                             @endcan
                             

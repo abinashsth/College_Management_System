@@ -38,6 +38,16 @@ class RouteServiceProvider extends ServiceProvider
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+            
+            // Load marks routes
+            Route::middleware('web')
+                ->group(base_path('routes/marks.php'));
+                
+            // Load masks routes if it exists
+            if (file_exists(base_path('routes/masks.php'))) {
+                Route::middleware('web')
+                    ->group(base_path('routes/masks.php'));
+            }
         });
     }
 } 

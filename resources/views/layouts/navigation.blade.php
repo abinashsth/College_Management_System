@@ -26,6 +26,10 @@
                         {{ __('Marks') }}
                     </x-nav-link>
                     
+                    <x-nav-link :href="route('marks.welcome')" :active="request()->routeIs('marks.welcome')">
+                        {{ __('Marks Test') }}
+                    </x-nav-link>
+                    
                     <x-nav-link :href="route('masks.index')" :active="request()->routeIs('masks.*')">
                         {{ __('Subject Masks') }}
                     </x-nav-link>
@@ -98,6 +102,10 @@
             @can('view marks')
             <x-responsive-nav-link :href="route('marks.dashboard')" :active="request()->routeIs('marks.*')">
                 {{ __('Marks') }}
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('marks.welcome')" :active="request()->routeIs('marks.welcome')">
+                {{ __('Marks Test') }}
             </x-responsive-nav-link>
             
             <x-responsive-nav-link :href="route('masks.index')" :active="request()->routeIs('masks.*')">

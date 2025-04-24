@@ -11,9 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if the table already exists
+        if (Schema::hasTable('mark_components')) {
+            return;
+        }
+        
         Schema::create('mark_components', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('mark_id')->constrained()->onDelete('cascade');
+            $table->foreignId('mark_id')->constrained('marks');
             $table->string('component_name');
             $table->decimal('marks_obtained', 8, 2)->nullable();
             $table->decimal('total_marks', 8, 2)->default(0);

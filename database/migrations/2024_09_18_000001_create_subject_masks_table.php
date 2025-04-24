@@ -11,15 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if the table already exists
+        if (Schema::hasTable('subject_masks')) {
+            return;
+        }
+        
         Schema::create('subject_masks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('subject_id')->constrained()->onDelete('cascade');
-            $table->foreignId('exam_id')->constrained()->onDelete('cascade');
+            $table->foreignId('subject_id')->constrained('subjects');
+            $table->foreignId('exam_id')->constrained('exams');
             $table->decimal('mask_value', 8, 2)->unsigned();
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('created_by')->nullable()->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->timestamps();
             
             // Ensure a subject has only one mask per exam

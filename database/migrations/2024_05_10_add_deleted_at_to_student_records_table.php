@@ -11,8 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if the table doesn't exist
+        if (!Schema::hasTable('student_records')) {
+            return;
+        }
+        
         Schema::table('student_records', function (Blueprint $table) {
-            $table->softDeletes();
+            // Check if column already exists
+            if (!Schema::hasColumn('student_records', 'deleted_at')) {
+                $table->softDeletes();
+            }
         });
     }
 
@@ -21,8 +29,15 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Skip if the table doesn't exist
+        if (!Schema::hasTable('student_records')) {
+            return;
+        }
+        
         Schema::table('student_records', function (Blueprint $table) {
-            $table->dropSoftDeletes();
+            if (Schema::hasColumn('student_records', 'deleted_at')) {
+                $table->dropSoftDeletes();
+            }
         });
     }
 }; 

@@ -204,6 +204,12 @@ class ExamController extends Controller
             $subjectPassingMarks = $request->input('subject_passing_marks', []);
             $subjectNotes = $request->input('subject_notes', []);
             
+            // Ensure subject_id is set to avoid NULL constraint error
+            if (empty($validated['subject_id']) && !empty($subjects)) {
+                // Use the first subject in the list as the default subject_id
+                $validated['subject_id'] = $subjects[0];
+            }
+            
             unset($validated['subjects']);
             unset($validated['subject_total_marks']);
             unset($validated['subject_passing_marks']);

@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth'])->group(function () {
+    // Test route - should be accessible to all authenticated users
+    Route::get('/marks/welcome', [MarkController::class, 'welcome'])->name('marks.welcome');
+    
     // Dashboard and selection routes
     Route::get('/marks/dashboard', [MarkController::class, 'dashboard'])->name('marks.dashboard');
     Route::get('/marks/select', [MarkController::class, 'selectExamSubject'])->name('marks.select');
@@ -25,6 +28,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/marks', [MarkController::class, 'store'])->name('marks.store');
         Route::get('/marks/create-bulk', [MarkController::class, 'createBulk'])->name('marks.createBulk');
         Route::post('/marks/store-bulk', [MarkController::class, 'storeBulk'])->name('marks.storeBulk');
+        
+        // Subject-specific marks entry
+        Route::get('/marks/subject-entry', [MarkController::class, 'subjectEntry'])->name('marks.subjectEntry');
+        Route::post('/marks/store-subject', [MarkController::class, 'storeSubjectMarks'])->name('marks.storeSubject');
     });
     
     // Mark view and edit routes

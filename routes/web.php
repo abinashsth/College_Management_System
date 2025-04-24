@@ -289,6 +289,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
         Route::post('/settings/system/bulk-update', [SystemSettingsController::class, 'bulkUpdate'])
             ->name('settings.system.bulk-update');
+        Route::get('/settings/system/{systemSetting}/duplicate', [SystemSettingsController::class, 'duplicate'])
+            ->name('settings.system.duplicate');
         
         // Grade System Management
         Route::get('/settings/grade-systems', [GradeSystemController::class, 'index'])->name('admin.grade-systems.index');

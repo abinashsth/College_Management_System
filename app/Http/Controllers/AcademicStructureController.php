@@ -476,6 +476,9 @@ class AcademicStructureController extends Controller
      */
     public function synchronizeAll()
     {
+        // Start a database transaction explicitly
+        DB::beginTransaction();
+        
         try {
             // Check if database tables exist before proceeding
             $requiredTables = ['faculties', 'departments', 'programs'];
@@ -591,26 +594,185 @@ class AcademicStructureController extends Controller
                 }
             }
             
-            // Load our standalone script
-            $syncScript = base_path('sync-academic-structures.php');
-            if (!file_exists($syncScript)) {
-                return back()->with('error', 'Sync script not found. Please check if sync-academic-structures.php exists in the project root.');
+            // Instead of including the sync script directly, we'll run our own sync code here
+            // This is to avoid transaction conflicts between the controller and included script
+            
+            // Sync faculties
+            $faculties = AcademicStructure::where('type', 'faculty')->get();
+            foreach ($faculties as $faculty) {
+                $this->syncFaculty($faculty);
             }
             
-            // Define LARAVEL_START to signal we're in Laravel context (not standalone)
-            if (!defined('LARAVEL_START')) {
-                define('LARAVEL_START', microtime(true));
+            // Sync departments
+            $departments = AcademicStructure::where('type', 'department')->get();
+            foreach ($departments as $department) {
+                $this->syncDepartment($department);
             }
             
-            // Include the script directly (which will use the existing Laravel app)
-            include_once $syncScript;
+            // Sync programs
+            $programs = AcademicStructure::where('type', 'program')->get();
+            foreach ($programs as $program) {
+                $this->syncProgram($program);
+            }
+            
+            // Commit transaction
+            DB::commit();
             
             return redirect()->route('settings.academic-structure.index')
                 ->with('success', 'All academic structures synchronized successfully with traditional tables');
         } catch (\Exception $e) {
             // Log the detailed error for debugging
             \Log::error('Academic structure sync error: ' . $e->getMessage());
+            
+            // Roll back transaction
+            DB::rollBack();
+            
             return back()->with('error', 'Failed to synchronize academic structures: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Sync a faculty to the traditional table
+     */
+    private function syncFaculty(AcademicStructure $faculty)
+    {
+        // Check if a faculty with this code already exists
+        $existingFaculty = Faculty::where('code', $faculty->code)->first();
+        
+        if ($existingFaculty) {
+            // Update existing faculty
+            $updateData = [
+                'name' => $faculty->name,
+                'description' => $faculty->description,
+                'slug' => Str::slug($faculty->name),
+                'status' => $faculty->is_active,
+                'academic_structure_id' => $faculty->id,
+            ];
+            
+            $existingFaculty->update($updateData);
+        } else {
+            // Create new faculty
+            Faculty::create([
+                'name' => $faculty->name,
+                'slug' => Str::slug($faculty->name),
+                'code' => $faculty->code,
+                'description' => $faculty->description,
+                'status' => $faculty->is_active,
+                'academic_structure_id' => $faculty->id,
+            ]);
+        }
+    }
+    
+    /**
+     * Sync a department to the traditional table
+     */
+    private function syncDepartment(AcademicStructure $department)
+    {
+        // A department must have a parent faculty
+        if (!$department->parent_id) {
+            return;
+        }
+        
+        $parentStructure = AcademicStructure::find($department->parent_id);
+        
+        if (!$parentStructure || $parentStructure->type !== 'faculty') {
+            return;
+        }
+        
+        // Find the corresponding faculty in the traditional system
+        $faculty = Faculty::where('code', $parentStructure->code)->first();
+        
+        if (!$faculty) {
+            return;
+        }
+        
+        // Check if a department with this code already exists
+        $existingDepartment = Department::where('code', $department->code)->first();
+        
+        if ($existingDepartment) {
+            // Update existing department
+            $updateData = [
+                'name' => $department->name,
+                'slug' => Str::slug($department->name),
+                'description' => $department->description,
+                'faculty_id' => $faculty->id,
+                'status' => $department->is_active,
+                'academic_structure_id' => $department->id,
+            ];
+            
+            $existingDepartment->update($updateData);
+        } else {
+            // Create new department
+            Department::create([
+                'name' => $department->name,
+                'slug' => Str::slug($department->name),
+                'code' => $department->code,
+                'description' => $department->description,
+                'faculty_id' => $faculty->id,
+                'status' => $department->is_active,
+                'academic_structure_id' => $department->id,
+            ]);
+        }
+    }
+    
+    /**
+     * Sync a program to the traditional table
+     */
+    private function syncProgram(AcademicStructure $program)
+    {
+        // A program must have a parent department
+        if (!$program->parent_id) {
+            return;
+        }
+        
+        $parentStructure = AcademicStructure::find($program->parent_id);
+        
+        if (!$parentStructure || $parentStructure->type !== 'department') {
+            return;
+        }
+        
+        // Find the corresponding department in the traditional system
+        $department = Department::where('code', $parentStructure->code)->first();
+        
+        if (!$department) {
+            return;
+        }
+        
+        // Check if a program with this code already exists
+        $existingProgram = Program::where('code', $program->code)->first();
+        
+        if ($existingProgram) {
+            // Update existing program
+            $updateData = [
+                'name' => $program->name,
+                'slug' => Str::slug($program->name),
+                'description' => $program->description,
+                'department_id' => $department->id,
+                'status' => $program->is_active,
+                'academic_structure_id' => $program->id,
+                // Keep existing duration, credit_hours, etc. if not in AcademicStructure
+                'duration' => $existingProgram->duration ?? 4,
+                'duration_unit' => $existingProgram->duration_unit ?? 'years',
+                'credit_hours' => $existingProgram->credit_hours ?? 120,
+                'degree_level' => $existingProgram->degree_level ?? 'Bachelor',
+            ];
+            
+            $existingProgram->update($updateData);
+        } else {
+            // Create new program
+            Program::create([
+                'name' => $program->name,
+                'slug' => Str::slug($program->name),
+                'code' => $program->code,
+                'description' => $program->description,
+                'department_id' => $department->id,
+                'status' => $program->is_active,
+                'academic_structure_id' => $program->id,
+                'duration' => 4, // Default value
+                'duration_unit' => 'years', // Default value
+                'credit_hours' => 120, // Default value
+                'degree_level' => 'Bachelor', // Default value
+            ]);
         }
     }
 }

@@ -39,8 +39,17 @@ class AcademicYearController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        // Format dates for consistent storage
+        if (isset($validated['start_date'])) {
+            $validated['start_date'] = \Carbon\Carbon::parse($validated['start_date'])->format('Y-m-d');
+        }
+        
+        if (isset($validated['end_date'])) {
+            $validated['end_date'] = \Carbon\Carbon::parse($validated['end_date'])->format('Y-m-d');
+        }
+
         // If this is set as current, unset any other current academic year
-        if ($request->is_current) {
+        if ($request->has('is_current') && $request->is_current) {
             AcademicYear::where('is_current', true)->update(['is_current' => false]);
         }
 
@@ -80,8 +89,17 @@ class AcademicYearController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        // Format dates to ensure consistent storage
+        if (isset($validated['start_date'])) {
+            $validated['start_date'] = \Carbon\Carbon::parse($validated['start_date'])->format('Y-m-d');
+        }
+        
+        if (isset($validated['end_date'])) {
+            $validated['end_date'] = \Carbon\Carbon::parse($validated['end_date'])->format('Y-m-d');
+        }
+
         // If this is set as current, unset any other current academic year
-        if ($request->is_current && !$academicYear->is_current) {
+        if ($request->has('is_current') && $request->is_current && !$academicYear->is_current) {
             AcademicYear::where('is_current', true)->update(['is_current' => false]);
         }
 
@@ -136,6 +154,19 @@ class AcademicYearController extends Controller
             'result_date' => 'nullable|date|after_or_equal:exam_start_date|before_or_equal:' . $academicYear->end_date,
         ]);
 
+        // Format all date fields for consistent storage
+        $dateFields = [
+            'start_date', 'end_date', 'registration_start_date', 'registration_end_date',
+            'class_start_date', 'class_end_date', 'exam_start_date', 'exam_end_date', 
+            'result_date'
+        ];
+        
+        foreach ($dateFields as $dateField) {
+            if (isset($validated[$dateField])) {
+                $validated[$dateField] = \Carbon\Carbon::parse($validated[$dateField])->format('Y-m-d');
+            }
+        }
+
         // Check if the name is unique for this academic year
         if (AcademicSession::where('academic_year_id', $academicYear->id)
             ->where('name', $request->name)
@@ -144,7 +175,7 @@ class AcademicYearController extends Controller
         }
 
         // If this is set as current, unset any other current session
-        if ($request->is_current) {
+        if ($request->has('is_current') && $request->is_current) {
             AcademicSession::where('is_current', true)->update(['is_current' => false]);
         }
 
@@ -212,6 +243,19 @@ class AcademicYearController extends Controller
             'result_date' => 'nullable|date|after_or_equal:exam_start_date|before_or_equal:' . $academicYear->end_date,
         ]);
 
+        // Format all date fields for consistent storage
+        $dateFields = [
+            'start_date', 'end_date', 'registration_start_date', 'registration_end_date',
+            'class_start_date', 'class_end_date', 'exam_start_date', 'exam_end_date', 
+            'result_date'
+        ];
+        
+        foreach ($dateFields as $dateField) {
+            if (isset($validated[$dateField])) {
+                $validated[$dateField] = \Carbon\Carbon::parse($validated[$dateField])->format('Y-m-d');
+            }
+        }
+
         // Check if the name is unique for this academic year
         if (AcademicSession::where('academic_year_id', $academicYear->id)
             ->where('name', $request->name)
@@ -221,7 +265,7 @@ class AcademicYearController extends Controller
         }
 
         // If this is set as current, unset any other current session
-        if ($request->is_current && !$session->is_current) {
+        if ($request->has('is_current') && $request->is_current && !$session->is_current) {
             AcademicSession::where('is_current', true)->update(['is_current' => false]);
         }
 

@@ -11,20 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if the table already exists
+        if (Schema::hasTable('marks')) {
+            return;
+        }
+        
         Schema::create('marks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('exam_id')->constrained()->onDelete('cascade');
-            $table->foreignId('student_id')->constrained()->onDelete('cascade');
-            $table->foreignId('subject_id')->constrained()->onDelete('cascade');
+            $table->foreignId('exam_id')->constrained('exams');
+            $table->foreignId('student_id')->constrained('students');
+            $table->foreignId('subject_id')->constrained('subjects');
             $table->decimal('marks_obtained', 8, 2)->unsigned()->nullable();
             $table->decimal('total_marks', 8, 2)->unsigned();
             $table->string('grade', 10)->nullable();
             $table->text('remarks')->nullable();
             $table->enum('status', ['draft', 'submitted', 'verified', 'published'])->default('draft');
             $table->boolean('is_absent')->default(false);
-            $table->foreignId('created_by')->constrained('users')->onDelete('restrict');
-            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('restrict');
-            $table->foreignId('verified_by')->nullable()->constrained('users')->onDelete('restrict');
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->foreignId('verified_by')->nullable()->constrained('users');
             $table->timestamp('verified_at')->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('published_at')->nullable();

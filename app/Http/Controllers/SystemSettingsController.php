@@ -13,16 +13,31 @@ class SystemSettingsController extends Controller
      */
     public function index()
     {
-        $settings = SystemSettings::orderBy('group')->get()->groupBy('group');
+        $settings = SystemSettings::orderBy('group');
+        $groups = SystemSettings::select('group')->distinct()->pluck('group');
         
-        // Try a very simple view name
-        return view('settings.system_index', compact('settings'));
+        // Filter by search if provided
+        if (request()->has('search') && request('search') !== null) {
+            $search = request('search');
+            $settings->where(function($query) use ($search) {
+                $query->where('key', 'like', "%{$search}%")
+                      ->orWhere('value', 'like', "%{$search}%");
+            });
+        }
         
-        // Alternative system view
-        // return view('settings.system', compact('settings'));
+        // Filter by group if provided
+        if (request()->has('group') && request('group') !== null && request('group') !== '') {
+            $settings->where('group', request('group'));
+        }
         
-        // Original code
-        // return view('settings.system.index', compact('settings'));
+        // Filter by visibility if provided
+        if (request()->has('is_public') && request('is_public') !== null && request('is_public') !== '') {
+            $settings->where('is_public', request('is_public'));
+        }
+        
+        $settings = $settings->paginate(10);
+        
+        return view('settings.system.index', compact('settings', 'groups'));
         
         // Dashboard view for testing
         // return view('settings.dashboard', [
@@ -37,7 +52,8 @@ class SystemSettingsController extends Controller
      */
     public function create()
     {
-        return view('settings.system.create');
+        $groups = SystemSettings::select('group')->distinct()->pluck('group');
+        return view('settings.system.create', compact('groups'));
     }
 
     /**
@@ -46,20 +62,23 @@ class SystemSettingsController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'key' => 'required|string|max:255|unique:system_settings',
-            'value' => 'nullable|string',
+            'key' => 'required|string|max:255|unique:system_settings,key',
             'group' => 'required|string|max:50',
+            'value' => 'required|string',
             'description' => 'nullable|string',
             'is_public' => 'boolean',
         ]);
 
+        // Convert is_public to boolean since checkboxes may come as null
+        $validated['is_public'] = $request->has('is_public') ? 1 : 0;
+
         SystemSettings::create($validated);
 
-        // Clear cache for this setting
-        Cache::forget('setting_' . $request->key);
+        // Clear the cache for this setting
+        Cache::forget('setting.' . $validated['key']);
 
         return redirect()->route('settings.system.index')
-            ->with('success', 'System setting created successfully');
+            ->with('success', 'Setting created successfully.');
     }
 
     /**
@@ -67,7 +86,7 @@ class SystemSettingsController extends Controller
      */
     public function show(SystemSettings $systemSetting)
     {
-        return view('settings.system.show', compact('systemSetting'));
+        return view('settings.system.show', ['setting' => $systemSetting]);
     }
 
     /**
@@ -75,7 +94,11 @@ class SystemSettingsController extends Controller
      */
     public function edit(SystemSettings $systemSetting)
     {
-        return view('settings.system.edit', compact('systemSetting'));
+        $groups = SystemSettings::select('group')->distinct()->pluck('group');
+        return view('settings.system.edit', [
+            'setting' => $systemSetting,
+            'groups' => $groups
+        ]);
     }
 
     /**
@@ -85,22 +108,25 @@ class SystemSettingsController extends Controller
     {
         $validated = $request->validate([
             'key' => 'required|string|max:255|unique:system_settings,key,' . $systemSetting->id,
-            'value' => 'nullable|string',
             'group' => 'required|string|max:50',
+            'value' => 'required|string',
             'description' => 'nullable|string',
             'is_public' => 'boolean',
         ]);
 
-        $systemSetting->update($validated);
+        // Convert is_public to boolean since checkboxes may come as null
+        $validated['is_public'] = $request->has('is_public') ? 1 : 0;
 
-        // Clear cache for this setting
-        Cache::forget('setting_' . $systemSetting->key);
-        if ($request->key != $systemSetting->key) {
-            Cache::forget('setting_' . $request->key);
+        // Clear the cache for both the old key and new key if changed
+        Cache::forget('setting.' . $systemSetting->key);
+        if ($systemSetting->key !== $validated['key']) {
+            Cache::forget('setting.' . $validated['key']);
         }
 
+        $systemSetting->update($validated);
+
         return redirect()->route('settings.system.index')
-            ->with('success', 'System setting updated successfully');
+            ->with('success', 'Setting updated successfully.');
     }
 
     /**
@@ -134,5 +160,17 @@ class SystemSettingsController extends Controller
 
         return redirect()->route('settings.system.index')
             ->with('success', 'Settings updated successfully');
+    }
+
+    /**
+     * Show the form for duplicating the specified resource.
+     */
+    public function duplicate(SystemSettings $systemSetting)
+    {
+        $groups = SystemSettings::select('group')->distinct()->pluck('group');
+        return view('settings.system.duplicate', [
+            'setting' => $systemSetting,
+            'groups' => $groups
+        ]);
     }
 }

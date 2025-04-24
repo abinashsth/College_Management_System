@@ -34,6 +34,16 @@ class MarkController extends Controller
     }
 
     /**
+     * Simple welcome page to test routing
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function welcome()
+    {
+        return view('marks.welcome');
+    }
+
+    /**
      * Show marks dashboard with statistics and quick links.
      *
      * @return \Illuminate\Http\Response
@@ -1737,5 +1747,170 @@ class MarkController extends Controller
         // For brevity, not fully implemented here
         
         return [];
+    }
+
+    /**
+     * Show form for subject-specific marks entry.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function subjectEntry(Request $request)
+    {
+        // Get active academic session and exams
+        $activeSession = AcademicSession::where('is_active', true)->first();
+        $exams = Exam::where('is_active', true)
+                     ->where('academic_session_id', $activeSession->id ?? null)
+                     ->orderBy('created_at', 'desc')
+                     ->get();
+        
+        // Get subjects the teacher has access to (if teacher)
+        $subjects = [];
+        if (Auth::user()->hasRole('Teacher')) {
+            $teacher = Auth::user()->teacher;
+            if ($teacher) {
+                $subjects = $teacher->subjects;
+            }
+        } else {
+            // For admins, get all subjects
+            $subjects = Subject::orderBy('name')->get();
+        }
+        
+        // If exam_id and subject_id are provided, prepare the form for mark entry
+        $students = collect();
+        $exam = null;
+        $subject = null;
+        $existingMarks = [];
+        
+        if ($request->filled('exam_id') && $request->filled('subject_id')) {
+            $exam = Exam::with('academicSession')->findOrFail($request->exam_id);
+            $subject = Subject::findOrFail($request->subject_id);
+            
+            // Check if user has permission
+            if (!Auth::user()->can('create marks') && !$this->canCreateMarks($exam, $subject)) {
+                return redirect()->route('marks.subjectEntry')
+                    ->with('error', 'You do not have permission to create marks for this subject');
+            }
+            
+            // Get students for the exam's class
+            $students = Student::where('class_id', $exam->class_id)
+                              ->where('enrollment_status', 'active')
+                              ->with('user')
+                              ->orderBy('roll_number')
+                              ->get();
+            
+            // Get any existing marks
+            $marks = Mark::where('exam_id', $exam->id)
+                        ->where('subject_id', $subject->id)
+                        ->get();
+            
+            $existingMarks = $marks->keyBy('student_id');
+        }
+        
+        return view('marks.subject_entry', compact('exams', 'subjects', 'students', 'exam', 'subject', 'existingMarks', 'activeSession'));
+    }
+    
+    /**
+     * Store subject-specific marks.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function storeSubjectMarks(Request $request)
+    {
+        $request->validate([
+            'exam_id' => 'required|exists:exams,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'marks' => 'required|array',
+            'marks.*' => 'nullable|numeric|min:0',
+            'is_absent' => 'nullable|array',
+            'is_absent.*' => 'nullable|boolean',
+            'remarks' => 'nullable|array',
+            'remarks.*' => 'nullable|string|max:255',
+        ]);
+
+        $exam = Exam::findOrFail($request->exam_id);
+        $subject = Subject::findOrFail($request->subject_id);
+        
+        // Check permission
+        if (!Auth::user()->can('create marks') && !$this->canCreateMarks($exam, $subject)) {
+            return redirect()->route('marks.subjectEntry')
+                ->with('error', 'You do not have permission to create marks for this subject');
+        }
+        
+        $marks = $request->input('marks', []);
+        $absent = $request->input('is_absent', []);
+        $remarks = $request->input('remarks', []);
+        $action = $request->input('action', 'save_draft');
+        
+        DB::beginTransaction();
+        try {
+            $updatedCount = 0;
+            $createdCount = 0;
+            
+            foreach ($marks as $studentId => $marksObtained) {
+                // Skip if no marks and not absent
+                if (empty($marksObtained) && empty($absent[$studentId])) {
+                    continue;
+                }
+                
+                // Check if marks already exist
+                $mark = Mark::where('student_id', $studentId)
+                           ->where('exam_id', $exam->id)
+                           ->where('subject_id', $subject->id)
+                           ->first();
+                
+                $isAbsent = isset($absent[$studentId]) && $absent[$studentId] ? true : false;
+                $studentRemarks = $remarks[$studentId] ?? null;
+                
+                $markData = [
+                    'student_id' => $studentId,
+                    'exam_id' => $exam->id,
+                    'subject_id' => $subject->id,
+                    'marks_obtained' => $isAbsent ? null : $marksObtained,
+                    'total_marks' => $exam->total_marks,
+                    'is_absent' => $isAbsent,
+                    'remarks' => $studentRemarks,
+                    'status' => $action === 'submit' ? Mark::STATUS_SUBMITTED : Mark::STATUS_DRAFT,
+                    'updated_by' => Auth::id(),
+                ];
+                
+                // Calculate grade if possible
+                if (!$isAbsent && !empty($marksObtained)) {
+                    $percentage = ($marksObtained / $exam->total_marks) * 100;
+                    $markData['grade'] = $this->calculateGrade($percentage, $exam);
+                }
+                
+                if ($mark) {
+                    // Update existing mark
+                    $mark->update($markData);
+                    $updatedCount++;
+                } else {
+                    // Create new mark
+                    $markData['created_by'] = Auth::id();
+                    Mark::create($markData);
+                    $createdCount++;
+                }
+            }
+            
+            DB::commit();
+            
+            $message = "Marks successfully saved. {$createdCount} new records created, {$updatedCount} records updated.";
+            if ($action === 'submit') {
+                $message .= " Marks have been submitted for verification.";
+            }
+            
+            return redirect()->route('marks.subjectEntry', [
+                'exam_id' => $exam->id,
+                'subject_id' => $subject->id
+            ])->with('success', $message);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error storing subject marks: ' . $e->getMessage());
+            
+            return redirect()->back()->withInput()
+                ->with('error', 'An error occurred while saving marks: ' . $e->getMessage());
+        }
     }
 } 
