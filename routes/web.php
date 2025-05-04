@@ -428,6 +428,24 @@ Route::middleware(['auth'])->prefix('results')->name('results.')->group(function
 /*
  * Finance & Fee Management Routes
  */
+
+// Student Fee Routes
+ Route::get('/student-fee', [StudentFeeController::class, 'index'])->name('student-fee.index');
+ Route::get('/student-fee/create', [StudentFeeController::class, 'create'])->name('student-fee.create');
+ Route::post('/student-fee', [StudentFeeController::class, 'store'])->name('student-fee.store');
+ Route::get('/student-fee/{studentFee}', [StudentFeeController::class,'show'])->name('student-fee.show');
+ Route::get('/student-fee/{studentFee}/edit', [StudentFeeController::class, 'edit'])->name('student-fee.edit');
+ Route::put('/student-fee/{studentFee}', [StudentFeeController::class, 'update'])->name('student-fee.update');
+ Route::delete('/student-fee/{studentFee}', [StudentFeeController::class, 'destroy'])->name('student-fee.destroy');
+ Route::get('/student-fee/{studentFee}/payment', [StudentFeeController::class, 'payment'])->name('student-fee.payment');
+ Route::post('/student-fee/{studentFee}/payment', [StudentFeeController::class, 'processPayment'])->name('student-fee.process-payment');
+ Route::get('/student-fee/{studentFee}/payment-history', [StudentFeeController::class, 'paymentHistory'])->name('student-fee.payment-history');
+ Route::get('/student-fee/{studentFee}/receipt', [StudentFeeController::class, 'receipt'])->name('student-fee.receipt');
+ Route::get('/student-fee/{studentFee}/receipt/{payment}', [StudentFeeController::class,'receipt'])->name('student-fee.receipt');
+ Route::get('/student-fee/{studentFee}/receipt/{payment}/pdf', [StudentFeeController::class,'receiptPdf'])->name('student-fee.receipt.pdf');
+
+
+
 Route::middleware(['auth'])->prefix('finance')->name('finance.')->group(function () {
     // Finance Dashboard
     Route::get('/dashboard', [App\Http\Controllers\FinanceController::class, 'dashboard'])->name('dashboard');
