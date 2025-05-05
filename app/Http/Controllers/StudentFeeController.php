@@ -11,13 +11,13 @@ class StudentFeeController extends Controller
     public function index()
     {
         $studentFees = StudentFee::with('student')->get();
-        return view('student_fee.index', compact('studentFees'));
+        return view('student-fee.index', compact('studentFees'));
     }
 
     public function create()
     {
         $students = Student::all();
-        return view('student_fee.create', compact('students'));
+        return view('student-fee.create', compact('students'));
     }
 
     public function store(Request $request)
@@ -36,13 +36,13 @@ class StudentFeeController extends Controller
 
     public function show(StudentFee $studentFee)
     {
-        return view('student_fee.show', compact('studentFee'));
+        return view('student-fee.show', compact('studentFee'));
     }
 
     public function edit(StudentFee $studentFee)
     {
         $students = Student::all();
-        return view('student_fee.edit', compact('studentFee', 'students'));
+        return view('student-fee.edit', compact('studentFee', 'students'));
     }
 
     public function update(Request $request, StudentFee $studentFee)

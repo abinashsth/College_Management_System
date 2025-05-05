@@ -17,7 +17,7 @@
         <!-- Student Fees Card -->
         <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-semibold mb-4">Student Fees</h2>
-            <a href="{{ route('fees.index') }}" class="text-blue-600 hover:text-blue-800">
+            <a href="{{ route('student-fee.index') }}" class="text-blue-600 hover:text-blue-800">
                 Manage Student Fees →
             </a>
         </div>

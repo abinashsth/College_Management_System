@@ -3,26 +3,35 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FeeStructure extends Model
 {
     protected $fillable = [
-        'program_id',
-        'academic_session_id',
-        'fee_type',
-        'amount',
-        'due_day',
+        'course_id',
+        'semester',
+        'tuition_fee',
+        'development_fee',
+        'other_charges',
+        'total_amount',
+        'is_active',
         'description'
     ];
 
-    public function program(): BelongsTo
+    protected $casts = [
+        'tuition_fee' => 'decimal:2',
+        'development_fee' => 'decimal:2',
+        'other_charges' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'is_active' => 'boolean'
+    ];
+
+    public function course()
     {
-        return $this->belongsTo(Program::class);
+        return $this->belongsTo(Course::class);
     }
 
-    public function academicSession(): BelongsTo
+    public function calculateTotal()
     {
-        return $this->belongsTo(AcademicSession::class);
+        return $this->tuition_fee + $this->development_fee + $this->other_charges;
     }
 }

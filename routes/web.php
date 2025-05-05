@@ -10,6 +10,7 @@ use App\Http\Controllers\SectionController;
 use App\Http\Controllers\ClassroomAllocationController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\StudentFeeController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\FeeStructureController;
@@ -200,6 +201,18 @@ Route::middleware(['auth', 'permission:manage fees'])->group(function () {
         
     } );
 
+
+    // Fee Structure Management
+    Route::middleware(['permission:view fee structures'])->group(function () {
+        Route::resource('fee-structures', FeeStructureController::class);
+        // Route::get('fee-structures', [FeeStructureController::class,'index'])->name('fee-structures.index');
+        // Route::get('fee-structures/create', [FeeStructureController::class, 'create'])->name('fee-structures.create');
+        // Route::post('fee-structures', [FeeStructureController::class,'store'])->name('fee-structures.store');   
+        // Route::get('fee-structures/{feeStructure}', [FeeStructureController::class, 'show'])->name('fee-structures.show');
+        // Route::get('fee-structures/{feeStructure}/edit', [FeeStructureController::class, 'edit'])->name('fee-structures.edit');
+        // Route::put('fee-structures/{feeStructure}', [FeeStructureController::class, 'update'])->name('fee-structures.update');
+        
+    });
 
 
 
